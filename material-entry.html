@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MatTrack — Materials Entry</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#0d0f14;--surface:#13161e;--surface2:#1a1e29;--border:#2a2f3f;
+    --accent:#c084fc;--accent2:#ff6b35;--accent3:#00ff9d;--accent4:#00c2ff;
+    --text:#d0d8f0;--muted:#5a6180;--danger:#ff3b5c;--warn:#ffb800;
+    --r:6px;--fh:'Rajdhani',sans-serif;--fm:'Share Tech Mono',monospace;--fb:'Exo 2',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;
+    background-image:radial-gradient(ellipse at 20% 0%,rgba(192,132,252,.07) 0%,transparent 60%),
+    radial-gradient(ellipse at 80% 100%,rgba(0,194,255,.05) 0%,transparent 60%);}
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:100%;max-width:420px;}
+  .login-logo{font-family:var(--fh);font-size:2rem;font-weight:700;letter-spacing:3px;color:var(--accent);text-transform:uppercase;text-align:center;margin-bottom:.2rem;}
+  .login-logo span{color:var(--muted);font-weight:400;}
+  .login-sub{font-family:var(--fm);font-size:.7rem;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:.5rem;text-transform:uppercase;}
+  .login-tagline{font-family:var(--fb);font-size:.82rem;color:var(--muted);text-align:center;margin-bottom:2rem;font-style:italic;}
+  .login-fi{display:flex;flex-direction:column;gap:6px;margin-bottom:1.2rem;}
+  .login-fi label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .login-fi input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:11px 14px;font-family:var(--fb);font-size:.95rem;outline:none;transition:border-color .2s;width:100%;}
+  .login-fi input:focus{border-color:var(--accent);}
+  .login-btn{width:100%;font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#fff;border:none;padding:12px;border-radius:var(--r);cursor:pointer;transition:all .2s;margin-top:.5rem;}
+  .login-btn:hover{opacity:.85;}
+  .login-err{font-family:var(--fm);font-size:.75rem;color:var(--danger);text-align:center;margin-top:.75rem;min-height:1rem;}
+  #app-screen{display:none;}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .logo span{color:var(--muted);font-weight:400;}
+  .hright{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;}
+  .user-info{font-family:var(--fm);font-size:.72rem;color:var(--muted);}
+  .user-info strong{color:var(--accent);}
+  .conn{display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:.72rem;color:var(--muted);}
+  .cdot{width:7px;height:7px;border-radius:50%;background:var(--accent3);}
+  .cdot.off{background:var(--danger);}
+  .badge{font-family:var(--fm);font-size:.72rem;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.3);color:var(--warn);padding:4px 10px;border-radius:20px;display:none;align-items:center;gap:6px;}
+  .badge.show{display:inline-flex;}
+  .badge::before{content:'';width:6px;height:6px;background:var(--warn);border-radius:50%;animation:pulse 1.5s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .btn-sync{font-family:var(--fm);font-size:.75rem;background:transparent;border:1px solid var(--accent);color:var(--accent);padding:5px 12px;border-radius:var(--r);cursor:pointer;text-transform:uppercase;transition:all .2s;}
+  .btn-sync:hover{background:rgba(192,132,252,.1);}
+  .btn-logout{font-family:var(--fm);font-size:.75rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:var(--r);cursor:pointer;text-transform:uppercase;transition:all .2s;}
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 1rem;overflow-x:auto;}
+  .tb{font-family:var(--fh);font-size:.9rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:none;border:none;color:var(--muted);padding:14px 20px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+  .tb:hover{color:var(--text);}
+  .tb.active{color:var(--accent);border-bottom:2px solid var(--accent);}
+  .tc{display:none;padding:2rem;max-width:900px;margin:0 auto;}
+  .tc.active{display:block;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2rem;margin-bottom:1.5rem;}
+  .ctitle{font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .ctitle::before{content:'';width:3px;height:18px;background:var(--accent);border-radius:2px;}
+  .fg{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+  .fi{display:flex;flex-direction:column;gap:6px;}
+  label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  input,select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:10px 14px;font-family:var(--fb);font-size:.9rem;outline:none;transition:border-color .2s;width:100%;}
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(192,132,252,.1);}
+  input[readonly]{color:var(--muted);cursor:default;}
+  select option{background:var(--surface2);}
+  .auto-tag{font-family:var(--fm);font-size:.65rem;color:var(--accent);letter-spacing:1px;margin-top:2px;}
+  .fa{display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;}
+  .bp{font-family:var(--fh);font-size:.95rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#fff;border:none;padding:10px 28px;border-radius:var(--r);cursor:pointer;transition:all .2s;}
+  .bp:hover{opacity:.85;transform:translateY(-1px);}
+  .bs{font-family:var(--fh);font-size:.95rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;background:transparent;color:var(--warn);border:1px solid var(--warn);padding:10px 28px;border-radius:var(--r);cursor:pointer;transition:all .2s;}
+  .bs:hover{background:rgba(255,184,0,.08);}
+  .tw{overflow-x:auto;margin-top:1rem;}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;}
+  thead tr{background:var(--surface2);border-bottom:1px solid var(--border);}
+  th{font-family:var(--fm);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 14px;text-align:left;white-space:nowrap;}
+  td{padding:10px 14px;border-bottom:1px solid rgba(42,47,63,.5);vertical-align:middle;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .tag{font-family:var(--fm);font-size:.7rem;padding:3px 8px;border-radius:3px;letter-spacing:1px;}
+  .tag-po{background:rgba(255,107,53,.15);color:var(--accent2);border:1px solid rgba(255,107,53,.3);}
+  .tag-ret{background:rgba(0,255,157,.1);color:var(--accent3);border:1px solid rgba(0,255,157,.2);}
+  .tag-pend{background:rgba(255,184,0,.12);color:var(--warn);border:1px solid rgba(255,184,0,.3);}
+  .ctrl{font-family:var(--fm);color:var(--accent);font-size:.78rem;}
+  .empty{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
+  .bal-pos{color:var(--accent3);font-family:var(--fm);font-weight:600;}
+  .bal-neg{color:var(--danger);font-family:var(--fm);font-weight:600;}
+  .bal-zero{color:var(--muted);font-family:var(--fm);}
+  /* Material list */
+  .mat-list{display:flex;flex-direction:column;gap:.5rem;margin-top:1rem;}
+  .mat-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;gap:1rem;}
+  .mat-info{flex:1;}
+  .mat-name{font-family:var(--fb);font-size:.9rem;}
+  .mat-unit{font-family:var(--fm);font-size:.72rem;color:var(--accent);letter-spacing:1px;}
+  .mat-acts{display:flex;gap:.5rem;}
+  .btn-edit-mat{font-family:var(--fm);font-size:.68rem;background:rgba(0,194,255,.1);border:1px solid rgba(0,194,255,.3);color:var(--accent4);padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:1px;}
+  .btn-edit-mat:hover{background:rgba(0,194,255,.2);}
+  .btn-del-mat{font-family:var(--fm);font-size:.68rem;background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.3);color:var(--danger);padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:1px;}
+  .btn-del-mat:hover{background:rgba(255,59,92,.2);}
+  .mat-edit-row{background:var(--surface2);border:1px solid var(--accent);border-radius:var(--r);padding:10px 14px;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;}
+  .mat-edit-row input{background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:6px 10px;font-family:var(--fb);font-size:.85rem;outline:none;flex:1;min-width:100px;}
+  .mat-edit-row input:focus{border-color:var(--accent);}
+  .btn-save-mat{font-family:var(--fm);font-size:.68rem;background:rgba(0,255,157,.1);border:1px solid rgba(0,255,157,.3);color:var(--accent3);padding:3px 8px;border-radius:4px;cursor:pointer;text-transform:uppercase;}
+  .btn-cancel-mat{font-family:var(--fm);font-size:.68rem;background:rgba(90,97,128,.15);border:1px solid rgba(90,97,128,.3);color:var(--muted);padding:3px 8px;border-radius:4px;cursor:pointer;text-transform:uppercase;}
+  .field-err{font-family:var(--fm);font-size:.7rem;color:var(--danger);margin-top:3px;}
+  #toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent3);color:var(--text);padding:12px 20px;border-radius:var(--r);font-family:var(--fm);font-size:.82rem;opacity:0;transform:translateY(10px);transition:all .3s;z-index:999;pointer-events:none;max-width:320px;}
+  #toast.show{opacity:1;transform:translateY(0);}
+  #toast.err{border-left-color:var(--danger);}
+  @media(max-width:600px){.fg{grid-template-columns:1fr;}header{padding:0 1rem;}.tc{padding:1.2rem;}.tb{padding:12px 12px;font-size:.78rem;}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Mat<span>Track</span></div>
+    <div class="login-sub">Materials Monitoring System</div>
+    <div class="login-tagline">Track. Monitor. Control.</div>
+    <div class="login-fi"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" autocomplete="username"/></div>
+    <div class="login-fi"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/></div>
+    <button class="login-btn" id="login-btn-el">Login</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <header>
+    <div class="logo">Mat<span>Track</span></div>
+    <div class="hright">
+      <div class="conn"><div class="cdot" id="cdot"></div><span id="ctxt">Online</span></div>
+      <div class="badge" id="badge">0 pending</div>
+      <button class="btn-sync" id="btn-sync-all">⟳ Sync</button>
+      <div class="user-info">Logged in as <strong id="display-name"></strong></div>
+      <button class="btn-logout" id="btn-logout">Logout</button>
+    </div>
+  </header>
+
+  <nav>
+    <button class="tb active" onclick="switchTab('t1',this)">Inventory</button>
+    <button class="tb" onclick="switchTab('t2',this)">Deliveries</button>
+    <button class="tb" onclick="switchTab('t3',this)">Pull Out / Return</button>
+    <button class="tb" onclick="switchTab('t4',this)">Material Database</button>
+    <button class="tb" onclick="switchTab('t5',this)">Summary</button>
+  </nav>
+
+  <!-- TAB 1: INVENTORY -->
+  <div id="t1" class="tc active">
+    <div class="card">
+      <div class="ctitle">Log Inventory</div>
+      <div class="fg">
+        <div class="fi"><label>Control Number</label><input id="inv-ctrl" readonly/><span class="auto-tag">Auto-generated</span></div>
+        <div class="fi">
+          <label>Material Name</label>
+          <select id="inv-mat" onchange="autoFillUnit('inv-mat','inv-unit')"><option value="">-- Select Material --</option></select>
+        </div>
+        <div class="fi"><label>Quantity</label><input type="number" id="inv-qty" placeholder="0" min="0"/></div>
+        <div class="fi"><label>Unit</label><input id="inv-unit" readonly/><span class="auto-tag">Auto-filled</span></div>
+        <div class="fi"><label>Date of Inventory</label><input type="date" id="inv-date"/></div>
+      </div>
+      <div class="fa">
+        <button class="bp" id="btn-inv">Submit Inventory</button>
+        <button class="bs" onclick="saveOffline('inv')">💾 Save Offline</button>
+      </div>
+    </div>
+    <div class="card" id="offline-inv-card" style="display:none">
+      <div class="ctitle">Pending Offline — Inventory</div>
+      <div class="tw"><table>
+        <thead><tr><th>Control No.</th><th>Material</th><th>Qty</th><th>Unit</th><th>Date</th><th>State</th></tr></thead>
+        <tbody id="offline-inv-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- TAB 2: DELIVERIES -->
+  <div id="t2" class="tc">
+    <div class="card">
+      <div class="ctitle">Log Delivery</div>
+      <div class="fg">
+        <div class="fi"><label>Control Number</label><input id="del-ctrl" readonly/><span class="auto-tag">Auto-generated</span></div>
+        <div class="fi">
+          <label>Material Name</label>
+          <select id="del-mat" onchange="autoFillUnit('del-mat','del-unit')"><option value="">-- Select Material --</option></select>
+        </div>
+        <div class="fi"><label>Quantity</label><input type="number" id="del-qty" placeholder="0" min="0"/></div>
+        <div class="fi"><label>Unit</label><input id="del-unit" readonly/><span class="auto-tag">Auto-filled</span></div>
+        <div class="fi"><label>Date Delivered</label><input type="date" id="del-date"/></div>
+        <div class="fi"><label>Supplier <span style="color:var(--muted);font-size:.65rem">(optional)</span></label><input id="del-supplier" placeholder="Supplier name"/></div>
+      </div>
+      <div class="fa">
+        <button class="bp" id="btn-del">Submit Delivery</button>
+        <button class="bs" onclick="saveOffline('del')">💾 Save Offline</button>
+      </div>
+    </div>
+    <div class="card" id="offline-del-card" style="display:none">
+      <div class="ctitle">Pending Offline — Deliveries</div>
+      <div class="tw"><table>
+        <thead><tr><th>Control No.</th><th>Material</th><th>Qty</th><th>Unit</th><th>Date</th><th>Supplier</th><th>State</th></tr></thead>
+        <tbody id="offline-del-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: PULL OUT / RETURN -->
+  <div id="t3" class="tc">
+    <div class="card">
+      <div class="ctitle">Log Pull Out / Return</div>
+      <div class="fg">
+        <div class="fi"><label>Control Number</label><input id="po-ctrl" readonly/><span class="auto-tag">Auto-generated</span></div>
+        <div class="fi">
+          <label>Material Name</label>
+          <select id="po-mat" onchange="autoFillUnit('po-mat','po-unit')"><option value="">-- Select Material --</option></select>
+        </div>
+        <div class="fi"><label>Quantity</label><input type="number" id="po-qty" placeholder="0" min="0"/>
+          <span class="field-err" id="po-qty-err"></span>
+        </div>
+        <div class="fi"><label>Unit</label><input id="po-unit" readonly/><span class="auto-tag">Auto-filled</span></div>
+        <div class="fi"><label>Type</label>
+          <select id="po-type"><option value="">-- Select Type --</option><option value="Pull Out">Pull Out</option><option value="Return">Return</option></select>
+        </div>
+        <div class="fi"><label>Requestor / Returner</label><input id="po-person" placeholder="Full name"/></div>
+        <div class="fi"><label>Date</label><input type="date" id="po-date"/></div>
+      </div>
+      <div class="fa">
+        <button class="bp" id="btn-po">Submit</button>
+        <button class="bs" onclick="saveOffline('po')">💾 Save Offline</button>
+      </div>
+    </div>
+    <div class="card" id="offline-po-card" style="display:none">
+      <div class="ctitle">Pending Offline — Pull Out / Return</div>
+      <div class="tw"><table>
+        <thead><tr><th>Control No.</th><th>Material</th><th>Qty</th><th>Unit</th><th>Type</th><th>Person</th><th>Date</th><th>State</th></tr></thead>
+        <tbody id="offline-po-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: MATERIAL DATABASE -->
+  <div id="t4" class="tc">
+    <div class="card">
+      <div class="ctitle">Add Material</div>
+      <div class="fg">
+        <div class="fi"><label>Material Name</label><input id="mat-name" placeholder="e.g. Portland Cement"/></div>
+        <div class="fi"><label>Unit</label><input id="mat-unit" placeholder="e.g. bags, pcs, meters"/></div>
+      </div>
+      <div class="fa"><button class="bp" id="btn-mat">Add Material</button></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Material List</div>
+      <div class="mat-list" id="mat-list"><div class="empty">NO MATERIALS YET</div></div>
+    </div>
+  </div>
+
+  <!-- TAB 5: SUMMARY -->
+  <div id="t5" class="tc">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
+      <button class="btn-sync" onclick="renderSummary()" style="border-color:var(--accent3);color:var(--accent3)">↻ Recalculate</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Material Summary</div>
+      <div class="tw"><table>
+        <thead><tr>
+          <th>Material</th><th>Unit</th>
+          <th>Latest Inventory</th><th>Inventory Date</th>
+          <th>Delivered After</th><th>Net Pull Out</th><th>Balance</th>
+        </tr></thead>
+        <tbody id="sum-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs, updateDoc, deleteDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const _apiKey = sessionStorage.getItem('st_api_key');
+if (!_apiKey) {
+  // Redirect to main index to enter API key
+  window.location.href = '../index.html';
+}
+const firebaseConfig = {
+  apiKey: _apiKey,
+  authDomain: "equiptrack-e1011.firebaseapp.com",
+  projectId: "equiptrack-e1011",
+  storageBucket: "equiptrack-e1011.firebasestorage.app",
+  messagingSenderId: "468749948486",
+  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+let materials  = [];
+let deliveries = [];
+let inventory  = [];
+let pullouts   = [];
+let offlineInv = JSON.parse(localStorage.getItem('offlineInv') || '[]');
+let offlineDel = JSON.parse(localStorage.getItem('offlineDel') || '[]');
+let offlinePo  = JSON.parse(localStorage.getItem('offlinePo')  || '[]');
+
+window.addEventListener('online',  () => { updateConn(); syncAllData(); });
+window.addEventListener('offline', () => updateConn());
+
+function updateConn() {
+  const online = navigator.onLine;
+  document.getElementById('cdot').classList.toggle('off', !online);
+  document.getElementById('ctxt').textContent = online ? 'Online' : 'Offline';
+}
+
+function updateBadge() {
+  const total = offlineInv.length + offlineDel.length + offlinePo.length;
+  const b = document.getElementById('badge');
+  total > 0 ? (b.classList.add('show'), b.textContent=total+' pending') : b.classList.remove('show');
+}
+
+// ── AUTH ──────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    const snap = await getDoc(doc(db,'users',user.uid));
+    if (!snap.exists()) { await signOut(auth); return; }
+    const data = snap.data();
+    if (!['admin','encoder'].includes(data.role)) {
+      document.getElementById('login-screen').innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1rem;text-align:center;padding:2rem;"><h2 style="font-family:var(--fh);font-size:1.5rem;color:var(--danger);letter-spacing:2px;">Access Denied</h2><p style="font-family:var(--fm);font-size:.82rem;color:var(--muted);">Your account does not have permission.</p></div>`;
+      return;
+    }
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    document.getElementById('display-name').textContent = data.username || user.email;
+    updateConn(); updateBadge();
+    await loadAll();
+    setToday(); genCtrlNums(); renderOfflineTables();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+});
+
+document.getElementById('login-btn-el').addEventListener('click', async () => {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  const btn   = document.getElementById('login-btn-el');
+  errEl.textContent = '';
+  if (!username||!password) { errEl.textContent='Please enter username and password.'; return; }
+  btn.textContent='Logging in...'; btn.disabled=true;
+  try {
+    await signInWithEmailAndPassword(auth, username.toLowerCase()+'@equiptrack.app', password);
+  } catch(e) {
+    if(['auth/invalid-credential','auth/user-not-found','auth/wrong-password'].includes(e.code))
+      errEl.textContent='Invalid username or password.';
+    else if(e.code==='auth/network-request-failed') errEl.textContent='Network error.';
+    else errEl.textContent='Login failed: '+e.message;
+  } finally { btn.textContent='Login'; btn.disabled=false; }
+});
+
+document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+// ── LOAD ──────────────────────────────────────────────────────
+async function loadAll() {
+  const [mS,dS,iS,pS] = await Promise.all([
+    getDocs(collection(db,'materials')),
+    getDocs(collection(db,'deliveries')),
+    getDocs(collection(db,'inventory')),
+    getDocs(collection(db,'pullouts')),
+  ]);
+  materials  = mS.docs.map(d=>({id:d.id,...d.data()}));
+  deliveries = dS.docs.map(d=>({id:d.id,...d.data()}));
+  inventory  = iS.docs.map(d=>({id:d.id,...d.data()}));
+  pullouts   = pS.docs.map(d=>({id:d.id,...d.data()}));
+  populateDropdowns(); renderMaterialList(); renderSummary();
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+window.switchTab = function(id,btn) {
+  document.querySelectorAll('.tc').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='t5') renderSummary();
+};
+
+function setToday() {
+  const t=new Date().toISOString().split('T')[0];
+  ['inv-date','del-date','po-date'].forEach(id=>document.getElementById(id).value=t);
+}
+
+function genCtrl(prefix) {
+  const ts=Date.now().toString(36).toUpperCase();
+  const rnd=Math.random().toString(36).substr(2,4).toUpperCase();
+  return `${prefix}-${ts}-${rnd}`;
+}
+
+function genCtrlNums() {
+  document.getElementById('inv-ctrl').value=genCtrl('INV');
+  document.getElementById('del-ctrl').value=genCtrl('DEL');
+  document.getElementById('po-ctrl').value=genCtrl('PO');
+}
+
+function toast(msg,err=false) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show'+(err?' err':'');
+  setTimeout(()=>t.className='',3500);
+}
+
+function v(id) { return document.getElementById(id).value.trim(); }
+
+function populateDropdowns() {
+  const opts='<option value="">-- Select Material --</option>'+
+    materials.map(m=>`<option value="${m.name}" data-unit="${m.unit}">${m.name}</option>`).join('');
+  ['inv-mat','del-mat','po-mat'].forEach(id=>document.getElementById(id).innerHTML=opts);
+}
+
+window.autoFillUnit = function(selId,unitId) {
+  const sel=document.getElementById(selId);
+  const opt=sel.options[sel.selectedIndex];
+  document.getElementById(unitId).value=opt?opt.getAttribute('data-unit')||'':'';
+};
+
+// ── BALANCE CALC ──────────────────────────────────────────────
+function getBalance(matName, excludeDate=null) {
+  const matInv = inventory.filter(i=>i.material===matName).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const latestInv = matInv[0]||null;
+  const latestInvDate = latestInv?latestInv.date:null;
+  const latestInvQty  = latestInv?parseFloat(latestInv.quantity):0;
+  const afterDate = excludeDate || latestInvDate;
+  const totalDel = deliveries.filter(d=>d.material===matName&&(!afterDate||d.date>afterDate)).reduce((s,d)=>s+parseFloat(d.quantity||0),0);
+  const totalPo  = pullouts.filter(p=>p.material===matName&&p.type==='Pull Out'&&(!afterDate||p.date>afterDate)).reduce((s,p)=>s+parseFloat(p.quantity||0),0);
+  const totalRet = pullouts.filter(p=>p.material===matName&&p.type==='Return'&&(!afterDate||p.date>afterDate)).reduce((s,p)=>s+parseFloat(p.quantity||0),0);
+  return latestInvQty + totalDel - totalPo + totalRet;
+}
+
+// ── INVENTORY ─────────────────────────────────────────────────
+document.getElementById('btn-inv').addEventListener('click', async () => {
+  const ctrl=v('inv-ctrl'),mat=v('inv-mat'),qty=v('inv-qty'),unit=v('inv-unit'),date=v('inv-date');
+  if(!mat||!qty||!date){toast('Fill all required fields.',true);return;}
+  const entry={ctrl,material:mat,quantity:parseFloat(qty),unit,date,createdAt:new Date().toISOString()};
+  if(navigator.onLine){
+    try{
+      await addDoc(collection(db,'inventory'),entry);
+      inventory.push(entry); renderSummary(); toast('Inventory logged!'); resetForm('inv');
+    }catch(e){addOffline('inv',entry);toast('Error — saved offline.');}
+  }else{addOffline('inv',entry);toast('Saved offline.');}
+});
+
+// ── DELIVERIES ────────────────────────────────────────────────
+document.getElementById('btn-del').addEventListener('click', async () => {
+  const ctrl=v('del-ctrl'),mat=v('del-mat'),qty=v('del-qty'),unit=v('del-unit'),date=v('del-date'),supplier=v('del-supplier');
+  if(!mat||!qty||!date){toast('Fill all required fields.',true);return;}
+  const entry={ctrl,material:mat,quantity:parseFloat(qty),unit,date,supplier,createdAt:new Date().toISOString()};
+  if(navigator.onLine){
+    try{
+      await addDoc(collection(db,'deliveries'),entry);
+      deliveries.push(entry); renderSummary(); toast('Delivery logged!'); resetForm('del');
+    }catch(e){addOffline('del',entry);toast('Error — saved offline.');}
+  }else{addOffline('del',entry);toast('Saved offline.');}
+});
+
+// ── PULL OUT / RETURN ─────────────────────────────────────────
+document.getElementById('btn-po').addEventListener('click', async () => {
+  const ctrl=v('po-ctrl'),mat=v('po-mat'),qty=v('po-qty'),unit=v('po-unit');
+  const type=v('po-type'),person=v('po-person'),date=v('po-date');
+  const errEl=document.getElementById('po-qty-err');
+  errEl.textContent='';
+  if(!mat||!qty||!type||!person||!date){toast('Fill all required fields.',true);return;}
+
+  // Check balance before pull out
+  if(type==='Pull Out'){
+    const balance=getBalance(mat);
+    if(parseFloat(qty)>balance){
+      errEl.textContent=`Insufficient balance. Available: ${balance} ${unit}`;
+      toast('Quantity exceeds available balance!',true);return;
+    }
+  }
+
+  const entry={ctrl,material:mat,quantity:parseFloat(qty),unit,type,person,date,createdAt:new Date().toISOString()};
+  if(navigator.onLine){
+    try{
+      await addDoc(collection(db,'pullouts'),entry);
+      pullouts.push(entry); renderSummary(); toast(type+' logged!'); resetForm('po');
+    }catch(e){addOffline('po',entry);toast('Error — saved offline.');}
+  }else{addOffline('po',entry);toast('Saved offline.');}
+});
+
+// ── MATERIAL DATABASE ──────────────────────────────────────────
+document.getElementById('btn-mat').addEventListener('click', async () => {
+  const name=v('mat-name'),unit=v('mat-unit');
+  if(!name||!unit){toast('Fill material name and unit.',true);return;}
+  if(materials.some(m=>m.name.toLowerCase()===name.toLowerCase())){toast('Material already exists!',true);return;}
+  try{
+    const ref=await addDoc(collection(db,'materials'),{name,unit});
+    materials.push({id:ref.id,name,unit});
+    populateDropdowns(); renderMaterialList();
+    document.getElementById('mat-name').value='';
+    document.getElementById('mat-unit').value='';
+    toast('Material added!');
+  }catch(e){toast('Error adding material.',true);}
+});
+
+function renderMaterialList() {
+  const el=document.getElementById('mat-list');
+  if(!materials.length){el.innerHTML='<div class="empty">NO MATERIALS YET</div>';return;}
+  el.innerHTML=materials.map(m=>`
+    <div class="mat-item" id="mat-item-${m.id}">
+      <div class="mat-info">
+        <div class="mat-name">${m.name}</div>
+        <div class="mat-unit">${m.unit}</div>
+      </div>
+      <div class="mat-acts">
+        <button class="btn-edit-mat" data-id="${m.id}">✏ Edit</button>
+        <button class="btn-del-mat" data-id="${m.id}" data-name="${m.name}">✕</button>
+      </div>
+    </div>`).join('');
+
+  el.querySelectorAll('.btn-edit-mat').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id=btn.getAttribute('data-id');
+      const m=materials.find(x=>x.id===id);
+      const item=document.getElementById('mat-item-'+id);
+      item.outerHTML=`
+        <div class="mat-edit-row" id="mat-item-${id}">
+          <input id="edit-name-${id}" value="${m.name}" placeholder="Material name"/>
+          <input id="edit-unit-${id}" value="${m.unit}" placeholder="Unit" style="max-width:120px"/>
+          <button class="btn-save-mat" data-id="${id}">✔ Save</button>
+          <button class="btn-cancel-mat" onclick="renderMaterialList()">✕</button>
+        </div>`;
+      document.querySelector(`.btn-save-mat[data-id="${id}"]`).addEventListener('click',async()=>{
+        const newName=document.getElementById('edit-name-'+id).value.trim();
+        const newUnit=document.getElementById('edit-unit-'+id).value.trim();
+        if(!newName||!newUnit){toast('Fill both fields.',true);return;}
+        try{
+          await updateDoc(doc(db,'materials',id),{name:newName,unit:newUnit});
+          const idx=materials.findIndex(x=>x.id===id);
+          materials[idx]={id,name:newName,unit:newUnit};
+          populateDropdowns(); renderMaterialList(); toast('Material updated!');
+        }catch(e){toast('Error updating material.',true);}
+      });
+    });
+  });
+
+  el.querySelectorAll('.btn-del-mat').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const id=btn.getAttribute('data-id');
+      const name=btn.getAttribute('data-name');
+      if(!confirm(`Remove "${name}" from material database?`))return;
+      try{
+        await deleteDoc(doc(db,'materials',id));
+        materials=materials.filter(m=>m.id!==id);
+        populateDropdowns(); renderMaterialList(); toast('Material removed.');
+      }catch(e){toast('Error removing material.',true);}
+    });
+  });
+}
+
+// ── SUMMARY ───────────────────────────────────────────────────
+window.renderSummary = function() {
+  const tb=document.getElementById('sum-tb');
+  if(!materials.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO MATERIALS IN DATABASE</div></td></tr>';return;}
+  const rows=materials.map(m=>{
+    const matInv=inventory.filter(i=>i.material===m.name).sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const latestInv=matInv[0]||null;
+    const latestInvDate=latestInv?latestInv.date:null;
+    const latestInvQty=latestInv?parseFloat(latestInv.quantity):0;
+    const filteredDel=deliveries.filter(d=>d.material===m.name&&(!latestInvDate||d.date>latestInvDate));
+    const filteredPo=pullouts.filter(p=>p.material===m.name&&p.type==='Pull Out'&&(!latestInvDate||p.date>latestInvDate));
+    const filteredRet=pullouts.filter(p=>p.material===m.name&&p.type==='Return'&&(!latestInvDate||p.date>latestInvDate));
+    const totalDel=filteredDel.reduce((s,d)=>s+parseFloat(d.quantity||0),0);
+    const totalPo=filteredPo.reduce((s,p)=>s+parseFloat(p.quantity||0),0);
+    const totalRet=filteredRet.reduce((s,r)=>s+parseFloat(r.quantity||0),0);
+    const netPo=totalPo-totalRet; // Net pull out = pull outs minus returns
+    const balance=latestInvQty+totalDel-netPo;
+    return{name:m.name,unit:m.unit,latestInvQty,latestInvDate,totalDel,netPo,balance};
+  });
+  tb.innerHTML=rows.map(r=>{
+    const balClass=r.balance>0?'bal-pos':r.balance<0?'bal-neg':'bal-zero';
+    return`<tr>
+      <td>${r.name}</td>
+      <td><span style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${r.unit}</span></td>
+      <td>${r.latestInvQty>0||r.latestInvDate?r.latestInvQty:'—'}</td>
+      <td>${r.latestInvDate||'—'}</td>
+      <td>${r.totalDel}</td>
+      <td>${r.netPo}</td>
+      <td><span class="${balClass}">${r.balance}</span></td>
+    </tr>`;
+  }).join('');
+};
+
+// ── OFFLINE ───────────────────────────────────────────────────
+function addOffline(type,entry){
+  if(type==='inv'){offlineInv.push(entry);localStorage.setItem('offlineInv',JSON.stringify(offlineInv));}
+  if(type==='del'){offlineDel.push(entry);localStorage.setItem('offlineDel',JSON.stringify(offlineDel));}
+  if(type==='po'){offlinePo.push(entry);localStorage.setItem('offlinePo',JSON.stringify(offlinePo));}
+  updateBadge(); renderOfflineTables();
+}
+
+function renderOfflineTables(){
+  const invCard=document.getElementById('offline-inv-card');
+  if(offlineInv.length){
+    invCard.style.display='block';
+    document.getElementById('offline-inv-tb').innerHTML=offlineInv.map(e=>`<tr>
+      <td><span class="ctrl">${e.ctrl}</span></td>
+      <td>${e.material}</td><td>${e.quantity}</td><td>${e.unit}</td><td>${e.date}</td>
+      <td><span class="tag tag-pend">PENDING</span></td></tr>`).join('');
+  }else invCard.style.display='none';
+
+  const delCard=document.getElementById('offline-del-card');
+  if(offlineDel.length){
+    delCard.style.display='block';
+    document.getElementById('offline-del-tb').innerHTML=offlineDel.map(e=>`<tr>
+      <td><span class="ctrl">${e.ctrl}</span></td>
+      <td>${e.material}</td><td>${e.quantity}</td><td>${e.unit}</td><td>${e.date}</td><td>${e.supplier||'—'}</td>
+      <td><span class="tag tag-pend">PENDING</span></td></tr>`).join('');
+  }else delCard.style.display='none';
+
+  const poCard=document.getElementById('offline-po-card');
+  if(offlinePo.length){
+    poCard.style.display='block';
+    document.getElementById('offline-po-tb').innerHTML=offlinePo.map(e=>`<tr>
+      <td><span class="ctrl">${e.ctrl}</span></td>
+      <td>${e.material}</td><td>${e.quantity}</td><td>${e.unit}</td>
+      <td><span class="tag ${e.type==='Pull Out'?'tag-po':'tag-ret'}">${e.type}</span></td>
+      <td>${e.person}</td><td>${e.date}</td>
+      <td><span class="tag tag-pend">PENDING</span></td></tr>`).join('');
+  }else poCard.style.display='none';
+}
+
+window.saveOffline=function(type){
+  let entry=null;
+  if(type==='inv'){
+    const ctrl=v('inv-ctrl'),mat=v('inv-mat'),qty=v('inv-qty'),unit=v('inv-unit'),date=v('inv-date');
+    if(!mat||!qty||!date){toast('Fill all required fields.',true);return;}
+    entry={ctrl,material:mat,quantity:parseFloat(qty),unit,date,createdAt:new Date().toISOString()};
+    addOffline('inv',entry); resetForm('inv');
+  }else if(type==='del'){
+    const ctrl=v('del-ctrl'),mat=v('del-mat'),qty=v('del-qty'),unit=v('del-unit'),date=v('del-date'),supplier=v('del-supplier');
+    if(!mat||!qty||!date){toast('Fill all required fields.',true);return;}
+    entry={ctrl,material:mat,quantity:parseFloat(qty),unit,date,supplier,createdAt:new Date().toISOString()};
+    addOffline('del',entry); resetForm('del');
+  }else if(type==='po'){
+    const ctrl=v('po-ctrl'),mat=v('po-mat'),qty=v('po-qty'),unit=v('po-unit'),type2=v('po-type'),person=v('po-person'),date=v('po-date');
+    if(!mat||!qty||!type2||!person||!date){toast('Fill all required fields.',true);return;}
+    entry={ctrl,material:mat,quantity:parseFloat(qty),unit,type:type2,person,date,createdAt:new Date().toISOString()};
+    addOffline('po',entry); resetForm('po');
+  }
+  if(entry) toast('Saved offline.');
+};
+
+async function syncAllData(){
+  if(!navigator.onLine)return;
+  const total=offlineInv.length+offlineDel.length+offlinePo.length;
+  if(!total)return;
+  let ok=0,failInv=[],failDel=[],failPo=[];
+  for(const e of offlineInv){try{await addDoc(collection(db,'inventory'),e);inventory.push(e);ok++;}catch{failInv.push(e);}}
+  for(const e of offlineDel){try{await addDoc(collection(db,'deliveries'),e);deliveries.push(e);ok++;}catch{failDel.push(e);}}
+  for(const e of offlinePo){try{await addDoc(collection(db,'pullouts'),e);pullouts.push(e);ok++;}catch{failPo.push(e);}}
+  offlineInv=failInv;offlineDel=failDel;offlinePo=failPo;
+  localStorage.setItem('offlineInv',JSON.stringify(offlineInv));
+  localStorage.setItem('offlineDel',JSON.stringify(offlineDel));
+  localStorage.setItem('offlinePo',JSON.stringify(offlinePo));
+  updateBadge();renderOfflineTables();renderSummary();
+  if(ok>0) toast(`Synced ${ok} record(s)!`);
+}
+
+document.getElementById('btn-sync-all').addEventListener('click', syncAllData);
+
+function resetForm(type){
+  if(type==='inv'){['inv-mat','inv-qty','inv-unit'].forEach(id=>document.getElementById(id).value='');document.getElementById('inv-ctrl').value=genCtrl('INV');document.getElementById('inv-date').value=new Date().toISOString().split('T')[0];}
+  else if(type==='del'){['del-mat','del-qty','del-unit','del-supplier'].forEach(id=>document.getElementById(id).value='');document.getElementById('del-ctrl').value=genCtrl('DEL');document.getElementById('del-date').value=new Date().toISOString().split('T')[0];}
+  else if(type==='po'){['po-mat','po-qty','po-unit','po-type','po-person'].forEach(id=>document.getElementById(id).value='');document.getElementById('po-qty-err').textContent='';document.getElementById('po-ctrl').value=genCtrl('PO');document.getElementById('po-date').value=new Date().toISOString().split('T')[0];}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MatTrack — Viewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#0d0f14;--surface:#13161e;--surface2:#1a1e29;--border:#2a2f3f;--accent:#c084fc;--accent2:#ff6b35;--accent3:#00ff9d;--accent4:#00c2ff;--text:#d0d8f0;--muted:#5a6180;--danger:#ff3b5c;--warn:#ffb800;--r:6px;--fh:'Rajdhani',sans-serif;--fm:'Share Tech Mono',monospace;--fb:'Exo 2',sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;background-image:radial-gradient(ellipse at 80% 0%,rgba(192,132,252,.06) 0%,transparent 60%),radial-gradient(ellipse at 20% 100%,rgba(0,255,157,.04) 0%,transparent 60%);}
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:100%;max-width:420px;}
+  .login-logo{font-family:var(--fh);font-size:2rem;font-weight:700;letter-spacing:3px;color:var(--accent);text-transform:uppercase;text-align:center;margin-bottom:.2rem;}
+  .login-logo span{color:var(--muted);font-weight:400;}
+  .login-sub{font-family:var(--fm);font-size:.7rem;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:.5rem;text-transform:uppercase;}
+  .login-tagline{font-family:var(--fb);font-size:.82rem;color:var(--muted);text-align:center;margin-bottom:2rem;font-style:italic;}
+  .login-fi{display:flex;flex-direction:column;gap:6px;margin-bottom:1.2rem;}
+  .login-fi label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .login-fi input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:11px 14px;font-family:var(--fb);font-size:.95rem;outline:none;transition:border-color .2s;width:100%;}
+  .login-fi input:focus{border-color:var(--accent);}
+  .login-btn{width:100%;font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#fff;border:none;padding:12px;border-radius:var(--r);cursor:pointer;transition:all .2s;margin-top:.5rem;}
+  .login-btn:hover{opacity:.85;}
+  .login-err{font-family:var(--fm);font-size:.75rem;color:var(--danger);text-align:center;margin-top:.75rem;min-height:1rem;}
+  #app-screen{display:none;}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .logo span{color:var(--muted);font-weight:400;}
+  .vtag{font-family:var(--fm);font-size:.68rem;letter-spacing:2px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
+  .hright{display:flex;align-items:center;gap:1rem;}
+  .user-info{font-family:var(--fm);font-size:.72rem;color:var(--muted);}
+  .user-info strong{color:var(--accent);}
+  .bref{font-family:var(--fh);font-size:.9rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid var(--accent3);color:var(--accent3);padding:7px 16px;border-radius:var(--r);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+  .bref:hover{background:rgba(0,255,157,.08);}
+  .bref.loading .ri{animation:spin .8s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn-logout{font-family:var(--fm);font-size:.75rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:var(--r);cursor:pointer;text-transform:uppercase;transition:all .2s;}
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 1rem;overflow-x:auto;}
+  .tb{font-family:var(--fh);font-size:.9rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:none;border:none;color:var(--muted);padding:14px 20px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+  .tb:hover{color:var(--text);}
+  .tb.active{color:var(--accent);border-bottom:2px solid var(--accent);}
+  .tc{display:none;padding:2rem;max-width:1100px;margin:0 auto;}
+  .tc.active{display:block;}
+  .srow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;}
+  .sc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.4rem;}
+  .sl{font-family:var(--fm);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  .sv{font-family:var(--fh);font-size:2rem;font-weight:700;line-height:1;}
+  .purple{color:var(--accent);}.blue{color:var(--accent4);}.green{color:var(--accent3);}.orange{color:var(--accent2);}
+  .fbar{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.4rem;margin-bottom:1rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center;}
+  .si{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 14px;font-family:var(--fb);font-size:.88rem;outline:none;min-width:180px;flex:1;}
+  .si:focus{border-color:var(--accent);}
+  .sf{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 14px;font-family:var(--fb);font-size:.88rem;outline:none;cursor:pointer;}
+  .sf option{background:var(--surface2);}
+  .btn-export{font-family:var(--fh);font-size:.85rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:7px 16px;border-radius:var(--r);cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .btn-export:hover{background:rgba(255,107,53,.08);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .ctitle{font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);padding:1.2rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .ctitle::before{content:'';width:3px;height:16px;background:var(--accent);border-radius:2px;flex-shrink:0;}
+  .rc{margin-left:auto;font-family:var(--fm);font-size:.72rem;color:var(--muted);}
+  .tw{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;}
+  thead tr{background:var(--surface2);}
+  th{font-family:var(--fm);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 16px;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;}
+  th:hover{color:var(--text);}
+  th.sa::after{content:' ↑';color:var(--accent);}
+  th.sd::after{content:' ↓';color:var(--accent);}
+  td{padding:10px 16px;border-bottom:1px solid rgba(42,47,63,.5);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .ctrl{font-family:var(--fm);color:var(--accent);font-size:.78rem;}
+  .tag{font-family:var(--fm);font-size:.68rem;padding:3px 8px;border-radius:3px;letter-spacing:1px;white-space:nowrap;}
+  .tag-po{background:rgba(255,107,53,.12);color:var(--accent2);border:1px solid rgba(255,107,53,.2);}
+  .tag-ret{background:rgba(0,255,157,.1);color:var(--accent3);border:1px solid rgba(0,255,157,.2);}
+  .bal-pos{color:var(--accent3);font-family:var(--fm);font-weight:600;}
+  .bal-neg{color:var(--danger);font-family:var(--fm);font-weight:600;}
+  .bal-zero{color:var(--muted);font-family:var(--fm);}
+  .empty{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(13,15,20,.7);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+  .overlay.show{display:flex;}
+  .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+  .ltxt{font-family:var(--fm);font-size:.8rem;color:var(--accent);letter-spacing:2px;}
+  #toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent3);color:var(--text);padding:12px 20px;border-radius:var(--r);font-family:var(--fm);font-size:.82rem;opacity:0;transform:translateY(10px);transition:all .3s;z-index:999;pointer-events:none;max-width:320px;}
+  #toast.show{opacity:1;transform:translateY(0);}
+  #toast.err{border-left-color:var(--danger);}
+  @media(max-width:600px){header{padding:0 1rem;}.tb{padding:12px 12px;font-size:.78rem;}.tc{padding:1rem;}.srow{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay"><div class="spin"></div><div class="ltxt">LOADING...</div></div>
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Mat<span>Track</span></div>
+    <div class="login-sub">Materials Monitoring System</div>
+    <div class="login-tagline">Track. Monitor. Control.</div>
+    <div class="login-fi"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" autocomplete="username"/></div>
+    <div class="login-fi"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/></div>
+    <button class="login-btn" id="login-btn-el">Login</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+<div id="app-screen">
+  <header>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="logo">Mat<span>Track</span></div>
+      <span class="vtag">VIEWER</span>
+    </div>
+    <div class="hright">
+      <div class="user-info">Logged in as <strong id="display-name"></strong></div>
+      <button class="bref" id="rbtn"><span class="ri">↻</span> Refresh</button>
+      <button class="btn-logout" id="btn-logout">Logout</button>
+    </div>
+  </header>
+  <nav>
+    <button class="tb active" onclick="switchTab('t1',this)">Inventory</button>
+    <button class="tb" onclick="switchTab('t2',this)">Deliveries</button>
+    <button class="tb" onclick="switchTab('t3',this)">Pull Out / Return</button>
+    <button class="tb" onclick="switchTab('t4',this)">Summary</button>
+  </nav>
+
+  <!-- TAB 1: INVENTORY -->
+  <div id="t1" class="tc active">
+    <div class="fbar">
+      <input class="si" id="inv-s" placeholder="Search by material, control no..." oninput="renderInv()"/>
+      <button class="btn-export" onclick="exportCSV('inventory')">📥 Export</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Inventory Records <span class="rc" id="inv-rc"></span></div>
+      <div class="tw"><table id="inv-tbl">
+        <thead><tr>
+          <th onclick="sort('inv',0)">Control No.</th>
+          <th onclick="sort('inv',1)">Material</th>
+          <th onclick="sort('inv',2)">Quantity</th>
+          <th onclick="sort('inv',3)">Unit</th>
+          <th onclick="sort('inv',4)">Date</th>
+        </tr></thead>
+        <tbody id="inv-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- TAB 2: DELIVERIES -->
+  <div id="t2" class="tc">
+    <div class="srow">
+      <div class="sc"><div class="sl">Total Deliveries</div><div class="sv purple" id="s-del">—</div></div>
+      <div class="sc"><div class="sl">Total Materials</div><div class="sv blue" id="s-mat">—</div></div>
+    </div>
+    <div class="fbar">
+      <input class="si" id="del-s" placeholder="Search by material, supplier..." oninput="renderDel()"/>
+      <button class="btn-export" onclick="exportCSV('deliveries')">📥 Export</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Delivery Records <span class="rc" id="del-rc"></span></div>
+      <div class="tw"><table id="del-tbl">
+        <thead><tr>
+          <th onclick="sort('del',0)">Control No.</th>
+          <th onclick="sort('del',1)">Material</th>
+          <th onclick="sort('del',2)">Quantity</th>
+          <th onclick="sort('del',3)">Unit</th>
+          <th onclick="sort('del',4)">Date Delivered</th>
+          <th onclick="sort('del',5)">Supplier</th>
+        </tr></thead>
+        <tbody id="del-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: PULL OUT / RETURN -->
+  <div id="t3" class="tc">
+    <div class="fbar">
+      <input class="si" id="po-s" placeholder="Search by material, person..." oninput="renderPo()"/>
+      <select class="sf" id="po-f" onchange="renderPo()">
+        <option value="">All Types</option>
+        <option value="Pull Out">Pull Out</option>
+        <option value="Return">Return</option>
+      </select>
+      <button class="btn-export" onclick="exportCSV('pullouts')">📥 Export</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Pull Out / Return Records <span class="rc" id="po-rc"></span></div>
+      <div class="tw"><table id="po-tbl">
+        <thead><tr>
+          <th onclick="sort('po',0)">Control No.</th>
+          <th onclick="sort('po',1)">Material</th>
+          <th onclick="sort('po',2)">Quantity</th>
+          <th onclick="sort('po',3)">Unit</th>
+          <th onclick="sort('po',4)">Type</th>
+          <th onclick="sort('po',5)">Person</th>
+          <th onclick="sort('po',6)">Date</th>
+        </tr></thead>
+        <tbody id="po-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: SUMMARY -->
+  <div id="t4" class="tc">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;gap:1rem;">
+      <button class="btn-export" onclick="exportCSV('summary')">📥 Export</button>
+      <button class="bref" style="border-color:var(--accent);color:var(--accent)" onclick="renderSummary()"><span>↻</span> Recalculate</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Material Summary</div>
+      <div class="tw"><table>
+        <thead><tr>
+          <th>Material</th><th>Unit</th>
+          <th>Latest Inventory</th><th>Inventory Date</th>
+          <th>Delivered After</th><th>Net Pull Out</th><th>Balance</th>
+        </tr></thead>
+        <tbody id="sum-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const _apiKey = sessionStorage.getItem('st_api_key');
+if (!_apiKey) {
+  // Redirect to main index to enter API key
+  window.location.href = '../index.html';
+}
+const firebaseConfig = {
+  apiKey: _apiKey,
+  authDomain: "equiptrack-e1011.firebaseapp.com",
+  projectId: "equiptrack-e1011",
+  storageBucket: "equiptrack-e1011.firebasestorage.app",
+  messagingSenderId: "468749948486",
+  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
+};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+let materials=[],deliveries=[],inventory=[],pullouts=[];
+let ss={inv:{c:-1,a:true},del:{c:-1,a:true},po:{c:-1,a:true}};
+
+onAuthStateChanged(auth,async user=>{
+  if(user){
+    const snap=await getDoc(doc(db,'users',user.uid));
+    if(!snap.exists()){await signOut(auth);return;}
+    const data=snap.data();
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-screen').style.display='block';
+    document.getElementById('display-name').textContent=data.username||user.email;
+    await refreshAll();
+  }else{
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('app-screen').style.display='none';
+  }
+});
+
+document.getElementById('login-btn-el').addEventListener('click',async()=>{
+  const username=document.getElementById('login-user').value.trim();
+  const password=document.getElementById('login-pass').value;
+  const errEl=document.getElementById('login-err');
+  const btn=document.getElementById('login-btn-el');
+  errEl.textContent='';
+  if(!username||!password){errEl.textContent='Please enter username and password.';return;}
+  btn.textContent='Logging in...';btn.disabled=true;
+  try{await signInWithEmailAndPassword(auth,username.toLowerCase()+'@equiptrack.app',password);}
+  catch(e){
+    if(['auth/invalid-credential','auth/user-not-found','auth/wrong-password'].includes(e.code))errEl.textContent='Invalid username or password.';
+    else if(e.code==='auth/network-request-failed')errEl.textContent='Network error.';
+    else errEl.textContent='Login failed: '+e.message;
+  }finally{btn.textContent='Login';btn.disabled=false;}
+});
+
+document.getElementById('btn-logout').addEventListener('click',()=>signOut(auth));
+
+document.getElementById('rbtn').addEventListener('click',refreshAll);
+
+async function refreshAll(){
+  const btn=document.getElementById('rbtn'),ov=document.getElementById('overlay');
+  btn.classList.add('loading');ov.classList.add('show');
+  try{
+    const [mS,dS,iS,pS]=await Promise.all([getDocs(collection(db,'materials')),getDocs(collection(db,'deliveries')),getDocs(collection(db,'inventory')),getDocs(collection(db,'pullouts'))]);
+    materials=mS.docs.map(d=>({id:d.id,...d.data()}));
+    deliveries=dS.docs.map(d=>({id:d.id,...d.data()}));
+    inventory=iS.docs.map(d=>({id:d.id,...d.data()}));
+    pullouts=pS.docs.map(d=>({id:d.id,...d.data()}));
+    updateStats();renderInv();renderDel();renderPo();renderSummary();
+  }catch(e){toast('Failed to load data.',true);}
+  finally{btn.classList.remove('loading');ov.classList.remove('show');}
+}
+
+function updateStats(){
+  document.getElementById('s-del').textContent=deliveries.length;
+  document.getElementById('s-mat').textContent=new Set(deliveries.map(d=>d.material)).size;
+}
+
+window.switchTab=function(id,btn){
+  document.querySelectorAll('.tc').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='t4')renderSummary();
+};
+
+function toast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='show'+(err?' err':'');setTimeout(()=>t.className='',3500);}
+function fdate(d){if(!d)return'—';try{const dt=new Date(d);if(isNaN(dt))return d;return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}catch{return d;}}
+
+window.renderInv=function(){
+  const q=document.getElementById('inv-s').value.toLowerCase();
+  let d=inventory.filter(i=>[i.ctrl,i.material].join(' ').toLowerCase().includes(q));
+  const s=ss.inv;
+  if(s.c>=0){const k=['ctrl','material','quantity','unit','date'];d.sort((a,b)=>{const av=String(a[k[s.c]]||'').toLowerCase(),bv=String(b[k[s.c]]||'').toLowerCase();return s.a?av.localeCompare(bv):bv.localeCompare(av);});}
+  document.getElementById('inv-rc').textContent=d.length+' records';
+  const tb=document.getElementById('inv-tb');
+  if(!d.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  tb.innerHTML=d.map(i=>`<tr><td><span class="ctrl">${i.ctrl||'—'}</span></td><td>${i.material||'—'}</td><td>${i.quantity||'—'}</td><td>${i.unit||'—'}</td><td>${fdate(i.date)}</td></tr>`).join('');
+};
+
+window.renderDel=function(){
+  const q=document.getElementById('del-s').value.toLowerCase();
+  let d=deliveries.filter(i=>[i.ctrl,i.material,i.supplier].join(' ').toLowerCase().includes(q));
+  const s=ss.del;
+  if(s.c>=0){const k=['ctrl','material','quantity','unit','date','supplier'];d.sort((a,b)=>{const av=String(a[k[s.c]]||'').toLowerCase(),bv=String(b[k[s.c]]||'').toLowerCase();return s.a?av.localeCompare(bv):bv.localeCompare(av);});}
+  document.getElementById('del-rc').textContent=d.length+' records';
+  const tb=document.getElementById('del-tb');
+  if(!d.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  tb.innerHTML=d.map(i=>`<tr><td><span class="ctrl">${i.ctrl||'—'}</span></td><td>${i.material||'—'}</td><td>${i.quantity||'—'}</td><td>${i.unit||'—'}</td><td>${fdate(i.date)}</td><td>${i.supplier||'—'}</td></tr>`).join('');
+};
+
+window.renderPo=function(){
+  const q=document.getElementById('po-s').value.toLowerCase();
+  const f=document.getElementById('po-f').value;
+  let d=pullouts.filter(i=>[i.ctrl,i.material,i.person].join(' ').toLowerCase().includes(q)&&(!f||i.type===f));
+  const s=ss.po;
+  if(s.c>=0){const k=['ctrl','material','quantity','unit','type','person','date'];d.sort((a,b)=>{const av=String(a[k[s.c]]||'').toLowerCase(),bv=String(b[k[s.c]]||'').toLowerCase();return s.a?av.localeCompare(bv):bv.localeCompare(av);});}
+  document.getElementById('po-rc').textContent=d.length+' records';
+  const tb=document.getElementById('po-tb');
+  if(!d.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  tb.innerHTML=d.map(i=>`<tr><td><span class="ctrl">${i.ctrl||'—'}</span></td><td>${i.material||'—'}</td><td>${i.quantity||'—'}</td><td>${i.unit||'—'}</td><td><span class="tag ${i.type==='Pull Out'?'tag-po':'tag-ret'}">${i.type}</span></td><td>${i.person||'—'}</td><td>${fdate(i.date)}</td></tr>`).join('');
+};
+
+window.renderSummary=function(){
+  const tb=document.getElementById('sum-tb');
+  if(!materials.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO MATERIALS IN DATABASE</div></td></tr>';return;}
+  const rows=materials.map(m=>{
+    const matInv=inventory.filter(i=>i.material===m.name).sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const latestInv=matInv[0]||null;
+    const latestInvDate=latestInv?latestInv.date:null;
+    const latestInvQty=latestInv?parseFloat(latestInv.quantity):0;
+    const filteredDel=deliveries.filter(d=>d.material===m.name&&(!latestInvDate||d.date>latestInvDate));
+    const filteredPo=pullouts.filter(p=>p.material===m.name&&p.type==='Pull Out'&&(!latestInvDate||p.date>latestInvDate));
+    const filteredRet=pullouts.filter(p=>p.material===m.name&&p.type==='Return'&&(!latestInvDate||p.date>latestInvDate));
+    const totalDel=filteredDel.reduce((s,d)=>s+parseFloat(d.quantity||0),0);
+    const totalPo=filteredPo.reduce((s,p)=>s+parseFloat(p.quantity||0),0);
+    const totalRet=filteredRet.reduce((s,r)=>s+parseFloat(r.quantity||0),0);
+    const netPo=totalPo-totalRet;
+    const balance=latestInvQty+totalDel-netPo;
+    return{name:m.name,unit:m.unit,latestInvQty,latestInvDate,totalDel,netPo,balance};
+  });
+  tb.innerHTML=rows.map(r=>{
+    const bc=r.balance>0?'bal-pos':r.balance<0?'bal-neg':'bal-zero';
+    return`<tr><td>${r.name}</td><td><span style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${r.unit}</span></td><td>${r.latestInvQty>0||r.latestInvDate?r.latestInvQty:'—'}</td><td>${r.latestInvDate||'—'}</td><td>${r.totalDel}</td><td>${r.netPo}</td><td><span class="${bc}">${r.balance}</span></td></tr>`;
+  }).join('');
+};
+
+window.sort=function(key,col){
+  const s=ss[key];
+  if(s.c===col)s.a=!s.a;else{s.c=col;s.a=true;}
+  const tids={inv:'inv-tbl',del:'del-tbl',po:'po-tbl'};
+  document.getElementById(tids[key]).querySelectorAll('th').forEach((th,i)=>{th.classList.remove('sa','sd');if(i===col)th.classList.add(s.a?'sa':'sd');});
+  if(key==='inv')renderInv();else if(key==='del')renderDel();else renderPo();
+};
+
+window.exportCSV=function(type){
+  let headers=[],rows=[],filename='';
+  const today=new Date().toISOString().split('T')[0];
+  if(type==='inventory'){headers=['Control No','Material','Quantity','Unit','Date'];rows=inventory.map(i=>[i.ctrl,i.material,i.quantity,i.unit,i.date]);filename='Inventory_'+today+'.csv';}
+  else if(type==='deliveries'){headers=['Control No','Material','Quantity','Unit','Date Delivered','Supplier'];rows=deliveries.map(i=>[i.ctrl,i.material,i.quantity,i.unit,i.date,i.supplier||'']);filename='Deliveries_'+today+'.csv';}
+  else if(type==='pullouts'){headers=['Control No','Material','Quantity','Unit','Type','Person','Date'];rows=pullouts.map(i=>[i.ctrl,i.material,i.quantity,i.unit,i.type,i.person,i.date]);filename='PullOuts_'+today+'.csv';}
+  else if(type==='summary'){
+    headers=['Material','Unit','Latest Inventory','Inventory Date','Delivered After','Net Pull Out','Balance'];
+    rows=materials.map(m=>{
+      const matInv=inventory.filter(i=>i.material===m.name).sort((a,b)=>new Date(b.date)-new Date(a.date));
+      const li=matInv[0]||null;const lid=li?li.date:null;const liq=li?parseFloat(li.quantity):0;
+      const td=deliveries.filter(d=>d.material===m.name&&(!lid||d.date>lid)).reduce((s,d)=>s+parseFloat(d.quantity||0),0);
+      const tpo=pullouts.filter(p=>p.material===m.name&&p.type==='Pull Out'&&(!lid||p.date>lid)).reduce((s,p)=>s+parseFloat(p.quantity||0),0);
+      const tr=pullouts.filter(p=>p.material===m.name&&p.type==='Return'&&(!lid||p.date>lid)).reduce((s,r)=>s+parseFloat(r.quantity||0),0);
+      const np=tpo-tr;const bal=liq+td-np;
+      return[m.name,m.unit,liq>0||lid?liq:'',lid||'',td,np,bal];
+    });
+    filename='Summary_'+today+'.csv';
+  }
+  const csv=[headers,...rows].map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+  toast('Exported successfully!');
+};
+</script>
+</body>
+</html>

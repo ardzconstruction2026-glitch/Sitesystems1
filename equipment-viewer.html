@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EquipTrack — Viewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#0d0f14;--surface:#13161e;--surface2:#1a1e29;--border:#2a2f3f;
+    --accent:#00c2ff;--accent2:#ff6b35;--accent3:#00ff9d;
+    --text:#d0d8f0;--muted:#5a6180;--danger:#ff3b5c;--warn:#ffb800;
+    --r:6px;--fh:'Rajdhani',sans-serif;--fm:'Share Tech Mono',monospace;--fb:'Exo 2',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;
+    background-image:radial-gradient(ellipse at 80% 0%,rgba(0,255,157,.05) 0%,transparent 60%),
+    radial-gradient(ellipse at 20% 100%,rgba(0,194,255,.05) 0%,transparent 60%);}
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:100%;max-width:400px;}
+  .login-logo{font-family:var(--fh);font-size:1.8rem;font-weight:700;letter-spacing:3px;color:var(--accent3);text-transform:uppercase;text-align:center;margin-bottom:.25rem;}
+  .login-logo span{color:var(--muted);font-weight:400;}
+  .login-sub{font-family:var(--fm);font-size:.72rem;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:2rem;text-transform:uppercase;}
+  .login-fi{display:flex;flex-direction:column;gap:6px;margin-bottom:1.2rem;}
+  .login-fi label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .login-fi input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:11px 14px;font-family:var(--fb);font-size:.95rem;outline:none;transition:border-color .2s;}
+  .login-fi input:focus{border-color:var(--accent3);}
+  .login-btn{width:100%;font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent3);color:#000;border:none;padding:12px;border-radius:var(--r);cursor:pointer;transition:all .2s;margin-top:.5rem;}
+  .login-btn:hover{opacity:.85;}
+  .login-err{font-family:var(--fm);font-size:.75rem;color:var(--danger);text-align:center;margin-top:.75rem;letter-spacing:.5px;min-height:1rem;}
+  #app-screen{display:none;}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent3);text-transform:uppercase;}
+  .logo span{color:var(--muted);font-weight:400;}
+  .vtag{font-family:var(--fm);font-size:.68rem;letter-spacing:2px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
+  .hright{display:flex;align-items:center;gap:1rem;}
+  .user-info{font-family:var(--fm);font-size:.75rem;color:var(--muted);letter-spacing:1px;}
+  .user-info strong{color:var(--accent3);}
+  .btn-logout{font-family:var(--fm);font-size:.75rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:var(--r);cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s;}
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .bref{font-family:var(--fh);font-size:.9rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid var(--accent3);color:var(--accent3);padding:7px 20px;border-radius:var(--r);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;}
+  .bref:hover{background:rgba(0,255,157,.08);}
+  .bref.loading .ri{animation:spin .8s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  nav{display:flex;padding:0 2rem;background:var(--surface);border-bottom:1px solid var(--border);}
+  .tb{font-family:var(--fh);font-size:.95rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:none;border:none;color:var(--muted);padding:14px 28px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+  .tb:hover{color:var(--text);}
+  .tb.active{color:var(--accent3);border-bottom:2px solid var(--accent3);}
+  .tc{display:none;padding:2rem;max-width:1100px;margin:0 auto;}
+  .tc.active{display:block;}
+  .srow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;}
+  .sc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.4rem;}
+  .sl{font-family:var(--fm);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  .sv{font-family:var(--fh);font-size:2rem;font-weight:700;line-height:1;}
+  .blue{color:var(--accent);}.orange{color:var(--accent2);}.green{color:var(--accent3);}.red{color:var(--danger);}
+  .fbar{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.4rem;margin-bottom:1rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center;}
+  .si{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 14px;font-family:var(--fb);font-size:.88rem;outline:none;min-width:200px;flex:1;}
+  .si:focus{border-color:var(--accent3);}
+  .sf{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 14px;font-family:var(--fb);font-size:.88rem;outline:none;cursor:pointer;}
+  .sf option{background:var(--surface2);}
+  .btn-export{font-family:var(--fh);font-size:.85rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:7px 16px;border-radius:var(--r);cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .btn-export:hover{background:rgba(255,107,53,.08);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .ctitle{font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent3);padding:1.2rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .ctitle::before{content:'';width:3px;height:16px;background:var(--accent3);border-radius:2px;}
+  .rc{margin-left:auto;font-family:var(--fm);font-size:.72rem;color:var(--muted);}
+  .tw{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;}
+  thead tr{background:var(--surface2);}
+  th{font-family:var(--fm);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 16px;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;}
+  th:hover{color:var(--text);}
+  th.sa::after{content:' ↑';color:var(--accent3);}
+  th.sd::after{content:' ↓';color:var(--accent3);}
+  td{padding:10px 16px;border-bottom:1px solid rgba(42,47,63,.5);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .en{font-family:var(--fm);color:var(--accent);font-size:.85rem;}
+  .tag{font-family:var(--fm);font-size:.68rem;padding:3px 8px;border-radius:3px;letter-spacing:1px;white-space:nowrap;}
+  .tg{background:rgba(0,255,157,.1);color:var(--accent3);border:1px solid rgba(0,255,157,.2);}
+  .td2{background:rgba(255,59,92,.12);color:var(--danger);border:1px solid rgba(255,59,92,.3);}
+  .tr2{background:rgba(255,184,0,.12);color:var(--warn);border:1px solid rgba(255,184,0,.3);}
+  .tf{background:rgba(255,107,53,.12);color:var(--accent2);border:1px solid rgba(255,107,53,.3);}
+  .tm{background:rgba(90,97,128,.2);color:var(--muted);border:1px solid rgba(90,97,128,.3);}
+  .tout{background:rgba(255,107,53,.12);color:var(--accent2);border:1px solid rgba(255,107,53,.2);}
+  .tret{background:rgba(0,255,157,.1);color:var(--accent3);border:1px solid rgba(0,255,157,.2);}
+  .empty{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(13,15,20,.7);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+  .overlay.show{display:flex;}
+  .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent3);border-radius:50%;animation:spin .7s linear infinite;}
+  .ltxt{font-family:var(--fm);font-size:.8rem;color:var(--accent3);letter-spacing:2px;}
+  #toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent3);color:var(--text);padding:12px 20px;border-radius:var(--r);font-family:var(--fm);font-size:.82rem;opacity:0;transform:translateY(10px);transition:all .3s;z-index:999;pointer-events:none;max-width:320px;}
+  #toast.show{opacity:1;transform:translateY(0);}
+  #toast.err{border-left-color:var(--danger);}
+  @media(max-width:600px){header{padding:0 1rem;}.tb{padding:12px 14px;font-size:.8rem;}.tc{padding:1rem;}.srow{grid-template-columns:1fr 1fr;}}
+
+  /* DETAIL MODAL */
+  .dmodal-bg{display:none;position:fixed;inset:0;background:rgba(13,15,20,.85);z-index:300;align-items:center;justify-content:center;padding:1rem;}
+  .dmodal-bg.show{display:flex;}
+  .dmodal{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:2rem;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;}
+  .dmodal-title{font-family:var(--fh);font-size:1.2rem;font-weight:700;letter-spacing:2px;
+    text-transform:uppercase;color:var(--accent3);margin-bottom:1.5rem;padding-bottom:.75rem;
+    border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+  .dmodal-close{font-family:var(--fm);font-size:.8rem;color:var(--muted);cursor:pointer;
+    background:transparent;border:1px solid var(--border);padding:4px 10px;border-radius:4px;
+    transition:all .2s;text-transform:uppercase;letter-spacing:1px;}
+  .dmodal-close:hover{border-color:var(--danger);color:var(--danger);}
+  .dinfo-row{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;
+    border-bottom:1px solid rgba(42,47,63,.4);}
+  .dinfo-row:last-child{border-bottom:none;}
+  .dinfo-label{font-family:var(--fm);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .dinfo-val{font-family:var(--fb);font-size:.9rem;color:var(--text);}
+  .dhistory-title{font-family:var(--fh);font-size:.9rem;font-weight:700;letter-spacing:2px;
+    text-transform:uppercase;color:var(--accent);margin:1.2rem 0 .75rem;}
+  .history-item{display:flex;justify-content:space-between;align-items:center;
+    padding:.5rem .75rem;background:var(--surface2);border-radius:4px;margin-bottom:.4rem;}
+  .history-date{font-family:var(--fm);font-size:.72rem;color:var(--muted);}
+  tr.clickable{cursor:pointer;}
+  tr.clickable:hover td{background:rgba(0,255,157,.04);}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"><div class="spin"></div><div class="ltxt">LOADING...</div></div>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Equip<span>Track</span></div>
+    <div class="login-sub">Viewer Portal</div>
+    <div class="login-fi"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" autocomplete="username"/></div>
+    <div class="login-fi"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/></div>
+    <button class="login-btn" onclick="doLogin()">Login</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<div id="app-screen">
+  <header>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="logo">Equip<span>Track</span></div>
+      <span class="vtag">VIEWER</span>
+    </div>
+    <div class="hright">
+      <div class="user-info">Logged in as <strong id="display-name"></strong></div>
+      <button class="bref" id="rbtn" onclick="refreshAll()"><span class="ri">↻</span> Refresh</button>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+  <nav>
+    <button class="tb active" onclick="switchTab('t1',this)">Equipment Database</button>
+    <button class="tb" onclick="switchTab('t2',this)">Borrow Status</button>
+    <button class="tb" onclick="switchTab('t3',this)">Equipment Status</button>
+  </nav>
+
+  <!-- TAB 1 -->
+  <div id="t1" class="tc active">
+    <div class="srow">
+      <div class="sc"><div class="sl">Total Equipment</div><div class="sv blue" id="s-total">—</div></div>
+      <div class="sc"><div class="sl">Currently Borrowed</div><div class="sv orange" id="s-out">—</div></div>
+      <div class="sc"><div class="sl">Good Condition</div><div class="sv green" id="s-good">—</div></div>
+      <div class="sc"><div class="sl">Damaged / Repair</div><div class="sv red" id="s-dmg">—</div></div>
+    </div>
+    <div class="fbar">
+      <input class="si" id="eq-s" placeholder="Search by number, type, brand..." oninput="renderEquip()"/>
+      <select class="sf" id="eq-ft" onchange="renderEquip()"><option value="">All Types</option></select>
+      <button class="btn-export" onclick="exportExcel('equipment')">📥 Export Excel</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Equipment Records <span class="rc" id="eq-rc"></span></div>
+      <div class="tw"><table id="eq-tbl">
+        <thead><tr>
+          <th onclick="sort('eq',0)">Eq. No.</th>
+          <th onclick="sort('eq',1)">Type</th>
+          <th onclick="sort('eq',2)">Brand</th>
+          <th onclick="sort('eq',3)">Date of Log</th>
+          <th onclick="sort('eq',4)">Date Uploaded</th>
+        </tr></thead>
+        <tbody id="eq-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- TAB 2 -->
+  <div id="t2" class="tc">
+    <div class="fbar">
+      <input class="si" id="br-s" placeholder="Search by number, borrower, location..." oninput="renderBorrow()"/>
+      <select class="sf" id="br-f" onchange="renderBorrow()">
+        <option value="">All</option><option value="out">Currently Out</option><option value="returned">Returned</option>
+      </select>
+      <button class="btn-export" onclick="exportExcel('borrow')">📥 Export Excel</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Borrow Log <span class="rc" id="br-rc"></span></div>
+      <div class="tw"><table id="br-tbl">
+        <thead><tr>
+          <th onclick="sort('br',0)">Eq. No.</th>
+          <th onclick="sort('br',1)">Type</th>
+          <th onclick="sort('br',2)">Brand</th>
+          <th onclick="sort('br',3)">Borrower</th>
+          <th onclick="sort('br',4)">Date Borrowed</th>
+          <th onclick="sort('br',5)">Location</th>
+          <th onclick="sort('br',6)">Status</th>
+          <th onclick="sort('br',7)">Date Returned</th>
+        </tr></thead>
+        <tbody id="br-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- TAB 3 -->
+  <div id="t3" class="tc">
+    <div class="fbar">
+      <input class="si" id="st-s" placeholder="Search by number or status..." oninput="renderStatus()"/>
+      <select class="sf" id="st-f" onchange="renderStatus()">
+        <option value="">All Statuses</option>
+        <option>Good</option><option>Damaged</option>
+        <option>Under Repair</option><option>For Disposal</option><option>Missing</option>
+      </select>
+      <button class="btn-export" onclick="exportExcel('status')">📥 Export Excel</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Equipment Status <span class="rc" id="st-rc"></span></div>
+      <div class="tw"><table id="st-tbl">
+        <thead><tr>
+          <th onclick="sort('st',0)">Eq. No.</th>
+          <th onclick="sort('st',1)">Type</th>
+          <th onclick="sort('st',2)">Brand</th>
+          <th onclick="sort('st',3)">Status</th>
+          <th onclick="sort('st',4)">Last Updated</th>
+        </tr></thead>
+        <tbody id="st-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- DETAIL MODAL -->
+<div class="dmodal-bg" id="detail-modal">
+  <div class="dmodal">
+    <div class="dmodal-title">
+      <span id="dm-title">Equipment Details</span>
+      <button class="dmodal-close" id="dm-close">✕ Close</button>
+    </div>
+    <div id="dm-content"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const _apiKey = sessionStorage.getItem('st_api_key');
+if (!_apiKey) {
+  // Redirect to main index to enter API key
+  window.location.href = '../index.html';
+}
+const firebaseConfig = {
+  apiKey: _apiKey,
+  authDomain: "equiptrack-e1011.firebaseapp.com",
+  projectId: "equiptrack-e1011",
+  storageBucket: "equiptrack-e1011.firebasestorage.app",
+  messagingSenderId: "468749948486",
+  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+let equipData  = [], borrowData = [], statusData = [], equipMap = {};
+let ss = { eq:{c:-1,a:true}, br:{c:-1,a:true}, st:{c:-1,a:true} };
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    const snap = await getDoc(doc(db,'users',user.uid));
+    if (!snap.exists()) { await signOut(auth); return; }
+    const data = snap.data();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    document.getElementById('display-name').textContent = data.username || user.email;
+    await refreshAll();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+});
+
+window.doLogin = async function() {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  const errEl    = document.getElementById('login-err');
+  const btn      = document.querySelector('.login-btn');
+  errEl.textContent = '';
+  if (!username||!password) { errEl.textContent = 'Please enter username and password.'; return; }
+  btn.textContent = 'Logging in...';
+  btn.disabled = true;
+  try {
+    await signInWithEmailAndPassword(auth, username.toLowerCase()+'@equiptrack.app', password);
+  } catch(e) {
+    console.error('Login error:', e.code, e.message);
+    if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+      errEl.textContent = 'Invalid username or password.';
+    } else if (e.code === 'auth/network-request-failed') {
+      errEl.textContent = 'Network error. Check your connection.';
+    } else if (e.code === 'auth/too-many-requests') {
+      errEl.textContent = 'Too many attempts. Try again later.';
+    } else {
+      errEl.textContent = 'Login failed: ' + e.message;
+    }
+  } finally {
+    btn.textContent = 'Login';
+    btn.disabled = false;
+  }
+};
+
+window.doLogout = async function() { await signOut(auth); };
+
+window.refreshAll = async function() {
+  const btn = document.getElementById('rbtn');
+  const ov  = document.getElementById('overlay');
+  btn.classList.add('loading');
+  ov.classList.add('show');
+  try {
+    const [eSnap,bSnap,sSnap] = await Promise.all([
+      getDocs(collection(db,'equipment')),
+      getDocs(collection(db,'borrowLog')),
+      getDocs(collection(db,'statusLog')),
+    ]);
+    equipData  = eSnap.docs.map(d => ({id:d.id,...d.data()}));
+    borrowData = bSnap.docs.map(d => ({id:d.id,...d.data()}));
+    statusData = sSnap.docs.map(d => ({id:d.id,...d.data()}));
+    // Sort all status entries by date
+    statusData.sort((a,b) => new Date(a.date) - new Date(b.date));
+    equipMap   = {};
+    equipData.forEach(e => { equipMap[e.num] = e; });
+    populateTypeFilter();
+    renderEquip(); renderBorrow(); renderStatus(); updateStats();
+  } catch(e) { toast('Failed to load data.',true); }
+  finally { btn.classList.remove('loading'); ov.classList.remove('show'); }
+};
+
+function updateStats() {
+  document.getElementById('s-total').textContent = equipData.length;
+  document.getElementById('s-out').textContent   = borrowData.filter(b => b.returned!==true && b.returned!=='Yes').length;
+  const latest = {};
+  statusData.forEach(s => { latest[s.num] = s.status; }); // sorted asc, last wins = latest
+  const vals = Object.values(latest);
+  document.getElementById('s-good').textContent = vals.filter(x => x==='Good').length;
+  document.getElementById('s-dmg').textContent  = vals.filter(x => x==='Damaged'||x==='Under Repair').length;
+}
+
+function populateTypeFilter() {
+  const sel   = document.getElementById('eq-ft');
+  const types = [...new Set(equipData.map(e=>e.type).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All Types</option>' + types.map(t=>`<option>${t}</option>`).join('');
+}
+
+window.switchTab = function(id,btn) {
+  document.querySelectorAll('.tc').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+};
+
+function toast(msg,err=false) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show'+(err?' err':'');
+  setTimeout(()=>t.className='',3500);
+}
+
+function fdate(d) {
+  if(!d) return '—';
+  try { const dt=new Date(d); if(isNaN(dt)) return d;
+    return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+  catch { return d; }
+}
+
+window.renderEquip = function() {
+  const q  = document.getElementById('eq-s').value.toLowerCase();
+  const ft = document.getElementById('eq-ft').value;
+  let d = equipData.filter(e => [e.num,e.type,e.brand].join(' ').toLowerCase().includes(q) && (!ft||e.type===ft));
+  const s = ss.eq;
+  if(s.c>=0){ const k=['num','type','brand','dateLog','dateUpload'];
+    d.sort((a,b)=>{ const av=(String(a[k[s.c]]||'')).toLowerCase(),bv=(String(b[k[s.c]]||'')).toLowerCase();
+      return s.a?av.localeCompare(bv):bv.localeCompare(av); }); }
+  document.getElementById('eq-rc').textContent = d.length+' records';
+  const tb = document.getElementById('eq-tb');
+  if(!d.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  tb.innerHTML = d.map(e=>`<tr>
+    <td><span class="en">${e.num||'—'}</span></td>
+    <td>${e.type||'—'}</td><td>${e.brand||'—'}</td>
+    <td>${fdate(e.dateLog)}</td><td>${fdate(e.dateUpload)}</td>
+  </tr>`).join('');
+};
+
+window.renderBorrow = function() {
+  const q = document.getElementById('br-s').value.toLowerCase();
+  const f = document.getElementById('br-f').value;
+  let d = borrowData.filter(b => {
+    const eq  = equipMap[b.num]||{};
+    const m   = [b.num,b.borrower,b.location,eq.type,eq.brand].join(' ').toLowerCase().includes(q);
+    const ret = b.returned===true||b.returned==='Yes';
+    return m&&(!f||(f==='out'&&!ret)||(f==='returned'&&ret));
+  });
+  const s = ss.br;
+  if(s.c>=0){ d.sort((a,b)=>{
+    const ea=equipMap[a.num]||{},eb=equipMap[b.num]||{};
+    const cols=[[String(a.num||''),String(b.num||'')],[ea.type||'',eb.type||''],[ea.brand||'',eb.brand||''],
+      [a.borrower||'',b.borrower||''],[a.date||'',b.date||''],[a.location||'',b.location||''],
+      [String(a.returned),String(b.returned)],[a.returnDate||'',b.returnDate||'']];
+    const [av,bv]=cols[s.c];
+    return s.a?av.localeCompare(bv):bv.localeCompare(av);
+  }); }
+  document.getElementById('br-rc').textContent = d.length+' records';
+  const tb = document.getElementById('br-tb');
+  if(!d.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  tb.innerHTML = d.map(b=>{
+    const eq=equipMap[b.num]||{};
+    const ret=b.returned===true||b.returned==='Yes';
+    return `<tr>
+      <td><span class="en">${b.num||'—'}</span></td>
+      <td>${eq.type||'—'}</td><td>${eq.brand||'—'}</td>
+      <td>${b.borrower||'—'}</td><td>${fdate(b.date)}</td><td>${b.location||'—'}</td>
+      <td><span class="tag ${ret?'tret':'tout'}">${ret?'RETURNED':'OUT'}</span></td>
+      <td>${b.returnDate?`<span style="font-family:var(--fm);font-size:.8rem;color:var(--accent3)">${b.returnDate}</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+};
+
+window.renderStatus = function() {
+  const q = document.getElementById('st-s').value.toLowerCase();
+  const f = document.getElementById('st-f').value;
+
+  // Build latest status per equipment — compare dates properly
+  const latestMap = {};
+  statusData.forEach(s => {
+    if (!latestMap[s.num] || new Date(s.date) > new Date(latestMap[s.num].date)) {
+      latestMap[s.num] = s;
+    }
+  });
+  let d = Object.values(latestMap).filter(s => {
+    const eq = equipMap[s.num]||{};
+    return [s.num,eq.type,s.status].join(' ').toLowerCase().includes(q) && (!f||s.status.includes(f));
+  });
+
+  const st=ss.st;
+  if(st.c>=0){ d.sort((a,b)=>{
+    const ea=equipMap[a.num]||{},eb=equipMap[b.num]||{};
+    const cols=[[String(a.num||''),String(b.num||'')],[ea.type||'',eb.type||''],[ea.brand||'',eb.brand||''],
+      [a.status||'',b.status||''],[a.date||'',b.date||'']];
+    const [av,bv]=cols[st.c];
+    return st.a?av.localeCompare(bv):bv.localeCompare(av);
+  }); }
+
+  document.getElementById('st-rc').textContent = d.length+' records';
+  const tb = document.getElementById('st-tb');
+  if(!d.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+
+  const cls={'Good':'tg','Damaged':'td2','Under Repair':'tr2','For Disposal':'tf','Missing':'tm'};
+  tb.innerHTML = d.map(s=>{
+    const eq=equipMap[s.num]||{};
+    const tagClass = Object.keys(cls).find(k => s.status.includes(k)) ? cls[Object.keys(cls).find(k=>s.status.includes(k))] : 'tm';
+    return `<tr class="clickable" onclick="showEquipDetail('${s.num}')">
+      <td><span class="en">${s.num||'—'}</span></td>
+      <td>${eq.type||'—'}</td><td>${eq.brand||'—'}</td>
+      <td><span class="tag ${tagClass}">${s.status}</span></td>
+      <td>${fdate(s.date)}</td>
+    </tr>`;
+  }).join('');
+};
+
+// ── EQUIPMENT DETAIL POPUP ────────────────────────────────────
+window.showEquipDetail = function(num) {
+  const eq      = equipMap[num] || {};
+  const history = statusData.filter(s => s.num === num).sort((a,b) => new Date(b.date)-new Date(a.date));
+  const cls     = {'Good':'tg','Damaged':'td2','Under Repair':'tr2','For Disposal':'tf','Missing':'tm'};
+
+  const getTagClass = (status) => {
+    const k = Object.keys(cls).find(k => status.includes(k));
+    return k ? cls[k] : 'tm';
+  };
+
+  document.getElementById('dm-title').textContent = `${num} — Details`;
+  document.getElementById('dm-content').innerHTML = `
+    <div class="dinfo-row"><span class="dinfo-label">Equipment No.</span><span class="dinfo-val" style="font-family:var(--fm);color:var(--accent)">${num}</span></div>
+    <div class="dinfo-row"><span class="dinfo-label">Type</span><span class="dinfo-val">${eq.type||'—'}</span></div>
+    <div class="dinfo-row"><span class="dinfo-label">Brand</span><span class="dinfo-val">${eq.brand||'—'}</span></div>
+    <div class="dinfo-row"><span class="dinfo-label">Date of Log</span><span class="dinfo-val">${fdate(eq.dateLog)}</span></div>
+    <div class="dinfo-row"><span class="dinfo-label">Date Uploaded</span><span class="dinfo-val">${fdate(eq.dateUpload)}</span></div>
+    <div class="dhistory-title">Status History</div>
+    ${history.length ? history.map(h=>`
+      <div class="history-item">
+        <span class="tag ${getTagClass(h.status)}">${h.status}</span>
+        <span class="history-date">${fdate(h.date)}</span>
+      </div>`).join('') : '<div style="font-family:var(--fm);font-size:.78rem;color:var(--muted);text-align:center;padding:1rem">No status history</div>'}
+  `;
+  document.getElementById('detail-modal').classList.add('show');
+};
+
+window.sort = function(key,col){
+  const s=ss[key];
+  if(s.c===col) s.a=!s.a; else{s.c=col;s.a=true;}
+  const tids={eq:'eq-tbl',br:'br-tbl',st:'st-tbl'};
+  document.getElementById(tids[key]).querySelectorAll('th').forEach((th,i)=>{
+    th.classList.remove('sa','sd');
+    if(i===col) th.classList.add(s.a?'sa':'sd');
+  });
+  if(key==='eq') renderEquip();
+  else if(key==='br') renderBorrow();
+  else renderStatus();
+};
+
+// ── EXPORT TO EXCEL ───────────────────────────────────────────
+window.exportExcel = function(type) {
+  let rows = [], headers = [], filename = '';
+  if(type==='equipment'){
+    headers = ['Equipment Number','Type','Brand','Date of Log','Date Uploaded'];
+    rows = equipData.map(e=>[e.num,e.type,e.brand,e.dateLog,e.dateUpload]);
+    filename = 'Equipment_'+today()+'.csv';
+  } else if(type==='borrow'){
+    headers = ['Equipment Number','Type','Brand','Borrower','Date Borrowed','Location','Status','Date Returned'];
+    rows = borrowData.map(b=>{
+      const eq=equipMap[b.num]||{};
+      const ret=b.returned===true||b.returned==='Yes';
+      return [b.num,eq.type||'',eq.brand||'',b.borrower,b.date,b.location,ret?'Returned':'Out',b.returnDate||''];
+    });
+    filename = 'BorrowLog_'+today()+'.csv';
+  } else {
+    headers = ['Equipment Number','Type','Brand','Status','Last Updated'];
+    rows = statusData.map(s=>{ const eq=equipMap[s.num]||{};
+      return [s.num,eq.type||'',eq.brand||'',s.status,s.date]; });
+    filename = 'StatusLog_'+today()+'.csv';
+  }
+  const csv = [headers, ...rows].map(r => r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  toast('Exported successfully!');
+};
+
+function today(){ return new Date().toISOString().split('T')[0]; }
+
+// Wire modal close
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('dm-close').addEventListener('click', () => {
+    document.getElementById('detail-modal').classList.remove('show');
+  });
+  document.getElementById('detail-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('detail-modal'))
+      document.getElementById('detail-modal').classList.remove('show');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MatTrack — Master</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#0d0f14;--surface:#13161e;--surface2:#1a1e29;--border:#2a2f3f;--accent:#c084fc;--accent2:#ff6b35;--accent3:#00ff9d;--accent4:#00c2ff;--text:#d0d8f0;--muted:#5a6180;--danger:#ff3b5c;--warn:#ffb800;--r:6px;--fh:'Rajdhani',sans-serif;--fm:'Share Tech Mono',monospace;--fb:'Exo 2',sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;background-image:radial-gradient(ellipse at 20% 0%,rgba(192,132,252,.07) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(255,107,53,.04) 0%,transparent 60%);}
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:100%;max-width:420px;}
+  .login-logo{font-family:var(--fh);font-size:2rem;font-weight:700;letter-spacing:3px;color:var(--accent);text-transform:uppercase;text-align:center;margin-bottom:.2rem;}
+  .login-logo span{color:var(--muted);font-weight:400;}
+  .login-sub{font-family:var(--fm);font-size:.7rem;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:.5rem;text-transform:uppercase;}
+  .login-tagline{font-family:var(--fb);font-size:.82rem;color:var(--muted);text-align:center;margin-bottom:2rem;font-style:italic;}
+  .login-fi{display:flex;flex-direction:column;gap:6px;margin-bottom:1.2rem;}
+  .login-fi label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .login-fi input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:11px 14px;font-family:var(--fb);font-size:.95rem;outline:none;transition:border-color .2s;width:100%;}
+  .login-fi input:focus{border-color:var(--accent);}
+  .login-btn{width:100%;font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#fff;border:none;padding:12px;border-radius:var(--r);cursor:pointer;transition:all .2s;margin-top:.5rem;}
+  .login-btn:hover{opacity:.85;}
+  .login-err{font-family:var(--fm);font-size:.75rem;color:var(--danger);text-align:center;margin-top:.75rem;min-height:1rem;}
+  .access-denied{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1rem;text-align:center;padding:2rem;}
+  #app-screen{display:none;}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .logo span{color:var(--muted);font-weight:400;}
+  .vtag{font-family:var(--fm);font-size:.68rem;letter-spacing:2px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
+  .hright{display:flex;align-items:center;gap:1rem;}
+  .user-info{font-family:var(--fm);font-size:.72rem;color:var(--muted);}
+  .user-info strong{color:var(--accent);}
+  .bref{font-family:var(--fh);font-size:.9rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:7px 16px;border-radius:var(--r);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+  .bref:hover{background:rgba(255,107,53,.08);}
+  .bref.loading .ri{animation:spin .8s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn-logout{font-family:var(--fm);font-size:.75rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:var(--r);cursor:pointer;text-transform:uppercase;transition:all .2s;}
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 1rem;overflow-x:auto;}
+  .tb{font-family:var(--fh);font-size:.9rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:none;border:none;color:var(--muted);padding:14px 20px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+  .tb:hover{color:var(--text);}
+  .tb.active{color:var(--accent2);border-bottom:2px solid var(--accent2);}
+  .tc{display:none;padding:2rem;max-width:1100px;margin:0 auto;}
+  .tc.active{display:block;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.5rem;}
+  .ctitle{font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);padding:1.2rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .ctitle::before{content:'';width:3px;height:16px;background:var(--accent2);border-radius:2px;flex-shrink:0;}
+  .rcount{margin-left:auto;font-family:var(--fm);font-size:.72rem;color:var(--muted);}
+  .fbar{padding:1rem 1.4rem;border-bottom:1px solid var(--border);display:flex;gap:1rem;flex-wrap:wrap;}
+  .si{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 14px;font-family:var(--fb);font-size:.88rem;outline:none;flex:1;min-width:180px;}
+  .si:focus{border-color:var(--accent2);}
+  .tw{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;}
+  thead tr{background:var(--surface2);}
+  th{font-family:var(--fm);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 14px;text-align:left;white-space:nowrap;}
+  td{padding:8px 14px;border-bottom:1px solid rgba(42,47,63,.5);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  tr.editing td{background:rgba(192,132,252,.04);}
+  .iedit{background:var(--surface);border:1px solid var(--accent);border-radius:4px;color:var(--text);padding:5px 8px;font-family:var(--fb);font-size:.83rem;outline:none;width:100%;min-width:80px;}
+  .isel{background:var(--surface);border:1px solid var(--accent);border-radius:4px;color:var(--text);padding:5px 8px;font-family:var(--fb);font-size:.83rem;outline:none;width:100%;}
+  .acts{display:flex;gap:6px;align-items:center;white-space:nowrap;}
+  .btn-edit{font-family:var(--fm);font-size:.7rem;letter-spacing:1px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.3);color:var(--accent);padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+  .btn-edit:hover{background:rgba(192,132,252,.2);}
+  .btn-del{font-family:var(--fm);font-size:.7rem;letter-spacing:1px;background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.3);color:var(--danger);padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+  .btn-del:hover{background:rgba(255,59,92,.2);}
+  .btn-save{font-family:var(--fm);font-size:.7rem;letter-spacing:1px;background:rgba(0,255,157,.1);border:1px solid rgba(0,255,157,.3);color:var(--accent3);padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+  .btn-cancel{font-family:var(--fm);font-size:.7rem;letter-spacing:1px;background:rgba(90,97,128,.15);border:1px solid rgba(90,97,128,.3);color:var(--muted);padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+  .ctrl{font-family:var(--fm);color:var(--accent);font-size:.78rem;}
+  .tag{font-family:var(--fm);font-size:.68rem;padding:3px 8px;border-radius:3px;letter-spacing:1px;white-space:nowrap;}
+  .tag-po{background:rgba(255,107,53,.12);color:var(--accent2);border:1px solid rgba(255,107,53,.2);}
+  .tag-ret{background:rgba(0,255,157,.1);color:var(--accent3);border:1px solid rgba(0,255,157,.2);}
+  .empty{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(13,15,20,.85);z-index:300;align-items:center;justify-content:center;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2rem;max-width:400px;width:90%;text-align:center;}
+  .modal-icon{font-size:2.5rem;margin-bottom:1rem;}
+  .modal-title{font-family:var(--fh);font-size:1.2rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--danger);margin-bottom:.75rem;}
+  .modal-msg{font-family:var(--fb);font-size:.9rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.5;}
+  .modal-actions{display:flex;gap:1rem;justify-content:center;}
+  .btn-confirm{font-family:var(--fh);font-size:.9rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--danger);color:#fff;border:none;padding:10px 24px;border-radius:var(--r);cursor:pointer;}
+  .btn-cancel2{font-family:var(--fh);font-size:.9rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--border);padding:10px 24px;border-radius:var(--r);cursor:pointer;}
+  #toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent3);color:var(--text);padding:12px 20px;border-radius:var(--r);font-family:var(--fm);font-size:.82rem;opacity:0;transform:translateY(10px);transition:all .3s;z-index:999;pointer-events:none;max-width:320px;}
+  #toast.show{opacity:1;transform:translateY(0);}
+  #toast.err{border-left-color:var(--danger);}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(13,15,20,.7);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+  .overlay.show{display:flex;}
+  .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;}
+  .ltxt{font-family:var(--fm);font-size:.8rem;color:var(--accent2);letter-spacing:2px;}
+  @media(max-width:600px){header{padding:0 1rem;}.tb{padding:12px 12px;font-size:.78rem;}.tc{padding:1rem;}}
+  .btn-purge{font-family:var(--fh);font-size:.85rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+    background:rgba(255,59,92,.12);border:1px solid rgba(255,59,92,.4);color:var(--danger);
+    padding:7px 18px;border-radius:var(--r);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;}
+  .btn-purge:hover{background:rgba(255,59,92,.25);}
+  .purge-section{background:rgba(255,59,92,.05);border:1px solid rgba(255,59,92,.2);border-radius:8px;
+    padding:1.5rem 2rem;margin:2rem auto;max-width:1100px;display:flex;align-items:center;
+    justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+  .purge-info{font-family:var(--fm);font-size:.78rem;color:var(--muted);letter-spacing:.5px;}
+  .purge-info strong{color:var(--danger);}
+  .purge-modal{background:var(--surface);border:1px solid rgba(255,59,92,.4);border-radius:10px;
+    padding:2rem;max-width:440px;width:90%;text-align:center;}
+  .purge-confirm-input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+    color:var(--text);padding:10px 14px;font-family:var(--fm);font-size:.9rem;outline:none;
+    width:100%;margin-bottom:1rem;text-align:center;letter-spacing:2px;}
+  .purge-confirm-input:focus{border-color:var(--danger);}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay"><div class="spin"></div><div class="ltxt">LOADING...</div></div>
+<!-- PURGE MODAL -->
+<div class="modal-bg" id="purge-modal">
+  <div class="purge-modal">
+    <div class="modal-icon">🗑️</div>
+    <div style="font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--danger);margin-bottom:.75rem;">Purge All Data</div>
+    <div style="font-family:var(--fb);font-size:.88rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.6;">
+      This will permanently delete <strong style="color:var(--danger)">ALL</strong> records from Materials, Deliveries, Inventory and Pull Outs. This action <strong style="color:var(--danger)">cannot be undone</strong>.
+    </div>
+    <div style="font-family:var(--fm);font-size:.75rem;color:var(--muted);margin-bottom:.5rem;letter-spacing:1px;">Type <strong style="color:var(--danger)">PURGE</strong> to confirm</div>
+    <input class="purge-confirm-input" id="purge-input" placeholder="PURGE" autocomplete="off"/>
+    <div class="modal-actions">
+      <button class="btn-confirm" id="btn-purge-confirm">Purge All</button>
+      <button class="btn-cancel2" id="btn-purge-cancel">Cancel</button>
+    </div>
+    <div id="purge-progress" style="font-family:var(--fm);font-size:.75rem;color:var(--warn);margin-top:1rem;min-height:1rem;letter-spacing:1px;"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-icon">⚠️</div>
+    <div class="modal-title">Confirm Delete</div>
+    <div class="modal-msg" id="modal-msg">Are you sure?</div>
+    <div class="modal-actions">
+      <button class="btn-confirm" id="btn-confirm">Delete</button>
+      <button class="btn-cancel2" id="btn-cancel-modal">Cancel</button>
+    </div>
+  </div>
+</div>
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Mat<span>Track</span></div>
+    <div class="login-sub">Materials Monitoring System</div>
+    <div class="login-tagline">Admin Only — Master Portal</div>
+    <div class="login-fi"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" autocomplete="username"/></div>
+    <div class="login-fi"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/></div>
+    <button class="login-btn" id="login-btn-el">Login</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+<div id="app-screen">
+  <header>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="logo">Mat<span>Track</span></div>
+      <span class="vtag">MASTER</span>
+    </div>
+    <div class="hright">
+      <div class="user-info">Logged in as <strong id="display-name"></strong></div>
+      <button class="bref" id="rbtn"><span class="ri">↻</span> Refresh</button>
+      <button class="btn-logout" id="btn-logout">Logout</button>
+    </div>
+  </header>
+  <nav>
+    <button class="tb active" onclick="switchTab('t1',this)">Inventory</button>
+    <button class="tb" onclick="switchTab('t2',this)">Deliveries</button>
+    <button class="tb" onclick="switchTab('t3',this)">Pull Out / Return</button>
+    <button class="tb" onclick="switchTab('t4',this)">Material Database</button>
+  </nav>
+
+  <!-- PURGE SECTION -->
+  <div class="purge-section">
+    <div class="purge-info">
+      <strong>⚠ Danger Zone</strong> — Purge All Data permanently deletes every record in Materials, Deliveries, Inventory and Pull Outs.
+    </div>
+    <button class="btn-purge" id="btn-open-purge">🗑 Purge All Data</button>
+  </div>
+
+  <!-- TAB 1: INVENTORY -->
+  <div id="t1" class="tc active">
+    <div class="card">
+      <div class="ctitle">Inventory Records <span class="rcount" id="inv-rc"></span></div>
+      <div class="fbar"><input class="si" id="inv-s" placeholder="Search..." oninput="renderInv()"/></div>
+      <div class="tw"><table><thead><tr><th>Control No.</th><th>Material</th><th>Quantity</th><th>Unit</th><th>Date</th><th>Actions</th></tr></thead><tbody id="inv-tb"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- TAB 2: DELIVERIES -->
+  <div id="t2" class="tc">
+    <div class="card">
+      <div class="ctitle">Delivery Records <span class="rcount" id="del-rc"></span></div>
+      <div class="fbar"><input class="si" id="del-s" placeholder="Search..." oninput="renderDel()"/></div>
+      <div class="tw"><table><thead><tr><th>Control No.</th><th>Material</th><th>Quantity</th><th>Unit</th><th>Date</th><th>Supplier</th><th>Actions</th></tr></thead><tbody id="del-tb"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: PULL OUT / RETURN -->
+  <div id="t3" class="tc">
+    <div class="card">
+      <div class="ctitle">Pull Out / Return Records <span class="rcount" id="po-rc"></span></div>
+      <div class="fbar"><input class="si" id="po-s" placeholder="Search..." oninput="renderPo()"/></div>
+      <div class="tw"><table><thead><tr><th>Control No.</th><th>Material</th><th>Quantity</th><th>Unit</th><th>Type</th><th>Person</th><th>Date</th><th>Actions</th></tr></thead><tbody id="po-tb"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: MATERIAL DATABASE -->
+  <div id="t4" class="tc">
+    <div class="card">
+      <div class="ctitle">Material Database <span class="rcount" id="mat-rc"></span></div>
+      <div class="fbar"><input class="si" id="mat-s" placeholder="Search materials..." oninput="renderMats()"/></div>
+      <div class="tw"><table><thead><tr><th>Material Name</th><th>Unit</th><th>Actions</th></tr></thead><tbody id="mat-tb"></tbody></table></div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const _apiKey = sessionStorage.getItem('st_api_key');
+if (!_apiKey) {
+  // Redirect to main index to enter API key
+  window.location.href = '../index.html';
+}
+const firebaseConfig = {
+  apiKey: _apiKey,
+  authDomain: "equiptrack-e1011.firebaseapp.com",
+  projectId: "equiptrack-e1011",
+  storageBucket: "equiptrack-e1011.firebasestorage.app",
+  messagingSenderId: "468749948486",
+  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
+};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+let materials=[],deliveries=[],inventory=[],pullouts=[],pendingDelete=null;
+
+onAuthStateChanged(auth,async user=>{
+  if(user){
+    const snap=await getDoc(doc(db,'users',user.uid));
+    if(!snap.exists()){await signOut(auth);return;}
+    const data=snap.data();
+    if(data.role!=='admin'){
+      document.getElementById('login-screen').innerHTML=`<div class="access-denied"><h2 style="font-family:var(--fh);font-size:1.5rem;color:var(--danger);letter-spacing:2px;">Access Denied</h2><p style="font-family:var(--fm);font-size:.82rem;color:var(--muted);">Admin only.</p></div>`;
+      document.getElementById('login-screen').style.display='flex';return;
+    }
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-screen').style.display='block';
+    document.getElementById('display-name').textContent=data.username||user.email;
+    await loadAll();
+  }else{
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('app-screen').style.display='none';
+  }
+});
+
+document.getElementById('login-btn-el').addEventListener('click',async()=>{
+  const username=document.getElementById('login-user').value.trim();
+  const password=document.getElementById('login-pass').value;
+  const errEl=document.getElementById('login-err');
+  const btn=document.getElementById('login-btn-el');
+  errEl.textContent='';
+  if(!username||!password){errEl.textContent='Please enter username and password.';return;}
+  btn.textContent='Logging in...';btn.disabled=true;
+  try{await signInWithEmailAndPassword(auth,username.toLowerCase()+'@equiptrack.app',password);}
+  catch(e){
+    if(['auth/invalid-credential','auth/user-not-found','auth/wrong-password'].includes(e.code))errEl.textContent='Invalid username or password.';
+    else if(e.code==='auth/network-request-failed')errEl.textContent='Network error.';
+    else errEl.textContent='Login failed: '+e.message;
+  }finally{btn.textContent='Login';btn.disabled=false;}
+});
+
+document.getElementById('btn-logout').addEventListener('click',()=>signOut(auth));
+document.getElementById('rbtn').addEventListener('click',loadAll);
+
+document.getElementById('btn-confirm').addEventListener('click',()=>{
+  document.getElementById('modal').classList.remove('show');
+  if(pendingDelete)pendingDelete();
+  pendingDelete=null;
+});
+document.getElementById('btn-cancel-modal').addEventListener('click',()=>{
+  document.getElementById('modal').classList.remove('show');
+  pendingDelete=null;
+});
+
+// ── PURGE ─────────────────────────────────────────────────────
+document.getElementById('btn-open-purge').addEventListener('click', () => {
+  document.getElementById('purge-input').value = '';
+  document.getElementById('purge-progress').textContent = '';
+  document.getElementById('purge-modal').classList.add('show');
+});
+
+document.getElementById('btn-purge-cancel').addEventListener('click', () => {
+  document.getElementById('purge-modal').classList.remove('show');
+});
+
+document.getElementById('btn-purge-confirm').addEventListener('click', async () => {
+  const input = document.getElementById('purge-input').value.trim();
+  if (input !== 'PURGE') {
+    document.getElementById('purge-progress').textContent = 'Please type PURGE to confirm.';
+    return;
+  }
+  const progress = document.getElementById('purge-progress');
+  const btn      = document.getElementById('btn-purge-confirm');
+  btn.disabled   = true;
+  btn.textContent = 'Purging...';
+
+  const collections = ['materials','deliveries','inventory','pullouts'];
+  let total = 0;
+
+  for (const col of collections) {
+    try {
+      progress.textContent = `Purging ${col}...`;
+      const snap = await getDocs(collection(db, col));
+      for (const d of snap.docs) {
+        await deleteDoc(doc(db, col, d.id));
+        total++;
+      }
+    } catch(e) {
+      progress.textContent = `Error purging ${col}: ${e.message}`;
+      btn.disabled = false; btn.textContent = 'Purge All';
+      return;
+    }
+  }
+
+  document.getElementById('purge-modal').classList.remove('show');
+  toast(`Purge complete — ${total} records deleted.`);
+  await loadAll();
+  btn.disabled = false; btn.textContent = 'Purge All';
+});
+
+async function loadAll(){
+  const btn=document.getElementById('rbtn'),ov=document.getElementById('overlay');
+  btn.classList.add('loading');ov.classList.add('show');
+  try{
+    const [mS,dS,iS,pS]=await Promise.all([getDocs(collection(db,'materials')),getDocs(collection(db,'deliveries')),getDocs(collection(db,'inventory')),getDocs(collection(db,'pullouts'))]);
+    materials=mS.docs.map(d=>({id:d.id,...d.data()}));
+    deliveries=dS.docs.map(d=>({id:d.id,...d.data()}));
+    inventory=iS.docs.map(d=>({id:d.id,...d.data()}));
+    pullouts=pS.docs.map(d=>({id:d.id,...d.data()}));
+    renderInv();renderDel();renderPo();renderMats();
+  }catch(e){toast('Failed to load.',true);}
+  finally{btn.classList.remove('loading');ov.classList.remove('show');}
+}
+
+window.switchTab=function(id,btn){
+  document.querySelectorAll('.tc').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+};
+
+function toast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='show'+(err?' err':'');setTimeout(()=>t.className='',3500);}
+function fdate(d){if(!d)return'—';try{const dt=new Date(d);if(isNaN(dt))return d;return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}catch{return d;}}
+function v(id){return document.getElementById(id).value.trim();}
+
+function showModal(msg,cb){document.getElementById('modal-msg').textContent=msg;pendingDelete=cb;document.getElementById('modal').classList.add('show');}
+
+// ── INVENTORY ─────────────────────────────────────────────────
+window.renderInv=function(){
+  const q=document.getElementById('inv-s').value.toLowerCase();
+  const d=inventory.filter(i=>[i.ctrl,i.material].join(' ').toLowerCase().includes(q));
+  document.getElementById('inv-rc').textContent=d.length+' records';
+  const tb=document.getElementById('inv-tb');
+  if(!d.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  tb.innerHTML=d.map((i,idx)=>`<tr id="inv-row-${idx}">
+    <td><span class="ctrl">${i.ctrl||'—'}</span></td>
+    <td>${i.material||'—'}</td><td>${i.quantity||'—'}</td><td>${i.unit||'—'}</td><td>${fdate(i.date)}</td>
+    <td><div class="acts">
+      <button class="btn-edit" onclick="editInv(${idx})">✏ Edit</button>
+      <button class="btn-del" onclick="deleteInv(${idx})">✕ Delete</button>
+    </div></td></tr>`).join('');
+};
+
+window.editInv=function(idx){
+  const i=inventory[idx],row=document.getElementById('inv-row-'+idx);
+  row.classList.add('editing');
+  row.innerHTML=`<td><input class="iedit" id="inv-e-ctrl-${idx}" value="${i.ctrl||''}"/></td>
+    <td><input class="iedit" id="inv-e-mat-${idx}" value="${i.material||''}"/></td>
+    <td><input class="iedit" id="inv-e-qty-${idx}" type="number" value="${i.quantity||''}"/></td>
+    <td><input class="iedit" id="inv-e-unit-${idx}" value="${i.unit||''}"/></td>
+    <td><input class="iedit" id="inv-e-date-${idx}" type="date" value="${i.date||''}"/></td>
+    <td><div class="acts">
+      <button class="btn-save" onclick="saveInv(${idx})">✔ Save</button>
+      <button class="btn-cancel" onclick="renderInv()">✕ Cancel</button>
+    </div></td>`;
+};
+
+window.saveInv=async function(idx){
+  const i=inventory[idx];
+  const ctrl=v('inv-e-ctrl-'+idx),material=v('inv-e-mat-'+idx),quantity=document.getElementById('inv-e-qty-'+idx).value,unit=v('inv-e-unit-'+idx),date=v('inv-e-date-'+idx);
+  if(!material||!quantity||!date){toast('All fields required.',true);return;}
+  try{
+    await updateDoc(doc(db,'inventory',i.id),{ctrl,material,quantity:parseFloat(quantity),unit,date});
+    inventory[idx]={...i,ctrl,material,quantity:parseFloat(quantity),unit,date};
+    toast('Inventory updated!');renderInv();
+  }catch(e){toast('Error: '+e.message,true);}
+};
+
+window.deleteInv=function(idx){
+  const i=inventory[idx];
+  showModal(`Delete inventory record for "${i.material}"?`,async()=>{
+    try{await deleteDoc(doc(db,'inventory',i.id));inventory.splice(idx,1);toast('Deleted.');renderInv();}
+    catch(e){toast('Error: '+e.message,true);}
+  });
+};
+
+// ── DELIVERIES ────────────────────────────────────────────────
+window.renderDel=function(){
+  const q=document.getElementById('del-s').value.toLowerCase();
+  const d=deliveries.filter(i=>[i.ctrl,i.material,i.supplier].join(' ').toLowerCase().includes(q));
+  document.getElementById('del-rc').textContent=d.length+' records';
+  const tb=document.getElementById('del-tb');
+  if(!d.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  tb.innerHTML=d.map((i,idx)=>`<tr id="del-row-${idx}">
+    <td><span class="ctrl">${i.ctrl||'—'}</span></td>
+    <td>${i.material||'—'}</td><td>${i.quantity||'—'}</td><td>${i.unit||'—'}</td><td>${fdate(i.date)}</td><td>${i.supplier||'—'}</td>
+    <td><div class="acts">
+      <button class="btn-edit" onclick="editDel(${idx})">✏ Edit</button>
+      <button class="btn-del" onclick="deleteDel(${idx})">✕ Delete</button>
+    </div></td></tr>`).join('');
+};
+
+window.editDel=function(idx){
+  const i=deliveries[idx],row=document.getElementById('del-row-'+idx);
+  row.classList.add('editing');
+  row.innerHTML=`<td><input class="iedit" id="de-ctrl-${idx}" value="${i.ctrl||''}"/></td>
+    <td><input class="iedit" id="de-mat-${idx}" value="${i.material||''}"/></td>
+    <td><input class="iedit" id="de-qty-${idx}" type="number" value="${i.quantity||''}"/></td>
+    <td><input class="iedit" id="de-unit-${idx}" value="${i.unit||''}"/></td>
+    <td><input class="iedit" id="de-date-${idx}" type="date" value="${i.date||''}"/></td>
+    <td><input class="iedit" id="de-sup-${idx}" value="${i.supplier||''}"/></td>
+    <td><div class="acts">
+      <button class="btn-save" onclick="saveDel(${idx})">✔ Save</button>
+      <button class="btn-cancel" onclick="renderDel()">✕ Cancel</button>
+    </div></td>`;
+};
+
+window.saveDel=async function(idx){
+  const i=deliveries[idx];
+  const ctrl=v('de-ctrl-'+idx),material=v('de-mat-'+idx),quantity=document.getElementById('de-qty-'+idx).value,unit=v('de-unit-'+idx),date=v('de-date-'+idx),supplier=v('de-sup-'+idx);
+  if(!material||!quantity||!date){toast('All fields required.',true);return;}
+  try{
+    await updateDoc(doc(db,'deliveries',i.id),{ctrl,material,quantity:parseFloat(quantity),unit,date,supplier});
+    deliveries[idx]={...i,ctrl,material,quantity:parseFloat(quantity),unit,date,supplier};
+    toast('Delivery updated!');renderDel();
+  }catch(e){toast('Error: '+e.message,true);}
+};
+
+window.deleteDel=function(idx){
+  const i=deliveries[idx];
+  showModal(`Delete delivery record for "${i.material}"?`,async()=>{
+    try{await deleteDoc(doc(db,'deliveries',i.id));deliveries.splice(idx,1);toast('Deleted.');renderDel();}
+    catch(e){toast('Error: '+e.message,true);}
+  });
+};
+
+// ── PULL OUT / RETURN ─────────────────────────────────────────
+window.renderPo=function(){
+  const q=document.getElementById('po-s').value.toLowerCase();
+  const d=pullouts.filter(i=>[i.ctrl,i.material,i.person].join(' ').toLowerCase().includes(q));
+  document.getElementById('po-rc').textContent=d.length+' records';
+  const tb=document.getElementById('po-tb');
+  if(!d.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  tb.innerHTML=d.map((i,idx)=>`<tr id="po-row-${idx}">
+    <td><span class="ctrl">${i.ctrl||'—'}</span></td>
+    <td>${i.material||'—'}</td><td>${i.quantity||'—'}</td><td>${i.unit||'—'}</td>
+    <td><span class="tag ${i.type==='Pull Out'?'tag-po':'tag-ret'}">${i.type}</span></td>
+    <td>${i.person||'—'}</td><td>${fdate(i.date)}</td>
+    <td><div class="acts">
+      <button class="btn-edit" onclick="editPo(${idx})">✏ Edit</button>
+      <button class="btn-del" onclick="deletePo(${idx})">✕ Delete</button>
+    </div></td></tr>`).join('');
+};
+
+window.editPo=function(idx){
+  const i=pullouts[idx],row=document.getElementById('po-row-'+idx);
+  row.classList.add('editing');
+  row.innerHTML=`<td><input class="iedit" id="po-ctrl-${idx}" value="${i.ctrl||''}"/></td>
+    <td><input class="iedit" id="po-mat-${idx}" value="${i.material||''}"/></td>
+    <td><input class="iedit" id="po-qty-${idx}" type="number" value="${i.quantity||''}"/></td>
+    <td><input class="iedit" id="po-unit-${idx}" value="${i.unit||''}"/></td>
+    <td><select class="isel" id="po-type-${idx}">
+      <option ${i.type==='Pull Out'?'selected':''}>Pull Out</option>
+      <option ${i.type==='Return'?'selected':''}>Return</option>
+    </select></td>
+    <td><input class="iedit" id="po-person-${idx}" value="${i.person||''}"/></td>
+    <td><input class="iedit" id="po-date-${idx}" type="date" value="${i.date||''}"/></td>
+    <td><div class="acts">
+      <button class="btn-save" onclick="savePo(${idx})">✔ Save</button>
+      <button class="btn-cancel" onclick="renderPo()">✕ Cancel</button>
+    </div></td>`;
+};
+
+window.savePo=async function(idx){
+  const i=pullouts[idx];
+  const ctrl=v('po-ctrl-'+idx),material=v('po-mat-'+idx),quantity=document.getElementById('po-qty-'+idx).value,unit=v('po-unit-'+idx),type=document.getElementById('po-type-'+idx).value,person=v('po-person-'+idx),date=v('po-date-'+idx);
+  if(!material||!quantity||!type||!person||!date){toast('All fields required.',true);return;}
+  try{
+    await updateDoc(doc(db,'pullouts',i.id),{ctrl,material,quantity:parseFloat(quantity),unit,type,person,date});
+    pullouts[idx]={...i,ctrl,material,quantity:parseFloat(quantity),unit,type,person,date};
+    toast('Record updated!');renderPo();
+  }catch(e){toast('Error: '+e.message,true);}
+};
+
+window.deletePo=function(idx){
+  const i=pullouts[idx];
+  showModal(`Delete ${i.type} record for "${i.material}"?`,async()=>{
+    try{await deleteDoc(doc(db,'pullouts',i.id));pullouts.splice(idx,1);toast('Deleted.');renderPo();}
+    catch(e){toast('Error: '+e.message,true);}
+  });
+};
+
+// ── MATERIAL DATABASE ──────────────────────────────────────────
+window.renderMats=function(){
+  const q=document.getElementById('mat-s').value.toLowerCase();
+  const d=materials.filter(m=>[m.name,m.unit].join(' ').toLowerCase().includes(q));
+  document.getElementById('mat-rc').textContent=d.length+' records';
+  const tb=document.getElementById('mat-tb');
+  if(!d.length){tb.innerHTML='<tr><td colspan="3"><div class="empty">NO MATERIALS FOUND</div></td></tr>';return;}
+  tb.innerHTML=d.map((m,idx)=>`<tr id="mat-row-${idx}">
+    <td>${m.name||'—'}</td>
+    <td><span style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${m.unit||'—'}</span></td>
+    <td><div class="acts">
+      <button class="btn-edit" onclick="editMat(${idx})">✏ Edit</button>
+      <button class="btn-del" onclick="deleteMat(${idx})">✕ Delete</button>
+    </div></td></tr>`).join('');
+};
+
+window.editMat=function(idx){
+  const m=materials[idx],row=document.getElementById('mat-row-'+idx);
+  row.classList.add('editing');
+  row.innerHTML=`<td><input class="iedit" id="mat-e-name-${idx}" value="${m.name||''}"/></td>
+    <td><input class="iedit" id="mat-e-unit-${idx}" value="${m.unit||''}"/></td>
+    <td><div class="acts">
+      <button class="btn-save" onclick="saveMat(${idx})">✔ Save</button>
+      <button class="btn-cancel" onclick="renderMats()">✕ Cancel</button>
+    </div></td>`;
+};
+
+window.saveMat=async function(idx){
+  const m=materials[idx];
+  const name=v('mat-e-name-'+idx),unit=v('mat-e-unit-'+idx);
+  if(!name||!unit){toast('All fields required.',true);return;}
+  try{
+    await updateDoc(doc(db,'materials',m.id),{name,unit});
+    materials[idx]={...m,name,unit};
+    toast('Material updated!');renderMats();
+  }catch(e){toast('Error: '+e.message,true);}
+};
+
+window.deleteMat=function(idx){
+  const m=materials[idx];
+  showModal(`Delete material "${m.name}"? This cannot be undone.`,async()=>{
+    try{await deleteDoc(doc(db,'materials',m.id));materials.splice(idx,1);toast('Material deleted.');renderMats();}
+    catch(e){toast('Error: '+e.message,true);}
+  });
+};
+</script>
+</body>
+</html>
