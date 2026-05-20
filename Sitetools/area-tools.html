@@ -798,24 +798,21 @@ window.runTileCalc = function(){
 
   for(let gx = startX; gx < maxX + stepX; gx += stepX){
     for(let gy = startY; gy < maxY + stepY; gy += stepY){
-      const tile = {x:gx, y:gy, w:tileW, h:tileH};
-      const status = getTileStatus(tile, polyPts);
       if(status === 'full'){
         fullTiles++;
-        tileRects.push({...tile, type:'full'});
+        tileRects.push({x:gx, y:gy, w:tileW, h:tileH, type:'full'});
       } else if(status === 'cut'){
-        cutPositions.push({...tile, type:'cut'});
-        tileRects.push({...tile, type:'cut'});
+        const tileObj = {x:gx, y:gy, w:tileW, h:tileH, type:'cut'};
+        tileRects.push(tileObj);
+        cutPositions.push(tileObj); // same reference
       }
-      // 'outside' tiles are ignored
     }
   }
 
   // Cut piece reuse logic
-  // For each cut tile, compute the needed piece dimensions
-  const neededPieces = cutPositions.map((t,idx) => {
+  const neededPieces = cutPositions.map((t, idx) => {
     const inter = getIntersectionBounds(t, polyPts);
-    return { idx, needW: inter.w, needH: inter.h, tileRectIdx: tileRects.indexOf(t) };
+    return { idx, needW: inter.w, needH: inter.h, tileObj: t };
   });
 
   // Available offcuts — track source tile number for labeling
@@ -830,32 +827,24 @@ window.runTileCalc = function(){
   for(const piece of neededPieces){
     const fitIdx = findFittingOffcut(offcuts, piece.needW, piece.needH, tileW, tileH);
     if(fitIdx >= 0){
-      // Reuse offcut — assign same source label
       const used = offcuts.splice(fitIdx, 1)[0];
-      cutLabels[piece.tileRectIdx] = used.sourceLabel;
+      piece.tileObj.label = used.sourceLabel; // assign directly to object
       reusedCount++;
-      // New offcuts from trimming
       const newOffcutW = used.w - piece.needW;
       const newOffcutH = used.h - piece.needH;
       if(newOffcutW > 0.01) offcuts.push({w:newOffcutW, h:used.h, sourceLabel:used.sourceLabel});
       if(newOffcutH > 0.01) offcuts.push({w:piece.needW, h:newOffcutH, sourceLabel:used.sourceLabel});
     } else {
-      // New tile needed — assign new label
       cutTilesNeeded++;
       sourceTileCounter++;
       const label = 'C' + sourceTileCounter;
-      cutLabels[piece.tileRectIdx] = label;
+      piece.tileObj.label = label; // assign directly to object
       const offcutW = tileW - piece.needW;
       const offcutH = tileH - piece.needH;
       if(offcutW > 0.01) offcuts.push({w:offcutW, h:tileH, sourceLabel:label});
       if(offcutH > 0.01) offcuts.push({w:piece.needW, h:offcutH, sourceLabel:label});
     }
   }
-
-  // Assign labels back to tileRects
-  tileRects.forEach((t, i) => {
-    if(t.type === 'cut') t.label = cutLabels[i] || '?';
-  });
 
   const totalPurchase = fullTiles + cutTilesNeeded;
   const tileArea  = tileW * tileH;
