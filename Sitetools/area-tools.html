@@ -302,6 +302,43 @@
             <div id="grout-input-row" style="margin-bottom:1rem;">
               <div class="fi"><label>Grout Gap (cm)</label><input type="number" id="grout-size" value="0.3" min="0" step="0.1"/></div>
             </div>
+
+            <!-- GRID ORIGIN -->
+            <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem;">
+              <div style="font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">
+                Grid Origin — relative to Start Point
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="fi">
+                  <label>Horizontal (X)</label>
+                  <div style="display:flex;gap:.5rem;align-items:center;">
+                    <div style="display:flex;gap:4px;">
+                      <button class="arr-btn" id="ox-left"  onclick="setOriginDir('x','W')" style="width:36px;height:36px;font-size:1.1rem">←</button>
+                      <button class="arr-btn" id="ox-right" onclick="setOriginDir('x','E')" style="width:36px;height:36px;font-size:1.1rem">→</button>
+                    </div>
+                    <input type="number" id="origin-x" value="0" min="0" step="0.01" style="flex:1"/>
+                    <span style="font-family:var(--fm);font-size:.72rem;color:var(--muted)">m</span>
+                  </div>
+                  <input type="hidden" id="origin-x-dir" value="E"/>
+                </div>
+                <div class="fi">
+                  <label>Vertical (Y)</label>
+                  <div style="display:flex;gap:.5rem;align-items:center;">
+                    <div style="display:flex;gap:4px;">
+                      <button class="arr-btn" id="oy-up"   onclick="setOriginDir('y','N')" style="width:36px;height:36px;font-size:1.1rem">↑</button>
+                      <button class="arr-btn" id="oy-down" onclick="setOriginDir('y','S')" style="width:36px;height:36px;font-size:1.1rem">↓</button>
+                    </div>
+                    <input type="number" id="origin-y" value="0" min="0" step="0.01" style="flex:1"/>
+                    <span style="font-family:var(--fm);font-size:.72rem;color:var(--muted)">m</span>
+                  </div>
+                  <input type="hidden" id="origin-y-dir" value="N"/>
+                </div>
+              </div>
+              <div style="font-family:var(--fm);font-size:.68rem;color:var(--muted);margin-top:.5rem;">
+                A tile corner will be placed at this offset from the polygon start point.
+              </div>
+            </div>
+
             <button class="bp" onclick="runTileCalc()" style="width:100%">⬛ Calculate Tiles</button>
           </div>
 
@@ -456,6 +493,25 @@ window.setDir = function(dir){
     document.getElementById('arr-'+d).classList.toggle('active', d===dir);
   });
 };
+
+// ── ORIGIN DIRECTION ─────────────────────────────────────────
+window.setOriginDir = function(axis, dir) {
+  if(axis === 'x') {
+    document.getElementById('origin-x-dir').value = dir;
+    document.getElementById('ox-left').classList.toggle('active',  dir === 'W');
+    document.getElementById('ox-right').classList.toggle('active', dir === 'E');
+  } else {
+    document.getElementById('origin-y-dir').value = dir;
+    document.getElementById('oy-up').classList.toggle('active',   dir === 'N');
+    document.getElementById('oy-down').classList.toggle('active', dir === 'S');
+  }
+};
+
+// Init origin direction buttons
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('ox-right').classList.add('active');
+  document.getElementById('oy-up').classList.add('active');
+});
 
 // ── SEGMENTS ─────────────────────────────────────────────────
 window.addSegment = function(){
@@ -777,19 +833,24 @@ window.runTileCalc = function(){
   // Get polygon points in meters
   const polyPts = getPoints();
 
-  // Find centroid
-  const cx = polyPts.reduce((s,p)=>s+p.x,0) / polyPts.length;
-  const cy = polyPts.reduce((s,p)=>s+p.y,0) / polyPts.length;
-
   // Bounding box of polygon
   const xs = polyPts.map(p=>p.x), ys = polyPts.map(p=>p.y);
   const minX=Math.min(...xs), maxX=Math.max(...xs);
   const minY=Math.min(...ys), maxY=Math.max(...ys);
 
-  // Grid origin: tile corner at centroid
-  // Calculate how many tiles to cover the bounding box
-  const startX = cx - Math.ceil((cx - minX) / stepX) * stepX;
-  const startY = cy - Math.ceil((cy - minY) / stepY) * stepY;
+  // User-defined grid origin relative to polygon start point (first point)
+  const startPt  = polyPts[0];
+  const oxDist   = parseFloat(document.getElementById('origin-x').value) || 0;
+  const oyDist   = parseFloat(document.getElementById('origin-y').value) || 0;
+  const oxDir    = document.getElementById('origin-x-dir').value;
+  const oyDir    = document.getElementById('origin-y-dir').value;
+  const originX  = startPt.x + (oxDir === 'E' ? oxDist : -oxDist);
+  const originY  = startPt.y + (oyDir === 'N' ? oyDist : -oyDist);
+
+  // Grid starts so that a tile corner lands exactly at the origin point
+  // Extend backward to cover the full bounding box
+  const startX = originX - Math.ceil((originX - minX) / stepX) * stepX;
+  const startY = originY - Math.ceil((originY - minY) / stepY) * stepY;
 
   // Generate all tile positions
   let fullTiles = 0;
@@ -1013,15 +1074,32 @@ function drawTileCanvas(tiles, poly, stepX, stepY){
   ctx.lineWidth=2.5;
   ctx.stroke();
 
-  // Centroid dot
-  const cen=toC({x:poly.reduce((s,p)=>s+p.x,0)/poly.length, y:poly.reduce((s,p)=>s+p.y,0)/poly.length});
-  ctx.beginPath(); ctx.arc(cen.x,cen.y,5,0,Math.PI*2);
+  // Start point marker
+  const sp = toC(poly[0]);
+  ctx.beginPath(); ctx.arc(sp.x,sp.y,5,0,Math.PI*2);
   ctx.fillStyle='#00ff9d'; ctx.fill();
   ctx.fillStyle='rgba(0,255,157,.9)';
   ctx.font='10px Share Tech Mono';
   ctx.textAlign='left';
   ctx.textBaseline='alphabetic';
-  ctx.fillText('CENTROID',cen.x+8,cen.y+4);
+  ctx.fillText('START',sp.x+8,sp.y+4);
+
+  // Grid origin marker
+  const oxDist2  = parseFloat(document.getElementById('origin-x')?.value) || 0;
+  const oyDist2  = parseFloat(document.getElementById('origin-y')?.value) || 0;
+  const oxDir2   = document.getElementById('origin-x-dir')?.value || 'E';
+  const oyDir2   = document.getElementById('origin-y-dir')?.value || 'N';
+  const originPt = toC({
+    x: poly[0].x + (oxDir2==='E'? oxDist2:-oxDist2),
+    y: poly[0].y + (oyDir2==='N'? oyDist2:-oyDist2)
+  });
+  ctx.beginPath(); ctx.arc(originPt.x,originPt.y,5,0,Math.PI*2);
+  ctx.fillStyle='#f0c040'; ctx.fill();
+  ctx.fillStyle='rgba(240,192,64,.9)';
+  ctx.font='10px Share Tech Mono';
+  ctx.textAlign='left';
+  ctx.textBaseline='alphabetic';
+  ctx.fillText('GRID ORIGIN',originPt.x+8,originPt.y+4);
 
   // Draw cut group legend at bottom
   const labels = [...new Set(tiles.filter(t=>t.type==='cut').map(t=>t.label))].sort();
