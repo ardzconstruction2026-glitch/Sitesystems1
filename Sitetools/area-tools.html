@@ -798,6 +798,7 @@ window.runTileCalc = function(){
 
   for(let gx = startX; gx < maxX + stepX; gx += stepX){
     for(let gy = startY; gy < maxY + stepY; gy += stepY){
+      const status = getTileStatus({x:gx, y:gy, w:tileW, h:tileH}, polyPts);
       if(status === 'full'){
         fullTiles++;
         tileRects.push({x:gx, y:gy, w:tileW, h:tileH, type:'full'});
@@ -806,6 +807,7 @@ window.runTileCalc = function(){
         tileRects.push(tileObj);
         cutPositions.push(tileObj); // same reference
       }
+      // 'outside' tiles are ignored
     }
   }
 
