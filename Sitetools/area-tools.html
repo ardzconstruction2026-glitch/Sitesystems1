@@ -813,42 +813,52 @@ window.runTileCalc = function(){
 
   // Cut piece reuse logic
   // For each cut tile, compute the needed piece dimensions
-  const neededPieces = cutPositions.map(t => {
+  const neededPieces = cutPositions.map((t,idx) => {
     const inter = getIntersectionBounds(t, polyPts);
-    return { needW: inter.w, needH: inter.h, offcutW: tileW - inter.w, offcutH: tileH - inter.h };
+    return { idx, needW: inter.w, needH: inter.h, tileRectIdx: tileRects.indexOf(t) };
   });
 
-  // Available offcuts after each cut
-  let offcuts = []; // {w, h} — remaining pieces (can be rotated)
+  // Available offcuts — track source tile number for labeling
+  let offcuts = []; // {w, h, sourceLabel} 
   let cutTilesNeeded = 0;
   let reusedCount = 0;
+  let sourceTileCounter = 0;
+
+  // Map from tileRect index → label (e.g. "C1", "C2")
+  const cutLabels = {}; // tileRectIdx → label
 
   for(const piece of neededPieces){
-    // Try to find a reusable offcut that fits (check all rotations)
     const fitIdx = findFittingOffcut(offcuts, piece.needW, piece.needH, tileW, tileH);
     if(fitIdx >= 0){
-      // Reuse this offcut
+      // Reuse offcut — assign same source label
       const used = offcuts.splice(fitIdx, 1)[0];
+      cutLabels[piece.tileRectIdx] = used.sourceLabel;
       reusedCount++;
-      // The new offcut from trimming the reused piece
+      // New offcuts from trimming
       const newOffcutW = used.w - piece.needW;
       const newOffcutH = used.h - piece.needH;
-      if(newOffcutW > 0.01) offcuts.push({w:newOffcutW, h:used.h});
-      if(newOffcutH > 0.01) offcuts.push({w:piece.needW, h:newOffcutH});
+      if(newOffcutW > 0.01) offcuts.push({w:newOffcutW, h:used.h, sourceLabel:used.sourceLabel});
+      if(newOffcutH > 0.01) offcuts.push({w:piece.needW, h:newOffcutH, sourceLabel:used.sourceLabel});
     } else {
-      // Need a new tile — generate offcut
+      // New tile needed — assign new label
       cutTilesNeeded++;
+      sourceTileCounter++;
+      const label = 'C' + sourceTileCounter;
+      cutLabels[piece.tileRectIdx] = label;
       const offcutW = tileW - piece.needW;
       const offcutH = tileH - piece.needH;
-      if(offcutW > 0.01) offcuts.push({w:offcutW, h:tileH});
-      if(offcutH > 0.01) offcuts.push({w:piece.needW, h:offcutH});
+      if(offcutW > 0.01) offcuts.push({w:offcutW, h:tileH, sourceLabel:label});
+      if(offcutH > 0.01) offcuts.push({w:piece.needW, h:offcutH, sourceLabel:label});
     }
   }
 
+  // Assign labels back to tileRects
+  tileRects.forEach((t, i) => {
+    if(t.type === 'cut') t.label = cutLabels[i] || '?';
+  });
+
   const totalPurchase = fullTiles + cutTilesNeeded;
-  const totalArea = areaVal;
   const tileArea  = tileW * tileH;
-  const usedArea  = fullTiles * tileArea + neededPieces.reduce((s,p)=>s+p.needW*p.needH,0);
   const wasteArea = (cutTilesNeeded * tileArea) - neededPieces.slice(reusedCount).reduce((s,p)=>s+p.needW*p.needH,0);
   const wastePct  = cutTilesNeeded > 0 ? Math.max(0, (wasteArea/(totalPurchase*tileArea)*100)).toFixed(1) : '0.0';
 
@@ -861,7 +871,7 @@ window.runTileCalc = function(){
   document.getElementById('r-waste').textContent    = wastePct + '%';
   document.getElementById('tile-results').style.display = 'block';
 
-  // Draw tile canvas
+  // Draw tile canvas with labels
   drawTileCanvas(tileRects, polyPts, stepX, stepY);
   toast('Tile calculation complete!');
 };
@@ -935,6 +945,24 @@ function pointInPolygon(pt, poly){
   return inside;
 }
 
+// Color palette for cut tile groups
+const CUT_COLORS = [
+  {fill:'rgba(255,107,53,.3)',  stroke:'rgba(255,107,53,.8)',  text:'#ff6b35'},
+  {fill:'rgba(192,132,252,.3)', stroke:'rgba(192,132,252,.8)', text:'#c084fc'},
+  {fill:'rgba(255,184,0,.3)',   stroke:'rgba(255,184,0,.8)',   text:'#ffb800'},
+  {fill:'rgba(255,59,92,.25)',  stroke:'rgba(255,59,92,.7)',   text:'#ff3b5c'},
+  {fill:'rgba(0,255,157,.2)',   stroke:'rgba(0,255,157,.6)',   text:'#00ff9d'},
+  {fill:'rgba(74,158,255,.3)',  stroke:'rgba(74,158,255,.8)',  text:'#4a9eff'},
+  {fill:'rgba(240,192,64,.3)',  stroke:'rgba(240,192,64,.8)',  text:'#f0c040'},
+  {fill:'rgba(251,113,133,.3)', stroke:'rgba(251,113,133,.8)', text:'#fb7185'},
+];
+
+function getLabelColor(label) {
+  if(!label || label==='?') return {fill:'rgba(255,184,0,.25)',stroke:'rgba(255,184,0,.6)',text:'#ffb800'};
+  const num = parseInt(label.replace('C','')) - 1;
+  return CUT_COLORS[num % CUT_COLORS.length];
+}
+
 function drawTileCanvas(tiles, poly, stepX, stepY){
   const canvas = document.getElementById('tile-canvas');
   const allPts = [...poly, ...tiles.map(t=>[{x:t.x,y:t.y},{x:t.x+t.w,y:t.y+t.h}]).flat()];
@@ -942,7 +970,7 @@ function drawTileCanvas(tiles, poly, stepX, stepY){
   const minX=Math.min(...xs), maxX=Math.max(...xs);
   const minY=Math.min(...ys), maxY=Math.max(...ys);
 
-  const PAD=30, SCALE=Math.min(800/(maxX-minX||1), 800/(maxY-minY||1), 120);
+  const PAD=40, SCALE=Math.min(800/(maxX-minX||1), 800/(maxY-minY||1), 120);
   const W=Math.ceil((maxX-minX)*SCALE+PAD*2);
   const H=Math.ceil((maxY-minY)*SCALE+PAD*2);
   canvas.width=W; canvas.height=H;
@@ -957,16 +985,31 @@ function drawTileCanvas(tiles, poly, stepX, stepY){
     const tl=toC({x:t.x,     y:t.y+t.h});
     const br=toC({x:t.x+t.w, y:t.y});
     const tw=br.x-tl.x, th=br.y-tl.y;
+
     if(t.type==='full'){
-      ctx.fillStyle='rgba(0,194,255,.25)';
-      ctx.strokeStyle='rgba(0,194,255,.6)';
+      ctx.fillStyle='rgba(0,194,255,.2)';
+      ctx.strokeStyle='rgba(0,194,255,.5)';
+      ctx.fillRect(tl.x,tl.y,tw,th);
+      ctx.lineWidth=0.8;
+      ctx.strokeRect(tl.x,tl.y,tw,th);
     } else {
-      ctx.fillStyle='rgba(255,184,0,.25)';
-      ctx.strokeStyle='rgba(255,184,0,.6)';
+      // Cut tile — colored by source label
+      const col = getLabelColor(t.label);
+      ctx.fillStyle = col.fill;
+      ctx.strokeStyle = col.stroke;
+      ctx.fillRect(tl.x,tl.y,tw,th);
+      ctx.lineWidth=1.2;
+      ctx.strokeRect(tl.x,tl.y,tw,th);
+
+      // Draw label in center of tile
+      const cx2=(tl.x+br.x)/2, cy2=(tl.y+br.y)/2;
+      const fontSize = Math.max(8, Math.min(14, tw*0.35, th*0.5));
+      ctx.fillStyle = col.text;
+      ctx.font = `bold ${fontSize}px Rajdhani`;
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.fillText(t.label||'?', cx2, cy2);
     }
-    ctx.fillRect(tl.x,tl.y,tw,th);
-    ctx.lineWidth=0.5;
-    ctx.strokeRect(tl.x,tl.y,tw,th);
   }
 
   // Draw polygon outline
@@ -976,17 +1019,39 @@ function drawTileCanvas(tiles, poly, stepX, stepY){
   for(let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
   ctx.closePath();
   ctx.strokeStyle='#00ff9d';
-  ctx.lineWidth=2;
+  ctx.lineWidth=2.5;
   ctx.stroke();
 
   // Centroid dot
   const cen=toC({x:poly.reduce((s,p)=>s+p.x,0)/poly.length, y:poly.reduce((s,p)=>s+p.y,0)/poly.length});
-  ctx.beginPath(); ctx.arc(cen.x,cen.y,4,0,Math.PI*2);
+  ctx.beginPath(); ctx.arc(cen.x,cen.y,5,0,Math.PI*2);
   ctx.fillStyle='#00ff9d'; ctx.fill();
-  ctx.fillStyle='rgba(0,255,157,.8)';
+  ctx.fillStyle='rgba(0,255,157,.9)';
   ctx.font='10px Share Tech Mono';
   ctx.textAlign='left';
-  ctx.fillText('CENTROID',cen.x+6,cen.y+4);
+  ctx.textBaseline='alphabetic';
+  ctx.fillText('CENTROID',cen.x+8,cen.y+4);
+
+  // Draw cut group legend at bottom
+  const labels = [...new Set(tiles.filter(t=>t.type==='cut').map(t=>t.label))].sort();
+  if(labels.length > 0){
+    const legX=PAD, legY=H-10;
+    ctx.font='9px Share Tech Mono';
+    ctx.textBaseline='alphabetic';
+    let lx=legX;
+    for(const lbl of labels){
+      const col=getLabelColor(lbl);
+      ctx.fillStyle=col.fill;
+      ctx.strokeStyle=col.stroke;
+      ctx.lineWidth=1;
+      ctx.fillRect(lx,legY-10,12,10);
+      ctx.strokeRect(lx,legY-10,12,10);
+      ctx.fillStyle=col.text;
+      ctx.textAlign='left';
+      ctx.fillText(lbl,lx+14,legY-1);
+      lx += 14 + ctx.measureText(lbl).width + 12;
+    }
+  }
 }
 </script>
 </body>
