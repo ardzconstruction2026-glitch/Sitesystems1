@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SiteTools — Area Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#0d0f14;--surface:#13161e;--surface2:#1a1e29;--border:#2a2f3f;
+    --accent:#00c2ff;--accent2:#ff6b35;--accent3:#00ff9d;--accent4:#c084fc;
+    --text:#d0d8f0;--muted:#5a6180;--danger:#ff3b5c;--warn:#ffb800;
+    --r:6px;--fh:'Rajdhani',sans-serif;--fm:'Share Tech Mono',monospace;--fb:'Exo 2',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;
+    background-image:radial-gradient(ellipse at 20% 0%,rgba(0,194,255,.06) 0%,transparent 60%),
+    radial-gradient(ellipse at 80% 100%,rgba(192,132,252,.05) 0%,transparent 60%);}
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:100%;max-width:400px;}
+  .login-logo{font-family:var(--fh);font-size:1.8rem;font-weight:700;letter-spacing:3px;color:var(--accent);text-transform:uppercase;text-align:center;margin-bottom:.25rem;}
+  .login-logo span{color:var(--muted);font-weight:400;}
+  .login-sub{font-family:var(--fm);font-size:.72rem;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:2rem;text-transform:uppercase;}
+  .login-fi{display:flex;flex-direction:column;gap:6px;margin-bottom:1.2rem;}
+  .login-fi label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .login-fi input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:11px 14px;font-family:var(--fb);font-size:.95rem;outline:none;transition:border-color .2s;width:100%;}
+  .login-fi input:focus{border-color:var(--accent);}
+  .login-btn{width:100%;font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#000;border:none;padding:12px;border-radius:var(--r);cursor:pointer;transition:all .2s;margin-top:.5rem;}
+  .login-btn:hover{opacity:.85;}
+  .login-err{font-family:var(--fm);font-size:.75rem;color:var(--danger);text-align:center;margin-top:.75rem;min-height:1rem;}
+  #app-screen{display:none;}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .logo span{color:var(--muted);font-weight:400;}
+  .hright{display:flex;align-items:center;gap:1rem;}
+  .user-info{font-family:var(--fm);font-size:.75rem;color:var(--muted);}
+  .user-info strong{color:var(--accent);}
+  .btn-logout{font-family:var(--fm);font-size:.75rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:var(--r);cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s;}
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;}
+  .tb{font-family:var(--fh);font-size:.95rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:none;border:none;color:var(--muted);padding:14px 28px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+  .tb:hover{color:var(--text);}
+  .tb.active{color:var(--accent);border-bottom:2px solid var(--accent);}
+  .tc{display:none;padding:2rem;max-width:960px;margin:0 auto;}
+  .tc.active{display:block;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2rem;margin-bottom:1.5rem;}
+  .ctitle{font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .ctitle::before{content:'';width:3px;height:18px;background:var(--accent);border-radius:2px;}
+
+  /* INPUT AREA */
+  .input-row{display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:1.2rem;}
+  .fi{display:flex;flex-direction:column;gap:6px;}
+  label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  input[type="number"],input[type="date"],input[type="text"],textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:10px 14px;font-family:var(--fb);font-size:.9rem;outline:none;transition:border-color .2s;width:100%;}
+  input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,194,255,.1);}
+  textarea{resize:vertical;min-height:70px;}
+
+  /* DIRECTION ARROWS */
+  .arrow-pad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:4px;}
+  .arr-btn{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+  .arr-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .arr-btn.active{background:var(--accent);border-color:var(--accent);color:#000;}
+  .arr-btn.blank{background:transparent;border:none;cursor:default;}
+
+  /* SEGMENT LIST */
+  .seg-list{display:flex;flex-direction:column;gap:.4rem;max-height:200px;overflow-y:auto;margin-bottom:1rem;}
+  .seg-item{display:flex;align-items:center;gap:.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:7px 12px;font-family:var(--fm);font-size:.8rem;}
+  .seg-num{color:var(--muted);min-width:20px;}
+  .seg-dir{font-size:1.1rem;}
+  .seg-len{color:var(--accent);flex:1;}
+  .seg-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px;transition:color .2s;}
+  .seg-del:hover{color:var(--danger);}
+  .empty-seg{font-family:var(--fm);font-size:.78rem;color:var(--muted);padding:.5rem 0;text-align:center;}
+
+  /* CANVAS */
+  .canvas-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:1.2rem;}
+  canvas{display:block;}
+
+  /* RESULT */
+  .result-box{background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.2);border-radius:8px;padding:1.2rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem;}
+  .result-label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .result-value{font-family:var(--fh);font-size:2rem;font-weight:700;color:var(--accent3);}
+  .result-unit{font-family:var(--fm);font-size:.85rem;color:var(--muted);}
+
+  /* BUTTONS */
+  .btn-row{display:flex;gap:.75rem;flex-wrap:wrap;}
+  .bp{font-family:var(--fh);font-size:.9rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:var(--r);cursor:pointer;transition:all .2s;}
+  .bp:hover{opacity:.85;transform:translateY(-1px);}
+  .bp:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+  .bp-green{background:var(--accent3);color:#000;}
+  .bp-orange{background:var(--accent2);color:#fff;}
+  .bp-purple{background:var(--accent4);color:#fff;}
+  .bp-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);}
+  .bp-danger:hover{background:rgba(255,59,92,.1);}
+
+  /* SAVED TABLE */
+  .fbar{display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;}
+  .si{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--fb);font-size:.85rem;outline:none;flex:1;min-width:180px;}
+  .si:focus{border-color:var(--accent);}
+  .tw{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;}
+  thead tr{background:var(--surface2);}
+  th{font-family:var(--fm);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 14px;text-align:left;white-space:nowrap;}
+  td{padding:10px 14px;border-bottom:1px solid rgba(42,47,63,.5);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .btn-use{font-family:var(--fm);font-size:.7rem;background:rgba(0,194,255,.1);border:1px solid rgba(0,194,255,.3);color:var(--accent);padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s;letter-spacing:.5px;text-transform:uppercase;}
+  .btn-use:hover{background:rgba(0,194,255,.2);}
+  .btn-del-row{font-family:var(--fm);font-size:.7rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);color:var(--danger);padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s;letter-spacing:.5px;text-transform:uppercase;}
+  .btn-del-row:hover{background:rgba(255,59,92,.18);}
+  .empty{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
+
+  /* MODAL */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(13,15,20,.85);z-index:300;align-items:center;justify-content:center;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2rem;max-width:380px;width:90%;text-align:center;}
+  .modal-title{font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--danger);margin-bottom:.75rem;}
+  .modal-msg{font-family:var(--fb);font-size:.88rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.5;}
+  .modal-acts{display:flex;gap:1rem;justify-content:center;}
+  .btn-confirm{font-family:var(--fh);font-size:.9rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--danger);color:#fff;border:none;padding:10px 24px;border-radius:var(--r);cursor:pointer;}
+  .btn-cancel2{font-family:var(--fh);font-size:.9rem;letter-spacing:2px;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--border);padding:10px 24px;border-radius:var(--r);cursor:pointer;}
+
+  #toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent3);color:var(--text);padding:12px 20px;border-radius:var(--r);font-family:var(--fm);font-size:.82rem;opacity:0;transform:translateY(10px);transition:all .3s;z-index:999;pointer-events:none;max-width:320px;}
+  #toast.show{opacity:1;transform:translateY(0);}
+  #toast.err{border-left-color:var(--danger);}
+  @media(max-width:600px){header{padding:0 1rem;}.tc{padding:1rem;}.tb{padding:12px 14px;font-size:.8rem;}.btn-row{flex-direction:column;}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Site<span>Tools</span></div>
+    <div class="login-sub">Area Calculator</div>
+    <div class="login-fi"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" autocomplete="username"/></div>
+    <div class="login-fi"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/></div>
+    <button class="login-btn" id="login-btn-el">Login</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <header>
+    <div class="logo">Site<span>Tools</span> <span style="font-size:.9rem;color:var(--muted);font-weight:400;letter-spacing:1px">/ Area</span></div>
+    <div class="hright">
+      <div class="user-info">Logged in as <strong id="display-name"></strong></div>
+      <button class="btn-logout" id="btn-logout">Logout</button>
+    </div>
+  </header>
+  <nav>
+    <button class="tb active" onclick="switchTab('t1',this)">Area Tool</button>
+    <button class="tb" onclick="switchTab('t2',this)">Saved Areas</button>
+  </nav>
+
+  <!-- TAB 1: AREA TOOL -->
+  <div id="t1" class="tc active">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+
+      <!-- LEFT: INPUTS -->
+      <div>
+        <div class="card">
+          <div class="ctitle">Add Segment</div>
+          <div class="input-row">
+            <div class="fi">
+              <label>Direction</label>
+              <div class="arrow-pad">
+                <div class="arr-btn blank"></div>
+                <button class="arr-btn" id="arr-N" onclick="setDir('N')">↑</button>
+                <div class="arr-btn blank"></div>
+                <button class="arr-btn" id="arr-W" onclick="setDir('W')">←</button>
+                <div class="arr-btn blank" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r)"></div>
+                <button class="arr-btn" id="arr-E" onclick="setDir('E')">→</button>
+                <div class="arr-btn blank"></div>
+                <button class="arr-btn" id="arr-S" onclick="setDir('S')">↓</button>
+                <div class="arr-btn blank"></div>
+              </div>
+              <input type="hidden" id="f-dir"/>
+            </div>
+            <div class="fi" style="flex:1">
+              <label>Length (m)</label>
+              <input type="number" id="f-len" placeholder="0.00" min="0" step="0.01"/>
+              <div style="margin-top:.75rem">
+                <button class="bp" onclick="addSegment()" style="width:100%">+ Add Segment</button>
+              </div>
+            </div>
+          </div>
+          <!-- SEGMENT LIST -->
+          <label style="margin-bottom:.5rem;display:block">Segments</label>
+          <div class="seg-list" id="seg-list"><div class="empty-seg">No segments added yet.</div></div>
+          <div class="btn-row" style="margin-top:.75rem">
+            <button class="bp bp-orange" onclick="closePolygon()">⬡ Close Polygon</button>
+            <button class="bp bp-green" onclick="calculateArea()">= Calculate</button>
+            <button class="bp bp-danger" onclick="clearAll()">✕ Clear</button>
+          </div>
+        </div>
+
+        <!-- RESULT + SAVE -->
+        <div class="card">
+          <div class="ctitle">Result</div>
+          <div class="result-box" id="result-box" style="display:none">
+            <div>
+              <div class="result-label">Computed Area</div>
+              <div style="display:flex;align-items:baseline;gap:.5rem">
+                <div class="result-value" id="result-val">0</div>
+                <div class="result-unit">m²</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+            <div class="fi">
+              <label>Date</label>
+              <input type="date" id="f-date"/>
+            </div>
+            <div class="fi fi-notes" style="grid-column:1/-1">
+              <label>Notes</label>
+              <textarea id="f-notes" placeholder="Describe the area or location…"></textarea>
+            </div>
+          </div>
+          <button class="bp bp-purple" onclick="saveArea()" id="btn-save" disabled>💾 Save Area</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: CANVAS -->
+      <div>
+        <div class="card" style="padding:1rem">
+          <div class="ctitle" style="margin-bottom:1rem">Polygon Preview</div>
+          <div class="canvas-wrap">
+            <canvas id="poly-canvas" width="380" height="380"></canvas>
+          </div>
+          <div style="font-family:var(--fm);font-size:.7rem;color:var(--muted);text-align:center;margin-top:.5rem;letter-spacing:.5px">
+            Click on canvas to pan · Segments plotted in order
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SAVED AREAS -->
+  <div id="t2" class="tc">
+    <div class="card">
+      <div class="ctitle" style="margin-bottom:1rem">Saved Areas</div>
+      <div class="fbar">
+        <input class="si" id="search-saved" placeholder="Search by notes…" oninput="renderSaved()"/>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Area (m²)</th><th>Notes</th><th>Saved On</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="saved-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-bg" id="del-modal">
+  <div class="modal">
+    <div style="font-size:2rem;margin-bottom:.75rem">⚠️</div>
+    <div class="modal-title">Delete Entry?</div>
+    <div class="modal-msg">This saved area will be permanently deleted. This cannot be undone.</div>
+    <div class="modal-acts">
+      <button class="btn-confirm" id="btn-del-confirm">Delete</button>
+      <button class="btn-cancel2" id="btn-del-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, addDoc, getDoc, getDocs, deleteDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const _apiKey = sessionStorage.getItem('st_api_key');
+if (!_apiKey) { window.location.href = '../index.html'; }
+const firebaseConfig = {
+  apiKey: _apiKey,
+  authDomain: "equiptrack-e1011.firebaseapp.com",
+  projectId: "equiptrack-e1011",
+  storageBucket: "equiptrack-e1011.firebasestorage.app",
+  messagingSenderId: "468749948486",
+  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── STATE ─────────────────────────────────────────────────────
+let segments  = []; // [{dir:'N',len:5}, ...]
+let isClosed  = false;
+let areaVal   = null;
+let savedData = [];
+let pendingDelId = null;
+let currentDir = null;
+
+// ── AUTH ──────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    const snap = await getDoc(doc(db,'users',user.uid));
+    if (!snap.exists()) { await signOut(auth); return; }
+    const data = snap.data();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display   = 'block';
+    document.getElementById('display-name').textContent   = data.username || user.email;
+    setToday();
+    await loadSaved();
+    drawCanvas();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display   = 'none';
+  }
+});
+
+document.getElementById('login-btn-el').addEventListener('click', async () => {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  const errEl    = document.getElementById('login-err');
+  const btn      = document.getElementById('login-btn-el');
+  errEl.textContent='';
+  if (!username||!password){errEl.textContent='Please enter username and password.';return;}
+  btn.textContent='Logging in...';btn.disabled=true;
+  try {
+    await signInWithEmailAndPassword(auth, username.toLowerCase()+'@equiptrack.app', password);
+  } catch(e) {
+    if(e.code==='auth/invalid-credential'||e.code==='auth/user-not-found'||e.code==='auth/wrong-password'){
+      errEl.textContent='Invalid username or password.';
+    } else if(e.code==='auth/network-request-failed'){
+      errEl.textContent='Network error. Check your connection.';
+    } else { errEl.textContent='Login failed: '+e.message; }
+  } finally {btn.textContent='Login';btn.disabled=false;}
+});
+
+document.getElementById('btn-logout').addEventListener('click', ()=>signOut(auth));
+
+// ── UTILS ─────────────────────────────────────────────────────
+window.switchTab = function(id,btn){
+  document.querySelectorAll('.tc').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='t2') renderSaved();
+};
+
+function setToday(){
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+}
+
+function toast(msg,err=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='show'+(err?' err':'');
+  setTimeout(()=>t.className='',3500);
+}
+
+// ── DIRECTION ────────────────────────────────────────────────
+window.setDir = function(dir){
+  currentDir = dir;
+  document.getElementById('f-dir').value = dir;
+  ['N','S','E','W'].forEach(d=>{
+    document.getElementById('arr-'+d).classList.toggle('active', d===dir);
+  });
+};
+
+// ── SEGMENTS ─────────────────────────────────────────────────
+window.addSegment = function(){
+  const dir = currentDir;
+  const len = parseFloat(document.getElementById('f-len').value);
+  if (!dir){ toast('Select a direction.',true); return; }
+  if (!len || len<=0){ toast('Enter a valid length.',true); return; }
+  if (isClosed){ toast('Polygon is closed. Clear to start new.',true); return; }
+  segments.push({dir, len});
+  document.getElementById('f-len').value='';
+  renderSegList();
+  drawCanvas();
+};
+
+function renderSegList(){
+  const el = document.getElementById('seg-list');
+  if(!segments.length){el.innerHTML='<div class="empty-seg">No segments added yet.</div>';return;}
+  const arrows = {N:'↑',S:'↓',E:'→',W:'←'};
+  el.innerHTML = segments.map((s,i)=>`
+    <div class="seg-item">
+      <span class="seg-num">${i+1}</span>
+      <span class="seg-dir">${arrows[s.dir]}</span>
+      <span class="seg-len">${s.len} m</span>
+      <button class="seg-del" onclick="delSegment(${i})">✕</button>
+    </div>`).join('');
+}
+
+window.delSegment = function(i){
+  segments.splice(i,1);
+  isClosed = false;
+  areaVal  = null;
+  document.getElementById('result-box').style.display='none';
+  document.getElementById('btn-save').disabled=true;
+  renderSegList();
+  drawCanvas();
+};
+
+window.closePolygon = function(){
+  if(segments.length < 3){ toast('Need at least 3 segments to close.',true); return; }
+  isClosed = true;
+  toast('Polygon closed!');
+  drawCanvas();
+};
+
+window.calculateArea = function(){
+  if(!isClosed){ toast('Close the polygon first.',true); return; }
+  const pts = getPoints();
+  const area = shoelace(pts);
+  areaVal = area;
+  document.getElementById('result-val').textContent = area.toFixed(4);
+  document.getElementById('result-box').style.display='flex';
+  document.getElementById('btn-save').disabled = false;
+  toast('Area calculated!');
+};
+
+window.clearAll = function(){
+  segments=[];isClosed=false;areaVal=null;currentDir=null;
+  ['N','S','E','W'].forEach(d=>document.getElementById('arr-'+d).classList.remove('active'));
+  document.getElementById('f-dir').value='';
+  document.getElementById('f-len').value='';
+  document.getElementById('f-notes').value='';
+  document.getElementById('result-box').style.display='none';
+  document.getElementById('btn-save').disabled=true;
+  renderSegList();
+  drawCanvas();
+  setToday();
+};
+
+// ── GEOMETRY ──────────────────────────────────────────────────
+function getPoints(){
+  let x=0, y=0;
+  const pts=[{x,y}];
+  const dirMap = {N:{dx:0,dy:1}, S:{dx:0,dy:-1}, E:{dx:1,dy:0}, W:{dx:-1,dy:0}};
+  for(const s of segments){
+    const d=dirMap[s.dir];
+    x += d.dx * s.len;
+    y += d.dy * s.len;
+    pts.push({x,y});
+  }
+  return pts;
+}
+
+function shoelace(pts){
+  let area=0;
+  const n=pts.length;
+  for(let i=0;i<n;i++){
+    const j=(i+1)%n;
+    area += pts[i].x * pts[j].y;
+    area -= pts[j].x * pts[i].y;
+  }
+  return Math.abs(area)/2;
+}
+
+// ── CANVAS ────────────────────────────────────────────────────
+function drawCanvas(){
+  const canvas = document.getElementById('poly-canvas');
+  const ctx    = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Grid background
+  ctx.strokeStyle='rgba(42,47,63,.5)';
+  ctx.lineWidth=1;
+  for(let x=0;x<=W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  if(!segments.length) return;
+
+  const pts = getPoints();
+
+  // Scale to fit canvas
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs);
+  const minY=Math.min(...ys), maxY=Math.max(...ys);
+  const rangeX=maxX-minX||1, rangeY=maxY-minY||1;
+  const pad=50;
+  const scaleX=(W-pad*2)/rangeX, scaleY=(H-pad*2)/rangeY;
+  const scale=Math.min(scaleX,scaleY);
+
+  const toCanvas=(p)=>({
+    x: pad + (p.x-minX)*scale,
+    y: H - pad - (p.y-minY)*scale
+  });
+
+  const cpts = pts.map(toCanvas);
+
+  // Fill if closed
+  if(isClosed){
+    ctx.beginPath();
+    ctx.moveTo(cpts[0].x, cpts[0].y);
+    for(let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
+    ctx.closePath();
+    ctx.fillStyle='rgba(0,194,255,.08)';
+    ctx.fill();
+  }
+
+  // Draw segments
+  ctx.strokeStyle='#00c2ff';
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(cpts[0].x,cpts[0].y);
+  for(let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
+  if(isClosed) ctx.closePath();
+  ctx.stroke();
+
+  // Closing dashed line if not closed
+  if(!isClosed && cpts.length>1){
+    ctx.setLineDash([5,5]);
+    ctx.strokeStyle='rgba(0,194,255,.3)';
+    ctx.beginPath();
+    ctx.moveTo(cpts[cpts.length-1].x,cpts[cpts.length-1].y);
+    ctx.lineTo(cpts[0].x,cpts[0].y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Direction arrows on segments
+  const arrows={N:'↑',S:'↓',E:'→',W:'←'};
+  ctx.fillStyle='rgba(0,194,255,.8)';
+  ctx.font='12px Share Tech Mono';
+  ctx.textAlign='center';
+  for(let i=0;i<segments.length;i++){
+    const mid={x:(cpts[i].x+cpts[i+1].x)/2, y:(cpts[i].y+cpts[i+1].y)/2};
+    ctx.fillText(arrows[segments[i].dir]+' '+segments[i].len+'m', mid.x, mid.y-6);
+  }
+
+  // Points
+  cpts.forEach((p,i)=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,i===0?5:3,0,Math.PI*2);
+    ctx.fillStyle = i===0 ? '#00ff9d' : '#00c2ff';
+    ctx.fill();
+  });
+
+  // Start label
+  ctx.fillStyle='#00ff9d';
+  ctx.font='11px Share Tech Mono';
+  ctx.textAlign='left';
+  ctx.fillText('START', cpts[0].x+8, cpts[0].y-6);
+
+  // Area label if calculated
+  if(areaVal!==null && isClosed){
+    const cx=cpts.reduce((s,p)=>s+p.x,0)/cpts.length;
+    const cy=cpts.reduce((s,p)=>s+p.y,0)/cpts.length;
+    ctx.fillStyle='rgba(0,255,157,.9)';
+    ctx.font='bold 14px Rajdhani';
+    ctx.textAlign='center';
+    ctx.fillText(areaVal.toFixed(2)+' m²', cx, cy);
+  }
+}
+
+// ── SAVE ──────────────────────────────────────────────────────
+window.saveArea = async function(){
+  if(areaVal===null){ toast('Calculate area first.',true); return; }
+  const date  = document.getElementById('f-date').value;
+  const notes = document.getElementById('f-notes').value.trim();
+  if(!date){ toast('Enter a date.',true); return; }
+
+  const payload = {
+    date,
+    notes,
+    area:       areaVal,
+    directions: segments.map(s=>s.dir),
+    lengths:    segments.map(s=>s.len),
+    savedAt:    new Date().toISOString(),
+  };
+
+  try {
+    const ref = await addDoc(collection(db,'savedAreas'), payload);
+    savedData.push({id:ref.id,...payload});
+    toast('Area saved!');
+    document.getElementById('btn-save').disabled=true;
+  } catch(e){ toast('Error saving: '+e.message,true); }
+};
+
+// ── LOAD SAVED ────────────────────────────────────────────────
+async function loadSaved(){
+  try {
+    const snap = await getDocs(collection(db,'savedAreas'));
+    savedData  = snap.docs.map(d=>({id:d.id,...d.data()}));
+    savedData.sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt));
+  } catch(e){ console.error(e); }
+}
+
+window.renderSaved = function(){
+  const q  = document.getElementById('search-saved').value.toLowerCase();
+  const tb = document.getElementById('saved-tbody');
+  const data = savedData.filter(d=>(d.notes||'').toLowerCase().includes(q)||(d.date||'').includes(q));
+  if(!data.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">NO SAVED AREAS</div></td></tr>';return;}
+  tb.innerHTML = data.map(d=>`
+    <tr>
+      <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${d.date||'—'}</td>
+      <td style="font-family:var(--fh);font-size:1.1rem;color:var(--accent3);font-weight:700">${(d.area||0).toFixed(4)} <span style="font-family:var(--fm);font-size:.7rem;color:var(--muted)">m²</span></td>
+      <td style="max-width:200px">${d.notes||'—'}</td>
+      <td style="font-family:var(--fm);font-size:.72rem;color:var(--muted)">${fdate(d.savedAt)}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn-use" onclick="useArea('${d.id}')">↩ Use</button>
+          <button class="btn-del-row" onclick="delArea('${d.id}')">✕</button>
+        </div>
+      </td>
+    </tr>`).join('');
+};
+
+window.useArea = function(id){
+  const d = savedData.find(x=>x.id===id); if(!d) return;
+  segments = d.directions.map((dir,i)=>({dir, len:d.lengths[i]}));
+  isClosed = true;
+  areaVal  = d.area;
+  document.getElementById('f-date').value  = d.date||'';
+  document.getElementById('f-notes').value = d.notes||'';
+  document.getElementById('result-val').textContent = d.area.toFixed(4);
+  document.getElementById('result-box').style.display='flex';
+  document.getElementById('btn-save').disabled=false;
+  renderSegList();
+  drawCanvas();
+  switchTab('t1', document.querySelectorAll('.tb')[0]);
+  toast('Area loaded!');
+};
+
+window.delArea = function(id){
+  pendingDelId = id;
+  document.getElementById('del-modal').classList.add('show');
+};
+
+document.getElementById('btn-del-confirm').addEventListener('click', async()=>{
+  if(!pendingDelId) return;
+  try {
+    await deleteDoc(doc(db,'savedAreas',pendingDelId));
+    savedData = savedData.filter(d=>d.id!==pendingDelId);
+    renderSaved();
+    toast('Deleted.');
+  } catch(e){ toast('Error: '+e.message,true); }
+  document.getElementById('del-modal').classList.remove('show');
+  pendingDelId=null;
+});
+
+document.getElementById('btn-del-cancel').addEventListener('click',()=>{
+  document.getElementById('del-modal').classList.remove('show');
+  pendingDelId=null;
+});
+
+function fdate(d){
+  if(!d) return '—';
+  try{ const dt=new Date(d); if(isNaN(dt)) return d;
+    return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+  catch{ return d; }
+}
+</script>
+</body>
+</html>
