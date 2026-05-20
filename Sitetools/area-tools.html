@@ -308,34 +308,44 @@
               <div style="font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">
                 Grid Origin — relative to Start Point
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                <div class="fi">
-                  <label>Horizontal (X)</label>
-                  <div style="display:flex;gap:.5rem;align-items:center;">
-                    <div style="display:flex;gap:4px;">
-                      <button class="arr-btn" id="ox-left"  onclick="setOriginDir('x','W')" style="width:36px;height:36px;font-size:1.1rem">←</button>
-                      <button class="arr-btn" id="ox-right" onclick="setOriginDir('x','E')" style="width:36px;height:36px;font-size:1.1rem">→</button>
-                    </div>
-                    <input type="number" id="origin-x" value="0" min="0" step="0.01" style="flex:1"/>
-                    <span style="font-family:var(--fm);font-size:.72rem;color:var(--muted)">m</span>
-                  </div>
-                  <input type="hidden" id="origin-x-dir" value="E"/>
+
+              <!-- Horizontal offset -->
+              <div class="fi" style="margin-bottom:.75rem;">
+                <label>Horizontal Offset (X)</label>
+                <div style="display:flex;gap:.5rem;align-items:center;">
+                  <button class="arr-btn" id="ox-left"  onclick="setOriginDir('x','W')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0">←</button>
+                  <button class="arr-btn" id="ox-right" onclick="setOriginDir('x','E')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0">→</button>
+                  <input type="number" id="origin-x" value="0" min="0" step="0.01" style="flex:1;min-width:0;font-size:1rem;padding:10px 12px;"/>
+                  <span style="font-family:var(--fm);font-size:.78rem;color:var(--muted);flex-shrink:0">m</span>
                 </div>
-                <div class="fi">
-                  <label>Vertical (Y)</label>
-                  <div style="display:flex;gap:.5rem;align-items:center;">
-                    <div style="display:flex;gap:4px;">
-                      <button class="arr-btn" id="oy-up"   onclick="setOriginDir('y','N')" style="width:36px;height:36px;font-size:1.1rem">↑</button>
-                      <button class="arr-btn" id="oy-down" onclick="setOriginDir('y','S')" style="width:36px;height:36px;font-size:1.1rem">↓</button>
-                    </div>
-                    <input type="number" id="origin-y" value="0" min="0" step="0.01" style="flex:1"/>
-                    <span style="font-family:var(--fm);font-size:.72rem;color:var(--muted)">m</span>
-                  </div>
-                  <input type="hidden" id="origin-y-dir" value="N"/>
-                </div>
+                <input type="hidden" id="origin-x-dir" value="E"/>
               </div>
-              <div style="font-family:var(--fm);font-size:.68rem;color:var(--muted);margin-top:.5rem;">
-                A tile corner will be placed at this offset from the polygon start point.
+
+              <!-- Vertical offset -->
+              <div class="fi" style="margin-bottom:.75rem;">
+                <label>Vertical Offset (Y)</label>
+                <div style="display:flex;gap:.5rem;align-items:center;">
+                  <button class="arr-btn" id="oy-up"   onclick="setOriginDir('y','N')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0">↑</button>
+                  <button class="arr-btn" id="oy-down" onclick="setOriginDir('y','S')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0">↓</button>
+                  <input type="number" id="origin-y" value="0" min="0" step="0.01" style="flex:1;min-width:0;font-size:1rem;padding:10px 12px;"/>
+                  <span style="font-family:var(--fm);font-size:.78rem;color:var(--muted);flex-shrink:0">m</span>
+                </div>
+                <input type="hidden" id="origin-y-dir" value="N"/>
+              </div>
+
+              <!-- Anchor corner -->
+              <div class="fi" style="margin-bottom:.5rem;">
+                <label>Anchor Corner</label>
+                <select id="anchor-corner" style="width:100%;font-size:.9rem;padding:10px 14px;">
+                  <option value="TL">Top-Left</option>
+                  <option value="TR">Top-Right</option>
+                  <option value="BL">Bottom-Left</option>
+                  <option value="BR">Bottom-Right</option>
+                </select>
+              </div>
+
+              <div style="font-family:var(--fm);font-size:.68rem;color:var(--muted);margin-top:.4rem;line-height:1.5;">
+                The selected tile corner will be placed at this offset from the polygon start point.
               </div>
             </div>
 
@@ -838,19 +848,31 @@ window.runTileCalc = function(){
   const minX=Math.min(...xs), maxX=Math.max(...xs);
   const minY=Math.min(...ys), maxY=Math.max(...ys);
 
-  // User-defined grid origin relative to polygon start point (first point)
-  const startPt  = polyPts[0];
-  const oxDist   = parseFloat(document.getElementById('origin-x').value) || 0;
-  const oyDist   = parseFloat(document.getElementById('origin-y').value) || 0;
-  const oxDir    = document.getElementById('origin-x-dir').value;
-  const oyDir    = document.getElementById('origin-y-dir').value;
-  const originX  = startPt.x + (oxDir === 'E' ? oxDist : -oxDist);
-  const originY  = startPt.y + (oyDir === 'N' ? oyDist : -oyDist);
+  // User-defined grid origin relative to polygon start point
+  const startPt    = polyPts[0];
+  const oxDist     = parseFloat(document.getElementById('origin-x').value) || 0;
+  const oyDist     = parseFloat(document.getElementById('origin-y').value) || 0;
+  const oxDir      = document.getElementById('origin-x-dir').value;
+  const oyDir      = document.getElementById('origin-y-dir').value;
+  const anchorCorner = document.getElementById('anchor-corner').value;
 
-  // Grid starts so that a tile corner lands exactly at the origin point
-  // Extend backward to cover the full bounding box
-  const startX = originX - Math.ceil((originX - minX) / stepX) * stepX;
-  const startY = originY - Math.ceil((originY - minY) / stepY) * stepY;
+  // The user-specified point where the chosen corner of a tile should land
+  const originX = startPt.x + (oxDir === 'E' ? oxDist : -oxDist);
+  const originY = startPt.y + (oyDir === 'N' ? oyDist : -oyDist);
+
+  // Adjust grid start based on which corner is anchored
+  // TL = top-left corner at origin → grid starts at originX, originY
+  // TR = top-right corner → shift grid left by one tile width
+  // BL = bottom-left corner → shift grid up by one tile height
+  // BR = bottom-right corner → shift grid left + up
+  const cornerOffsetX = (anchorCorner === 'TR' || anchorCorner === 'BR') ? -tileW : 0;
+  const cornerOffsetY = (anchorCorner === 'BL' || anchorCorner === 'BR') ? -tileH : 0;
+  const anchoredX = originX + cornerOffsetX;
+  const anchoredY = originY + cornerOffsetY;
+
+  // Extend grid to cover full bounding box from anchor point
+  const startX = anchoredX - Math.ceil((anchoredX - minX) / stepX) * stepX;
+  const startY = anchoredY - Math.ceil((anchoredY - minY) / stepY) * stepY;
 
   // Generate all tile positions
   let fullTiles = 0;
@@ -1084,11 +1106,13 @@ function drawTileCanvas(tiles, poly, stepX, stepY){
   ctx.textBaseline='alphabetic';
   ctx.fillText('START',sp.x+8,sp.y+4);
 
-  // Grid origin marker
-  const oxDist2  = parseFloat(document.getElementById('origin-x')?.value) || 0;
-  const oyDist2  = parseFloat(document.getElementById('origin-y')?.value) || 0;
-  const oxDir2   = document.getElementById('origin-x-dir')?.value || 'E';
-  const oyDir2   = document.getElementById('origin-y-dir')?.value || 'N';
+  // Grid origin marker — show the user-defined anchor point
+  const oxDist2    = parseFloat(document.getElementById('origin-x')?.value) || 0;
+  const oyDist2    = parseFloat(document.getElementById('origin-y')?.value) || 0;
+  const oxDir2     = document.getElementById('origin-x-dir')?.value || 'E';
+  const oyDir2     = document.getElementById('origin-y-dir')?.value || 'N';
+  const corner2    = document.getElementById('anchor-corner')?.value || 'TL';
+  const cornerLabels = {'TL':'Top-Left','TR':'Top-Right','BL':'Bottom-Left','BR':'Bottom-Right'};
   const originPt = toC({
     x: poly[0].x + (oxDir2==='E'? oxDist2:-oxDist2),
     y: poly[0].y + (oyDir2==='N'? oyDist2:-oyDist2)
@@ -1099,7 +1123,7 @@ function drawTileCanvas(tiles, poly, stepX, stepY){
   ctx.font='10px Share Tech Mono';
   ctx.textAlign='left';
   ctx.textBaseline='alphabetic';
-  ctx.fillText('GRID ORIGIN',originPt.x+8,originPt.y+4);
+  ctx.fillText('ANCHOR ('+cornerLabels[corner2]+')',originPt.x+8,originPt.y+4);
 
   // Draw cut group legend at bottom
   const labels = [...new Set(tiles.filter(t=>t.type==='cut').map(t=>t.label))].sort();
