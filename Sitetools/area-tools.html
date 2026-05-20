@@ -124,6 +124,28 @@
   #toast.show{opacity:1;transform:translateY(0);}
   #toast.err{border-left-color:var(--danger);}
   @media(max-width:600px){header{padding:0 1rem;}.tc{padding:1rem;}.tb{padding:12px 14px;font-size:.8rem;}.btn-row{flex-direction:column;}}
+
+  /* TILE CALCULATOR */
+  .tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+  .toggle-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;}
+  .toggle-label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0;}
+  .toggle-switch input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;inset:0;background:var(--surface2);border:1px solid var(--border);border-radius:24px;cursor:pointer;transition:.3s;}
+  .toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:.3s;}
+  .toggle-switch input:checked + .toggle-slider{background:rgba(0,194,255,.15);border-color:var(--accent);}
+  .toggle-switch input:checked + .toggle-slider::before{transform:translateX(20px);background:var(--accent);}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem;}
+  .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;}
+  .stat-label{font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  .stat-val{font-family:var(--fh);font-size:1.8rem;font-weight:700;line-height:1;}
+  .stat-sub{font-family:var(--fm);font-size:.68rem;color:var(--muted);margin-top:3px;}
+  .sv-blue{color:var(--accent);} .sv-yellow{color:var(--warn);} .sv-green{color:var(--accent3);} .sv-orange{color:var(--accent2);} .sv-red{color:var(--danger);}
+  .tile-canvas-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:500px;}
+  .tile-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.75rem;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:.7rem;color:var(--muted);letter-spacing:.5px;}
+  .legend-dot{width:12px;height:12px;border-radius:2px;flex-shrink:0;}
+  .no-area-msg{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
 </style>
 </head>
 <body>
@@ -152,6 +174,7 @@
   <nav>
     <button class="tb active" onclick="switchTab('t1',this)">Area Tool</button>
     <button class="tb" onclick="switchTab('t2',this)">Saved Areas</button>
+    <button class="tb" onclick="switchTab('t3',this)">Tile Calculator</button>
   </nav>
 
   <!-- TAB 1: AREA TOOL -->
@@ -251,6 +274,72 @@
           </tr></thead>
           <tbody id="saved-tbody"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- TAB 3: TILE CALCULATOR -->
+  <div id="t3" class="tc">
+    <div id="no-area-msg" class="card"><div class="no-area-msg">⚠ Calculate an area first in the Area Tool tab before using the Tile Calculator.</div></div>
+    <div id="tile-content" style="display:none">
+      <div class="tile-grid">
+        <!-- LEFT: INPUTS + RESULTS -->
+        <div>
+          <div class="card">
+            <div class="ctitle">Tile Settings</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+              <div class="fi"><label>Tile Width (cm)</label><input type="number" id="tile-w" value="60" min="1" step="0.1"/></div>
+              <div class="fi"><label>Tile Height (cm)</label><input type="number" id="tile-h" value="60" min="1" step="0.1"/></div>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">Consider Grout Gap</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="grout-toggle" checked/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div id="grout-input-row" style="margin-bottom:1rem;">
+              <div class="fi"><label>Grout Gap (cm)</label><input type="number" id="grout-size" value="0.3" min="0" step="0.1"/></div>
+            </div>
+            <button class="bp" onclick="runTileCalc()" style="width:100%">⬛ Calculate Tiles</button>
+          </div>
+
+          <div class="card" id="tile-results" style="display:none">
+            <div class="ctitle">Results</div>
+            <div class="stat-grid">
+              <div class="stat-card"><div class="stat-label">Full Tiles</div><div class="stat-val sv-blue" id="r-full">0</div><div class="stat-sub">installed as-is</div></div>
+              <div class="stat-card"><div class="stat-label">Cut Positions</div><div class="stat-val sv-yellow" id="r-cut-pos">0</div><div class="stat-sub">need cutting</div></div>
+              <div class="stat-card"><div class="stat-label">Tiles to Cut</div><div class="stat-val sv-orange" id="r-cut-tiles">0</div><div class="stat-sub">after reuse</div></div>
+              <div class="stat-card"><div class="stat-label">Reused Pieces</div><div class="stat-val sv-green" id="r-reused">0</div><div class="stat-sub">cut offcuts reused</div></div>
+              <div class="stat-card" style="grid-column:1/-1;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2)">
+                <div class="stat-label">Tiles to Purchase</div>
+                <div class="stat-val sv-blue" id="r-purchase" style="font-size:2.2rem">0</div>
+                <div class="stat-sub">full tiles + tiles needed for cuts</div>
+              </div>
+              <div class="stat-card" style="grid-column:1/-1">
+                <div class="stat-label">Waste</div>
+                <div class="stat-val sv-red" id="r-waste">0%</div>
+                <div class="stat-sub">estimated cut waste</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: TILE CANVAS -->
+        <div>
+          <div class="card" style="padding:1rem">
+            <div class="ctitle" style="margin-bottom:1rem">Tile Layout Preview</div>
+            <div class="tile-canvas-wrap">
+              <canvas id="tile-canvas"></canvas>
+            </div>
+            <div class="tile-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(0,194,255,.5);border:1px solid var(--accent)"></div>Full Tile</div>
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(255,184,0,.4);border:1px solid var(--warn)"></div>Cut Tile</div>
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(255,59,92,.15);border:1px solid var(--danger)"></div>Outside</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -654,6 +743,250 @@ function fdate(d){
   try{ const dt=new Date(d); if(isNaN(dt)) return d;
     return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
   catch{ return d; }
+}
+
+// ── TILE CALCULATOR ───────────────────────────────────────────
+document.getElementById('grout-toggle').addEventListener('change', function(){
+  document.getElementById('grout-input-row').style.display = this.checked ? 'block' : 'none';
+});
+
+// Show/hide tile content based on area availability
+const origSwitchTab = window.switchTab;
+window.switchTab = function(id, btn){
+  origSwitchTab(id, btn);
+  if(id === 't3'){
+    const hasArea = isClosed && areaVal !== null;
+    document.getElementById('no-area-msg').style.display  = hasArea ? 'none'  : 'block';
+    document.getElementById('tile-content').style.display = hasArea ? 'block' : 'none';
+  }
+};
+
+window.runTileCalc = function(){
+  if(!isClosed || areaVal === null){ toast('Calculate polygon area first.',true); return; }
+
+  const tileW  = parseFloat(document.getElementById('tile-w').value) / 100; // convert cm to m
+  const tileH  = parseFloat(document.getElementById('tile-h').value) / 100;
+  const useGap = document.getElementById('grout-toggle').checked;
+  const gap    = useGap ? parseFloat(document.getElementById('grout-size').value) / 100 : 0;
+
+  if(!tileW || !tileH || tileW<=0 || tileH<=0){ toast('Enter valid tile dimensions.',true); return; }
+
+  const stepX = tileW + gap; // tile + grout
+  const stepY = tileH + gap;
+
+  // Get polygon points in meters
+  const polyPts = getPoints();
+
+  // Find centroid
+  const cx = polyPts.reduce((s,p)=>s+p.x,0) / polyPts.length;
+  const cy = polyPts.reduce((s,p)=>s+p.y,0) / polyPts.length;
+
+  // Bounding box of polygon
+  const xs = polyPts.map(p=>p.x), ys = polyPts.map(p=>p.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs);
+  const minY=Math.min(...ys), maxY=Math.max(...ys);
+
+  // Grid origin: tile corner at centroid
+  // Calculate how many tiles to cover the bounding box
+  const startX = cx - Math.ceil((cx - minX) / stepX) * stepX;
+  const startY = cy - Math.ceil((cy - minY) / stepY) * stepY;
+
+  // Generate all tile positions
+  let fullTiles = 0;
+  let cutPositions = []; // {x,y,w,h, insideFraction, insideShape}
+  const tileRects = [];
+
+  for(let gx = startX; gx < maxX + stepX; gx += stepX){
+    for(let gy = startY; gy < maxY + stepY; gy += stepY){
+      const tile = {x:gx, y:gy, w:tileW, h:tileH};
+      const status = getTileStatus(tile, polyPts);
+      if(status === 'full'){
+        fullTiles++;
+        tileRects.push({...tile, type:'full'});
+      } else if(status === 'cut'){
+        cutPositions.push({...tile, type:'cut'});
+        tileRects.push({...tile, type:'cut'});
+      }
+      // 'outside' tiles are ignored
+    }
+  }
+
+  // Cut piece reuse logic
+  // For each cut tile, compute the needed piece dimensions
+  const neededPieces = cutPositions.map(t => {
+    const inter = getIntersectionBounds(t, polyPts);
+    return { needW: inter.w, needH: inter.h, offcutW: tileW - inter.w, offcutH: tileH - inter.h };
+  });
+
+  // Available offcuts after each cut
+  let offcuts = []; // {w, h} — remaining pieces (can be rotated)
+  let cutTilesNeeded = 0;
+  let reusedCount = 0;
+
+  for(const piece of neededPieces){
+    // Try to find a reusable offcut that fits (check all rotations)
+    const fitIdx = findFittingOffcut(offcuts, piece.needW, piece.needH, tileW, tileH);
+    if(fitIdx >= 0){
+      // Reuse this offcut
+      const used = offcuts.splice(fitIdx, 1)[0];
+      reusedCount++;
+      // The new offcut from trimming the reused piece
+      const newOffcutW = used.w - piece.needW;
+      const newOffcutH = used.h - piece.needH;
+      if(newOffcutW > 0.01) offcuts.push({w:newOffcutW, h:used.h});
+      if(newOffcutH > 0.01) offcuts.push({w:piece.needW, h:newOffcutH});
+    } else {
+      // Need a new tile — generate offcut
+      cutTilesNeeded++;
+      const offcutW = tileW - piece.needW;
+      const offcutH = tileH - piece.needH;
+      if(offcutW > 0.01) offcuts.push({w:offcutW, h:tileH});
+      if(offcutH > 0.01) offcuts.push({w:piece.needW, h:offcutH});
+    }
+  }
+
+  const totalPurchase = fullTiles + cutTilesNeeded;
+  const totalArea = areaVal;
+  const tileArea  = tileW * tileH;
+  const usedArea  = fullTiles * tileArea + neededPieces.reduce((s,p)=>s+p.needW*p.needH,0);
+  const wasteArea = (cutTilesNeeded * tileArea) - neededPieces.slice(reusedCount).reduce((s,p)=>s+p.needW*p.needH,0);
+  const wastePct  = cutTilesNeeded > 0 ? Math.max(0, (wasteArea/(totalPurchase*tileArea)*100)).toFixed(1) : '0.0';
+
+  // Update results
+  document.getElementById('r-full').textContent     = fullTiles;
+  document.getElementById('r-cut-pos').textContent  = cutPositions.length;
+  document.getElementById('r-cut-tiles').textContent= cutTilesNeeded;
+  document.getElementById('r-reused').textContent   = reusedCount;
+  document.getElementById('r-purchase').textContent = totalPurchase;
+  document.getElementById('r-waste').textContent    = wastePct + '%';
+  document.getElementById('tile-results').style.display = 'block';
+
+  // Draw tile canvas
+  drawTileCanvas(tileRects, polyPts, stepX, stepY);
+  toast('Tile calculation complete!');
+};
+
+function findFittingOffcut(offcuts, needW, needH, maxW, maxH){
+  for(let i=0;i<offcuts.length;i++){
+    const o = offcuts[i];
+    // Check all 4 rotations (for rectangular tiles)
+    if((o.w >= needW - 0.001 && o.h >= needH - 0.001) ||
+       (o.w >= needH - 0.001 && o.h >= needW - 0.001)){
+      return i;
+    }
+  }
+  return -1;
+}
+
+function getTileStatus(tile, poly){
+  // Sample points to determine if tile is full, cut, or outside
+  const corners = [
+    {x:tile.x,         y:tile.y},
+    {x:tile.x+tile.w,  y:tile.y},
+    {x:tile.x+tile.w,  y:tile.y+tile.h},
+    {x:tile.x,         y:tile.y+tile.h},
+  ];
+  const inside = corners.map(p => pointInPolygon(p, poly));
+  const allIn  = inside.every(Boolean);
+  const anyIn  = inside.some(Boolean);
+
+  if(allIn) return 'full';
+
+  // Also check if polygon intersects tile even if no corners are inside
+  if(!anyIn){
+    // Check if any polygon edge crosses tile, or tile center is inside
+    const tc = {x:tile.x+tile.w/2, y:tile.y+tile.h/2};
+    if(pointInPolygon(tc, poly)) return 'cut';
+    // Check polygon vertices inside tile
+    if(poly.some(p=>p.x>=tile.x&&p.x<=tile.x+tile.w&&p.y>=tile.y&&p.y<=tile.y+tile.h)) return 'cut';
+    return 'outside';
+  }
+  return 'cut';
+}
+
+function getIntersectionBounds(tile, poly){
+  // Approximate intersection box using sampling
+  const sampleN = 10;
+  let minX=tile.x+tile.w, maxX=tile.x, minY=tile.y+tile.h, maxY=tile.y;
+  for(let i=0;i<=sampleN;i++){
+    for(let j=0;j<=sampleN;j++){
+      const px = tile.x + (tile.w * i/sampleN);
+      const py = tile.y + (tile.h * j/sampleN);
+      if(pointInPolygon({x:px,y:py}, poly)){
+        minX=Math.min(minX,px); maxX=Math.max(maxX,px);
+        minY=Math.min(minY,py); maxY=Math.max(maxY,py);
+      }
+    }
+  }
+  const w = Math.max(0.001, maxX-minX);
+  const h = Math.max(0.001, maxY-minY);
+  return {w, h};
+}
+
+function pointInPolygon(pt, poly){
+  let inside=false;
+  const n=poly.length;
+  for(let i=0,j=n-1;i<n;j=i++){
+    const xi=poly[i].x, yi=poly[i].y;
+    const xj=poly[j].x, yj=poly[j].y;
+    const intersect=((yi>pt.y)!==(yj>pt.y))&&(pt.x<(xj-xi)*(pt.y-yi)/(yj-yi)+xi);
+    if(intersect) inside=!inside;
+  }
+  return inside;
+}
+
+function drawTileCanvas(tiles, poly, stepX, stepY){
+  const canvas = document.getElementById('tile-canvas');
+  const allPts = [...poly, ...tiles.map(t=>[{x:t.x,y:t.y},{x:t.x+t.w,y:t.y+t.h}]).flat()];
+  const xs = allPts.map(p=>p.x), ys = allPts.map(p=>p.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs);
+  const minY=Math.min(...ys), maxY=Math.max(...ys);
+
+  const PAD=30, SCALE=Math.min(800/(maxX-minX||1), 800/(maxY-minY||1), 120);
+  const W=Math.ceil((maxX-minX)*SCALE+PAD*2);
+  const H=Math.ceil((maxY-minY)*SCALE+PAD*2);
+  canvas.width=W; canvas.height=H;
+
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  const toC=(p)=>({x:PAD+(p.x-minX)*SCALE, y:H-PAD-(p.y-minY)*SCALE});
+
+  // Draw tiles
+  for(const t of tiles){
+    const tl=toC({x:t.x,     y:t.y+t.h});
+    const br=toC({x:t.x+t.w, y:t.y});
+    const tw=br.x-tl.x, th=br.y-tl.y;
+    if(t.type==='full'){
+      ctx.fillStyle='rgba(0,194,255,.25)';
+      ctx.strokeStyle='rgba(0,194,255,.6)';
+    } else {
+      ctx.fillStyle='rgba(255,184,0,.25)';
+      ctx.strokeStyle='rgba(255,184,0,.6)';
+    }
+    ctx.fillRect(tl.x,tl.y,tw,th);
+    ctx.lineWidth=0.5;
+    ctx.strokeRect(tl.x,tl.y,tw,th);
+  }
+
+  // Draw polygon outline
+  const cpts=poly.map(toC);
+  ctx.beginPath();
+  ctx.moveTo(cpts[0].x,cpts[0].y);
+  for(let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
+  ctx.closePath();
+  ctx.strokeStyle='#00ff9d';
+  ctx.lineWidth=2;
+  ctx.stroke();
+
+  // Centroid dot
+  const cen=toC({x:poly.reduce((s,p)=>s+p.x,0)/poly.length, y:poly.reduce((s,p)=>s+p.y,0)/poly.length});
+  ctx.beginPath(); ctx.arc(cen.x,cen.y,4,0,Math.PI*2);
+  ctx.fillStyle='#00ff9d'; ctx.fill();
+  ctx.fillStyle='rgba(0,255,157,.8)';
+  ctx.font='10px Share Tech Mono';
+  ctx.textAlign='left';
+  ctx.fillText('CENTROID',cen.x+6,cen.y+4);
 }
 </script>
 </body>
