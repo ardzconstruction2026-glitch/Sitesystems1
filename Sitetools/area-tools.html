@@ -963,29 +963,68 @@ function findFittingOffcut(offcuts, needW, needH, maxW, maxH){
 }
 
 function getTileStatus(tile, poly){
-  // Sample points to determine if tile is full, cut, or outside
+  const EPS = 1e-9; // small tolerance to handle floating point edge cases
+
   const corners = [
-    {x:tile.x,         y:tile.y},
-    {x:tile.x+tile.w,  y:tile.y},
-    {x:tile.x+tile.w,  y:tile.y+tile.h},
-    {x:tile.x,         y:tile.y+tile.h},
+    {x:tile.x + EPS,        y:tile.y + EPS},
+    {x:tile.x+tile.w - EPS, y:tile.y + EPS},
+    {x:tile.x+tile.w - EPS, y:tile.y+tile.h - EPS},
+    {x:tile.x + EPS,        y:tile.y+tile.h - EPS},
   ];
+
   const inside = corners.map(p => pointInPolygon(p, poly));
   const allIn  = inside.every(Boolean);
   const anyIn  = inside.some(Boolean);
 
   if(allIn) return 'full';
+  if(anyIn) return 'cut';
 
-  // Also check if polygon intersects tile even if no corners are inside
-  if(!anyIn){
-    // Check if any polygon edge crosses tile, or tile center is inside
-    const tc = {x:tile.x+tile.w/2, y:tile.y+tile.h/2};
-    if(pointInPolygon(tc, poly)) return 'cut';
-    // Check polygon vertices inside tile
-    if(poly.some(p=>p.x>=tile.x&&p.x<=tile.x+tile.w&&p.y>=tile.y&&p.y<=tile.y+tile.h)) return 'cut';
-    return 'outside';
+  // No corners inside — check if any polygon edge crosses the tile,
+  // or if the tile is fully inside the polygon (all corners inside)
+  const tc = {x: tile.x + tile.w/2, y: tile.y + tile.h/2};
+  if(pointInPolygon(tc, poly)) return 'cut';
+
+  // Check if any polygon vertex is strictly inside the tile (not on boundary)
+  const tileContainsPt = poly.some(p =>
+    p.x > tile.x + EPS && p.x < tile.x + tile.w - EPS &&
+    p.y > tile.y + EPS && p.y < tile.y + tile.h - EPS
+  );
+  if(tileContainsPt) return 'cut';
+
+  // Check if any polygon edge crosses any tile edge
+  if(polyEdgesCrossTile(tile, poly)) return 'cut';
+
+  return 'outside';
+}
+
+function polyEdgesCrossTile(tile, poly){
+  // Tile edges as segments
+  const tileEdges = [
+    [{x:tile.x,       y:tile.y},       {x:tile.x+tile.w, y:tile.y}],
+    [{x:tile.x+tile.w,y:tile.y},       {x:tile.x+tile.w, y:tile.y+tile.h}],
+    [{x:tile.x+tile.w,y:tile.y+tile.h},{x:tile.x,        y:tile.y+tile.h}],
+    [{x:tile.x,       y:tile.y+tile.h},{x:tile.x,        y:tile.y}],
+  ];
+  const n = poly.length;
+  for(let i=0;i<n;i++){
+    const a = poly[i], b = poly[(i+1)%n];
+    for(const [c,d] of tileEdges){
+      if(segmentsIntersect(a,b,c,d)) return true;
+    }
   }
-  return 'cut';
+  return false;
+}
+
+function segmentsIntersect(a,b,c,d){
+  const det=(x1,y1,x2,y2)=>x1*y2-x2*y1;
+  const dx1=b.x-a.x, dy1=b.y-a.y;
+  const dx2=d.x-c.x, dy2=d.y-c.y;
+  const denom=det(dx1,dy1,dx2,dy2);
+  if(Math.abs(denom)<1e-10) return false; // parallel
+  const dx3=c.x-a.x, dy3=c.y-a.y;
+  const t=det(dx3,dy3,dx2,dy2)/denom;
+  const u=det(dx3,dy3,dx1,dy1)/denom;
+  return t>1e-9 && t<1-1e-9 && u>1e-9 && u<1-1e-9;
 }
 
 function getIntersectionBounds(tile, poly){
