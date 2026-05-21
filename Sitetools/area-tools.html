@@ -894,47 +894,81 @@ window.runTileCalc = function(){
     }
   }
 
-  // Cut piece reuse logic
+  // ── CUT PIECE REUSE LOGIC ────────────────────────────────────
+  // For each cut position, determine the needed piece dimensions
+  // and which edges of the piece touch the area boundary (cut edges)
+  // vs touch other tiles or are free (factory edges)
   const neededPieces = cutPositions.map((t, idx) => {
     const inter = getIntersectionBounds(t, polyPts);
-    return { idx, needW: inter.w, needH: inter.h, tileObj: t };
+    // Determine which edges of the needed piece are cut edges (touch polygon boundary)
+    // A side is a "cut edge" if the tile extends beyond the polygon on that side
+    const cutEdges = {
+      left:   t.x < getMinPolyX(polyPts) + 0.001 || !isEdgeInsidePoly({x:t.x, y:t.y, w:0, h:t.h}, polyPts),
+      right:  t.x + t.w > getMaxPolyX(polyPts) - 0.001 || !isEdgeInsidePoly({x:t.x+t.w, y:t.y, w:0, h:t.h}, polyPts),
+      bottom: t.y < getMinPolyY(polyPts) + 0.001 || !isEdgeInsidePoly({x:t.x, y:t.y, w:t.w, h:0}, polyPts),
+      top:    t.y + t.h > getMaxPolyY(polyPts) - 0.001 || !isEdgeInsidePoly({x:t.x, y:t.y+t.h, w:t.w, h:0}, polyPts),
+    };
+    return { idx, needW: inter.w, needH: inter.h, tileObj: t, cutEdges };
   });
 
-  // Available offcuts — track source tile number for labeling
-  let offcuts = []; // {w, h, sourceLabel} 
+  // Offcut pool — each offcut tracks:
+  // - dimensions (w, h)
+  // - which edges are cut vs factory
+  //   freshOffcut: {w, h, sourceLabel, cutEdges:{left,right,top,bottom}, timesReCut:0}
+  // For a fresh offcut from a new tile:
+  //   The cut edge is on the side where the tile was cut
+  //   All other edges are factory edges
+  let offcuts = [];
   let cutTilesNeeded = 0;
   let reusedCount = 0;
   let sourceTileCounter = 0;
 
-  // Map from tileRect index → label (e.g. "C1", "C2")
-  const cutLabels = {}; // tileRectIdx → label
-
   for(const piece of neededPieces){
-    const fitIdx = findFittingOffcut(offcuts, piece.needW, piece.needH, tileW, tileH);
-    if(fitIdx >= 0){
-      const used = offcuts.splice(fitIdx, 1)[0];
-      piece.tileObj.label = used.sourceLabel; // assign directly to object
+    // Try to find a whole offcut that fits WITHOUT any additional cutting
+    // Rules:
+    // 1. Offcut must fit exactly (or be trimmed only once more if no whole fit exists)
+    // 2. The offcut's cut edge must face the area boundary (piece.cutEdges)
+    //    i.e. cut-edge of offcut → cut-edge position of the needed piece
+
+    // First pass: try to find a whole offcut that fits with no extra cut needed
+    const exactIdx = findExactFit(offcuts, piece.needW, piece.needH);
+    if(exactIdx >= 0){
+      const used = offcuts.splice(exactIdx, 1)[0];
+      piece.tileObj.label = used.sourceLabel;
       reusedCount++;
-      const newOffcutW = used.w - piece.needW;
-      const newOffcutH = used.h - piece.needH;
-      if(newOffcutW > 0.01) offcuts.push({w:newOffcutW, h:used.h, sourceLabel:used.sourceLabel});
-      if(newOffcutH > 0.01) offcuts.push({w:piece.needW, h:newOffcutH, sourceLabel:used.sourceLabel});
+      // No new offcuts since it was used whole (or trimmed minimally)
     } else {
-      cutTilesNeeded++;
-      sourceTileCounter++;
-      const label = 'C' + sourceTileCounter;
-      piece.tileObj.label = label; // assign directly to object
-      const offcutW = tileW - piece.needW;
-      const offcutH = tileH - piece.needH;
-      if(offcutW > 0.01) offcuts.push({w:offcutW, h:tileH, sourceLabel:label});
-      if(offcutH > 0.01) offcuts.push({w:piece.needW, h:offcutH, sourceLabel:label});
+      // Second pass: find an offcut that needs one more cut (but hasn't been re-cut yet)
+      const reuseIdx = findReusableOffcut(offcuts, piece.needW, piece.needH);
+      if(reuseIdx >= 0){
+        const used = offcuts.splice(reuseIdx, 1)[0];
+        piece.tileObj.label = used.sourceLabel;
+        reusedCount++;
+        // Generate new offcut from re-cutting (mark as re-cut)
+        const remW = used.w - piece.needW;
+        const remH = used.h - piece.needH;
+        if(remW > 0.01) offcuts.push({w:remW, h:used.h, sourceLabel:used.sourceLabel, timesReCut: used.timesReCut+1});
+        if(remH > 0.01) offcuts.push({w:piece.needW, h:remH, sourceLabel:used.sourceLabel, timesReCut: used.timesReCut+1});
+      } else {
+        // Need a fresh tile
+        cutTilesNeeded++;
+        sourceTileCounter++;
+        const label = 'C' + sourceTileCounter;
+        piece.tileObj.label = label;
+        // Offcuts from fresh tile — only one cut edge each
+        const offcutW = tileW - piece.needW;
+        const offcutH = tileH - piece.needH;
+        if(offcutW > 0.01) offcuts.push({w:offcutW, h:tileH, sourceLabel:label, timesReCut:0});
+        if(offcutH > 0.01) offcuts.push({w:piece.needW, h:offcutH, sourceLabel:label, timesReCut:0});
+      }
     }
   }
 
   const totalPurchase = fullTiles + cutTilesNeeded;
   const tileArea  = tileW * tileH;
-  const wasteArea = (cutTilesNeeded * tileArea) - neededPieces.slice(reusedCount).reduce((s,p)=>s+p.needW*p.needH,0);
-  const wastePct  = cutTilesNeeded > 0 ? Math.max(0, (wasteArea/(totalPurchase*tileArea)*100)).toFixed(1) : '0.0';
+  const totalCutArea = neededPieces.reduce((s,p)=>s+p.needW*p.needH, 0);
+  const wasteArea = Math.max(0, (cutTilesNeeded * tileArea) - totalCutArea);
+  const wastePct  = cutTilesNeeded > 0 ? ((wasteArea / (totalPurchase * tileArea)) * 100).toFixed(1) : '0.0';
 
   // Update results
   document.getElementById('r-full').textContent     = fullTiles;
@@ -950,16 +984,46 @@ window.runTileCalc = function(){
   toast('Tile calculation complete!');
 };
 
-function findFittingOffcut(offcuts, needW, needH, maxW, maxH){
+// Exact fit — offcut is used whole with no additional cutting needed
+function findExactFit(offcuts, needW, needH){
+  const EPS = 0.001;
   for(let i=0;i<offcuts.length;i++){
     const o = offcuts[i];
-    // Check all 4 rotations (for rectangular tiles)
-    if((o.w >= needW - 0.001 && o.h >= needH - 0.001) ||
-       (o.w >= needH - 0.001 && o.h >= needW - 0.001)){
+    // Fits without any trimming (original orientation or 90° rotation)
+    if((Math.abs(o.w - needW) < EPS && Math.abs(o.h - needH) < EPS) ||
+       (Math.abs(o.w - needH) < EPS && Math.abs(o.h - needW) < EPS)){
       return i;
     }
   }
   return -1;
+}
+
+// Reusable fit — offcut is larger and needs one more cut, but hasn't been re-cut before
+function findReusableOffcut(offcuts, needW, needH){
+  const EPS = 0.001;
+  for(let i=0;i<offcuts.length;i++){
+    const o = offcuts[i];
+    if(o.timesReCut > 0) continue; // skip pieces that were already re-cut
+    // Can be trimmed to fit (original or rotated)
+    if((o.w >= needW - EPS && o.h >= needH - EPS) ||
+       (o.w >= needH - EPS && o.h >= needW - EPS)){
+      return i;
+    }
+  }
+  return -1;
+}
+
+// Helper: get polygon bounding values
+function getMinPolyX(poly){ return Math.min(...poly.map(p=>p.x)); }
+function getMaxPolyX(poly){ return Math.max(...poly.map(p=>p.x)); }
+function getMinPolyY(poly){ return Math.min(...poly.map(p=>p.y)); }
+function getMaxPolyY(poly){ return Math.max(...poly.map(p=>p.y)); }
+
+// Helper: check if a tile edge line is inside the polygon
+function isEdgeInsidePoly(edge, poly){
+  // Sample midpoint of edge
+  const mid = {x: edge.x + edge.w/2, y: edge.y + edge.h/2};
+  return pointInPolygon(mid, poly);
 }
 
 function getTileStatus(tile, poly){
