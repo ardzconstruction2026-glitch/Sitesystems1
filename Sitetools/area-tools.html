@@ -923,7 +923,13 @@ window.runTileCalc = function(){
   let sourceTileCounter = 0;
 
   for(const piece of neededPieces){
-    if(!piece.shape || piece.shape.length < 3){ continue; }
+    if(!piece.shape || piece.shape.length < 3){
+      // Fallback: assign fresh tile label even if clip failed
+      cutTilesNeeded++;
+      sourceTileCounter++;
+      piece.tileObj.label = 'C' + sourceTileCounter;
+      continue;
+    }
 
     // Try to find a fitting offcut from the pool
     const fitIdx = findOffcutFit(offcutPool, piece.shape, tileW, tileH);
@@ -1002,37 +1008,41 @@ function normalizeShape(pts){
 
 // Sutherland-Hodgman polygon clipping
 function clipPolygon(subjectPts, clipPts){
-  // Subject is tile rect verts, clip is area polygon
-  let output = subjectPts.map(p=>({x:p.x, y:p.y, eType:'factory'}));
-  const n = clipPts.length;
-  for(let i=0;i<n;i++){
-    if(!output.length) return [];
-    const input = output;
-    output = [];
-    const a = clipPts[i], b = clipPts[(i+1)%n];
-    for(let j=0;j<input.length;j++){
-      const curr = input[j], prev = input[(j+input.length-1)%input.length];
-      const currIn = isInsideEdge(curr, a, b);
-      const prevIn = isInsideEdge(prev, a, b);
-      if(currIn){
-        if(!prevIn){
-          // Entering — intersection point is a cut edge
+  let output = subjectPts.map(p=>({x:p.x, y:p.y, eType:p.eType||'factory'}));
+  // Try both winding directions
+  for(let pass=0; pass<2; pass++){
+    const clip = pass===0 ? clipPts : [...clipPts].reverse();
+    let result = [...output];
+    const n = clip.length;
+    for(let i=0;i<n;i++){
+      if(!result.length) break;
+      const inp = result;
+      result = [];
+      const a = clip[i], b = clip[(i+1)%n];
+      for(let j=0;j<inp.length;j++){
+        const curr = inp[j], prev = inp[(j+inp.length-1)%inp.length];
+        const currIn = isInsideEdge(curr, a, b);
+        const prevIn = isInsideEdge(prev, a, b);
+        if(currIn){
+          if(!prevIn){
+            const inter = lineIntersect(prev, curr, a, b);
+            if(inter) result.push({x:inter.x, y:inter.y, eType:'cut'});
+          }
+          result.push({...curr});
+        } else if(prevIn){
           const inter = lineIntersect(prev, curr, a, b);
-          if(inter) output.push({x:inter.x, y:inter.y, eType:'cut'});
+          if(inter) result.push({x:inter.x, y:inter.y, eType:'cut'});
         }
-        output.push({...curr});
-      } else if(prevIn){
-        // Exiting — intersection point is a cut edge
-        const inter = lineIntersect(prev, curr, a, b);
-        if(inter) output.push({x:inter.x, y:inter.y, eType:'cut'});
       }
     }
+    if(result.length >= 3) return result;
   }
-  return output;
+  return [];
 }
 
 function isInsideEdge(pt, a, b){
-  return (b.x-a.x)*(pt.y-a.y) - (b.y-a.y)*(pt.x-a.x) >= 0;
+  // Works for both CW and CCW — using left-side test
+  return (b.x-a.x)*(pt.y-a.y) - (b.y-a.y)*(pt.x-a.x) <= 0;
 }
 
 function lineIntersect(p1, p2, p3, p4){
