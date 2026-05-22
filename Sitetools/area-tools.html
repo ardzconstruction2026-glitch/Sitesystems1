@@ -494,6 +494,11 @@ window.switchTab = function(id,btn){
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
   if(id==='t2') renderSaved();
+  if(id==='t3'){
+    const hasArea = isClosed && areaVal !== null;
+    document.getElementById('no-area-msg').style.display  = hasArea ? 'none'  : 'block';
+    document.getElementById('tile-content').style.display = hasArea ? 'block' : 'none';
+  }
 };
 
 function setToday(){
