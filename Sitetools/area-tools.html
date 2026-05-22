@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SiteTools — Area Calculator</title>
+<title>SiteTools — Area Calculator v1.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
 <style>
   :root{
@@ -16,6 +16,8 @@
   body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;
     background-image:radial-gradient(ellipse at 20% 0%,rgba(0,194,255,.06) 0%,transparent 60%),
     radial-gradient(ellipse at 80% 100%,rgba(192,132,252,.05) 0%,transparent 60%);}
+
+  /* LOGIN */
   #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
   .login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:100%;max-width:400px;}
   .login-logo{font-family:var(--fh);font-size:1.8rem;font-weight:700;letter-spacing:3px;color:var(--accent);text-transform:uppercase;text-align:center;margin-bottom:.25rem;}
@@ -28,39 +30,50 @@
   .login-btn{width:100%;font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#000;border:none;padding:12px;border-radius:var(--r);cursor:pointer;transition:all .2s;margin-top:.5rem;}
   .login-btn:hover{opacity:.85;}
   .login-err{font-family:var(--fm);font-size:.75rem;color:var(--danger);text-align:center;margin-top:.75rem;min-height:1rem;}
+
+  /* APP */
   #app-screen{display:none;}
   header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
-  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .logo{font-family:var(--fh);font-size:1.3rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;display:flex;align-items:center;gap:.75rem;}
   .logo span{color:var(--muted);font-weight:400;}
+  .vtag{font-family:var(--fm);font-size:.65rem;color:var(--accent);letter-spacing:1px;background:rgba(0,194,255,.1);border:1px solid rgba(0,194,255,.2);padding:2px 8px;border-radius:10px;}
   .hright{display:flex;align-items:center;gap:1rem;}
   .user-info{font-family:var(--fm);font-size:.75rem;color:var(--muted);}
   .user-info strong{color:var(--accent);}
   .btn-logout{font-family:var(--fm);font-size:.75rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:var(--r);cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s;}
   .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+
+  /* TABS */
   nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;}
   .tb{font-family:var(--fh);font-size:.95rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:none;border:none;color:var(--muted);padding:14px 28px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
   .tb:hover{color:var(--text);}
   .tb.active{color:var(--accent);border-bottom:2px solid var(--accent);}
-  .tc{display:none;padding:2rem;max-width:960px;margin:0 auto;}
+  .tc{display:none;padding:2rem;max-width:980px;margin:0 auto;}
   .tc.active{display:block;}
+
+  /* CARDS */
   .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2rem;margin-bottom:1.5rem;}
   .ctitle{font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
   .ctitle::before{content:'';width:3px;height:18px;background:var(--accent);border-radius:2px;}
 
-  /* INPUT AREA */
-  .input-row{display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:1.2rem;}
+  /* FORM */
+  .fg{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
   .fi{display:flex;flex-direction:column;gap:6px;}
+  .fi.full{grid-column:1/-1;}
   label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
   input[type="number"],input[type="date"],input[type="text"],textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:10px 14px;font-family:var(--fb);font-size:.9rem;outline:none;transition:border-color .2s;width:100%;}
   input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,194,255,.1);}
   textarea{resize:vertical;min-height:70px;}
+  select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:10px 14px;font-family:var(--fb);font-size:.9rem;outline:none;width:100%;cursor:pointer;}
+  select:focus{border-color:var(--accent);}
+  select option{background:var(--surface2);}
 
-  /* DIRECTION ARROWS */
+  /* ARROW PAD */
   .arrow-pad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:4px;}
   .arr-btn{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
   .arr-btn:hover{border-color:var(--accent);color:var(--accent);}
   .arr-btn.active{background:var(--accent);border-color:var(--accent);color:#000;}
-  .arr-btn.blank{background:transparent;border:none;cursor:default;}
+  .arr-blank{background:transparent;border:none;}
 
   /* SEGMENT LIST */
   .seg-list{display:flex;flex-direction:column;gap:.4rem;max-height:200px;overflow-y:auto;margin-bottom:1rem;}
@@ -73,14 +86,14 @@
   .empty-seg{font-family:var(--fm);font-size:.78rem;color:var(--muted);padding:.5rem 0;text-align:center;}
 
   /* CANVAS */
-  .canvas-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:1.2rem;}
+  .canvas-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
   canvas{display:block;}
 
   /* RESULT */
   .result-box{background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.2);border-radius:8px;padding:1.2rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem;}
-  .result-label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
   .result-value{font-family:var(--fh);font-size:2rem;font-weight:700;color:var(--accent3);}
   .result-unit{font-family:var(--fm);font-size:.85rem;color:var(--muted);}
+  .result-label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
 
   /* BUTTONS */
   .btn-row{display:flex;gap:.75rem;flex-wrap:wrap;}
@@ -110,7 +123,28 @@
   .btn-del-row:hover{background:rgba(255,59,92,.18);}
   .empty{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
 
-  /* MODAL */
+  /* TILE CALC */
+  .tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+  .toggle-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;}
+  .toggle-label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0;}
+  .toggle-switch input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;inset:0;background:var(--surface2);border:1px solid var(--border);border-radius:24px;cursor:pointer;transition:.3s;}
+  .toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:.3s;}
+  .toggle-switch input:checked+.toggle-slider{background:rgba(0,194,255,.15);border-color:var(--accent);}
+  .toggle-switch input:checked+.toggle-slider::before{transform:translateX(20px);background:var(--accent);}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem;}
+  .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;}
+  .stat-label{font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  .stat-val{font-family:var(--fh);font-size:1.8rem;font-weight:700;line-height:1;}
+  .stat-sub{font-family:var(--fm);font-size:.68rem;color:var(--muted);margin-top:3px;}
+  .sv-blue{color:var(--accent);}.sv-yellow{color:var(--warn);}.sv-green{color:var(--accent3);}.sv-orange{color:var(--accent2);}.sv-red{color:var(--danger);}
+  .tile-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.75rem;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:.7rem;color:var(--muted);}
+  .legend-dot{width:12px;height:12px;border-radius:2px;flex-shrink:0;}
+  .no-area-msg{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
+
+  /* DELETE MODAL */
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(13,15,20,.85);z-index:300;align-items:center;justify-content:center;}
   .modal-bg.show{display:flex;}
   .modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2rem;max-width:380px;width:90%;text-align:center;}
@@ -120,32 +154,15 @@
   .btn-confirm{font-family:var(--fh);font-size:.9rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--danger);color:#fff;border:none;padding:10px 24px;border-radius:var(--r);cursor:pointer;}
   .btn-cancel2{font-family:var(--fh);font-size:.9rem;letter-spacing:2px;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--border);padding:10px 24px;border-radius:var(--r);cursor:pointer;}
 
+  /* TOAST */
   #toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent3);color:var(--text);padding:12px 20px;border-radius:var(--r);font-family:var(--fm);font-size:.82rem;opacity:0;transform:translateY(10px);transition:all .3s;z-index:999;pointer-events:none;max-width:320px;}
   #toast.show{opacity:1;transform:translateY(0);}
   #toast.err{border-left-color:var(--danger);}
-  @media(max-width:600px){header{padding:0 1rem;}.tc{padding:1rem;}.tb{padding:12px 14px;font-size:.8rem;}.btn-row{flex-direction:column;}}
 
-  /* TILE CALCULATOR */
-  .tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
-  .toggle-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;}
-  .toggle-label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
-  .toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0;}
-  .toggle-switch input{opacity:0;width:0;height:0;}
-  .toggle-slider{position:absolute;inset:0;background:var(--surface2);border:1px solid var(--border);border-radius:24px;cursor:pointer;transition:.3s;}
-  .toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:.3s;}
-  .toggle-switch input:checked + .toggle-slider{background:rgba(0,194,255,.15);border-color:var(--accent);}
-  .toggle-switch input:checked + .toggle-slider::before{transform:translateX(20px);background:var(--accent);}
-  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem;}
-  .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;}
-  .stat-label{font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
-  .stat-val{font-family:var(--fh);font-size:1.8rem;font-weight:700;line-height:1;}
-  .stat-sub{font-family:var(--fm);font-size:.68rem;color:var(--muted);margin-top:3px;}
-  .sv-blue{color:var(--accent);} .sv-yellow{color:var(--warn);} .sv-green{color:var(--accent3);} .sv-orange{color:var(--accent2);} .sv-red{color:var(--danger);}
-  .tile-canvas-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:500px;}
-  .tile-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.75rem;}
-  .legend-item{display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:.7rem;color:var(--muted);letter-spacing:.5px;}
-  .legend-dot{width:12px;height:12px;border-radius:2px;flex-shrink:0;}
-  .no-area-msg{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
+  @media(max-width:700px){
+    header{padding:0 1rem;} .tc{padding:1rem;} .tb{padding:12px 14px;font-size:.8rem;}
+    .fg{grid-template-columns:1fr;} .tile-grid{grid-template-columns:1fr;} .btn-row{flex-direction:column;}
+  }
 </style>
 </head>
 <body>
@@ -154,7 +171,7 @@
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">Site<span>Tools</span></div>
-    <div class="login-sub">Area Calculator</div>
+    <div class="login-sub">Area Calculator v1.1</div>
     <div class="login-fi"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" autocomplete="username"/></div>
     <div class="login-fi"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/></div>
     <button class="login-btn" id="login-btn-el">Login</button>
@@ -165,95 +182,83 @@
 <!-- APP -->
 <div id="app-screen">
   <header>
-    <div class="logo">Site<span>Tools</span> <span style="font-size:.9rem;color:var(--muted);font-weight:400;letter-spacing:1px">/ Area</span></div>
+    <div class="logo">Site<span>Tools</span> / Area <span class="vtag">v1.1</span></div>
     <div class="hright">
       <div class="user-info">Logged in as <strong id="display-name"></strong></div>
-      <button class="btn-logout" id="btn-logout">Logout</button>
+      <button class="btn-logout" id="btn-logout-el">Logout</button>
     </div>
   </header>
   <nav>
-    <button class="tb active" onclick="switchTab('t1',this)">Area Tool</button>
-    <button class="tb" onclick="switchTab('t2',this)">Saved Areas</button>
-    <button class="tb" onclick="switchTab('t3',this)">Tile Calculator</button>
+    <button class="tb active" id="tab-btn-1" onclick="switchTab(1)">Area Tool</button>
+    <button class="tb" id="tab-btn-2" onclick="switchTab(2)">Saved Areas</button>
+    <button class="tb" id="tab-btn-3" onclick="switchTab(3)">Tile Calculator</button>
   </nav>
 
   <!-- TAB 1: AREA TOOL -->
-  <div id="t1" class="tc active">
+  <div id="tab-1" class="tc active">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-
-      <!-- LEFT: INPUTS -->
+      <!-- LEFT -->
       <div>
         <div class="card">
           <div class="ctitle">Add Segment</div>
-          <div class="input-row">
+          <div style="display:flex;gap:1.5rem;align-items:flex-start;margin-bottom:1.2rem;">
             <div class="fi">
               <label>Direction</label>
               <div class="arrow-pad">
-                <div class="arr-btn blank"></div>
+                <div class="arr-blank"></div>
                 <button class="arr-btn" id="arr-N" onclick="setDir('N')">↑</button>
-                <div class="arr-btn blank"></div>
+                <div class="arr-blank"></div>
                 <button class="arr-btn" id="arr-W" onclick="setDir('W')">←</button>
-                <div class="arr-btn blank" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r)"></div>
+                <div class="arr-btn arr-blank" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r)"></div>
                 <button class="arr-btn" id="arr-E" onclick="setDir('E')">→</button>
-                <div class="arr-btn blank"></div>
+                <div class="arr-blank"></div>
                 <button class="arr-btn" id="arr-S" onclick="setDir('S')">↓</button>
-                <div class="arr-btn blank"></div>
+                <div class="arr-blank"></div>
               </div>
-              <input type="hidden" id="f-dir"/>
             </div>
-            <div class="fi" style="flex:1">
+            <div class="fi" style="flex:1;">
               <label>Length (m)</label>
               <input type="number" id="f-len" placeholder="0.00" min="0" step="0.01"/>
-              <div style="margin-top:.75rem">
-                <button class="bp" onclick="addSegment()" style="width:100%">+ Add Segment</button>
-              </div>
+              <button class="bp" onclick="addSegment()" style="margin-top:.75rem;width:100%">+ Add Segment</button>
             </div>
           </div>
-          <!-- SEGMENT LIST -->
-          <label style="margin-bottom:.5rem;display:block">Segments</label>
-          <div class="seg-list" id="seg-list"><div class="empty-seg">No segments added yet.</div></div>
-          <div class="btn-row" style="margin-top:.75rem">
+          <label style="display:block;margin-bottom:.5rem;">Segments</label>
+          <div class="seg-list" id="seg-list"><div class="empty-seg">No segments yet.</div></div>
+          <div class="btn-row" style="margin-top:.75rem;">
             <button class="bp bp-orange" onclick="closePolygon()">⬡ Close Polygon</button>
             <button class="bp bp-green" onclick="calculateArea()">= Calculate</button>
             <button class="bp bp-danger" onclick="clearAll()">✕ Clear</button>
           </div>
         </div>
 
-        <!-- RESULT + SAVE -->
         <div class="card">
-          <div class="ctitle">Result</div>
-          <div class="result-box" id="result-box" style="display:none">
+          <div class="ctitle">Save Area</div>
+          <div id="result-box" style="display:none;" class="result-box">
             <div>
               <div class="result-label">Computed Area</div>
-              <div style="display:flex;align-items:baseline;gap:.5rem">
+              <div style="display:flex;align-items:baseline;gap:.5rem;">
                 <div class="result-value" id="result-val">0</div>
                 <div class="result-unit">m²</div>
               </div>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-            <div class="fi">
-              <label>Date</label>
-              <input type="date" id="f-date"/>
-            </div>
-            <div class="fi fi-notes" style="grid-column:1/-1">
-              <label>Notes</label>
-              <textarea id="f-notes" placeholder="Describe the area or location…"></textarea>
-            </div>
+          <div class="fg" style="margin-bottom:1rem;">
+            <div class="fi"><label>Date</label><input type="date" id="f-date"/></div>
+            <div class="fi full"><label>Notes</label><textarea id="f-notes" placeholder="Describe the area or location…"></textarea></div>
           </div>
-          <button class="bp bp-purple" onclick="saveArea()" id="btn-save" disabled>💾 Save Area</button>
+          <button class="bp bp-purple" id="btn-save-area" disabled onclick="saveArea()">💾 Save Area</button>
         </div>
       </div>
 
       <!-- RIGHT: CANVAS -->
       <div>
-        <div class="card" style="padding:1rem">
-          <div class="ctitle" style="margin-bottom:1rem">Polygon Preview</div>
+        <div class="card" style="padding:1rem;">
+          <div class="ctitle" style="margin-bottom:1rem;">Polygon Preview</div>
           <div class="canvas-wrap">
-            <canvas id="poly-canvas" width="380" height="380"></canvas>
+            <canvas id="poly-canvas" width="400" height="400"></canvas>
           </div>
-          <div style="font-family:var(--fm);font-size:.7rem;color:var(--muted);text-align:center;margin-top:.5rem;letter-spacing:.5px">
-            Click on canvas to pan · Segments plotted in order
+          <div style="font-family:var(--fm);font-size:.68rem;color:var(--muted);text-align:center;margin-top:.5rem;">
+            Segments plotted in order from start point
           </div>
         </div>
       </div>
@@ -261,34 +266,31 @@
   </div>
 
   <!-- TAB 2: SAVED AREAS -->
-  <div id="t2" class="tc">
+  <div id="tab-2" class="tc">
     <div class="card">
-      <div class="ctitle" style="margin-bottom:1rem">Saved Areas</div>
+      <div class="ctitle">Saved Areas</div>
       <div class="fbar">
-        <input class="si" id="search-saved" placeholder="Search by notes…" oninput="renderSaved()"/>
+        <input class="si" id="search-saved" placeholder="Search by notes or date…" oninput="renderSaved()"/>
       </div>
       <div class="tw">
         <table>
-          <thead><tr>
-            <th>Date</th><th>Area (m²)</th><th>Notes</th><th>Saved On</th><th>Actions</th>
-          </tr></thead>
-          <tbody id="saved-tbody"></tbody>
+          <thead><tr><th>Date</th><th>Area (m²)</th><th>Notes</th><th>Saved On</th><th>Actions</th></tr></thead>
+          <tbody id="saved-tbody"><tr><td colspan="5"><div class="empty">Loading…</div></td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
-</div>
 
   <!-- TAB 3: TILE CALCULATOR -->
-  <div id="t3" class="tc">
-    <div id="no-area-msg" class="card"><div class="no-area-msg">⚠ Calculate an area first in the Area Tool tab before using the Tile Calculator.</div></div>
-    <div id="tile-content" style="display:none">
+  <div id="tab-3" class="tc">
+    <div id="no-area-msg" class="card"><div class="no-area-msg">⚠ Calculate an area first in the Area Tool tab.</div></div>
+    <div id="tile-content" style="display:none;">
       <div class="tile-grid">
-        <!-- LEFT: INPUTS + RESULTS -->
+        <!-- LEFT: SETTINGS + RESULTS -->
         <div>
           <div class="card">
             <div class="ctitle">Tile Settings</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+            <div class="fg" style="margin-bottom:1rem;">
               <div class="fi"><label>Tile Width (cm)</label><input type="number" id="tile-w" value="60" min="1" step="0.1"/></div>
               <div class="fi"><label>Tile Height (cm)</label><input type="number" id="tile-h" value="60" min="1" step="0.1"/></div>
             </div>
@@ -299,75 +301,58 @@
                 <span class="toggle-slider"></span>
               </label>
             </div>
-            <div id="grout-input-row" style="margin-bottom:1rem;">
+            <div id="grout-row" style="margin-bottom:1rem;">
               <div class="fi"><label>Grout Gap (cm)</label><input type="number" id="grout-size" value="0.3" min="0" step="0.1"/></div>
             </div>
 
-            <!-- GRID ORIGIN -->
             <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem;">
-              <div style="font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">
-                Grid Origin — relative to Start Point
-              </div>
-
-              <!-- Horizontal offset -->
+              <div style="font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">Grid Origin — from Start Point</div>
               <div class="fi" style="margin-bottom:.75rem;">
                 <label>Horizontal Offset (X)</label>
                 <div style="display:flex;gap:.5rem;align-items:center;">
-                  <button class="arr-btn" id="ox-left"  onclick="setOriginDir('x','W')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0">←</button>
-                  <button class="arr-btn" id="ox-right" onclick="setOriginDir('x','E')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0">→</button>
-                  <input type="number" id="origin-x" value="0" min="0" step="0.01" style="flex:1;min-width:0;font-size:1rem;padding:10px 12px;"/>
-                  <span style="font-family:var(--fm);font-size:.78rem;color:var(--muted);flex-shrink:0">m</span>
+                  <button class="arr-btn" id="ox-W" onclick="setOriginDir('x','W')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0;">←</button>
+                  <button class="arr-btn active" id="ox-E" onclick="setOriginDir('x','E')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0;">→</button>
+                  <input type="number" id="origin-x" value="0" min="0" step="0.01" style="flex:1;font-size:1rem;padding:10px 12px;"/>
+                  <span style="font-family:var(--fm);font-size:.78rem;color:var(--muted);flex-shrink:0;">m</span>
                 </div>
-                <input type="hidden" id="origin-x-dir" value="E"/>
               </div>
-
-              <!-- Vertical offset -->
               <div class="fi" style="margin-bottom:.75rem;">
                 <label>Vertical Offset (Y)</label>
                 <div style="display:flex;gap:.5rem;align-items:center;">
-                  <button class="arr-btn" id="oy-up"   onclick="setOriginDir('y','N')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0">↑</button>
-                  <button class="arr-btn" id="oy-down" onclick="setOriginDir('y','S')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0">↓</button>
-                  <input type="number" id="origin-y" value="0" min="0" step="0.01" style="flex:1;min-width:0;font-size:1rem;padding:10px 12px;"/>
-                  <span style="font-family:var(--fm);font-size:.78rem;color:var(--muted);flex-shrink:0">m</span>
+                  <button class="arr-btn active" id="oy-N" onclick="setOriginDir('y','N')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0;">↑</button>
+                  <button class="arr-btn" id="oy-S" onclick="setOriginDir('y','S')" style="width:40px;height:40px;font-size:1.2rem;flex-shrink:0;">↓</button>
+                  <input type="number" id="origin-y" value="0" min="0" step="0.01" style="flex:1;font-size:1rem;padding:10px 12px;"/>
+                  <span style="font-family:var(--fm);font-size:.78rem;color:var(--muted);flex-shrink:0;">m</span>
                 </div>
-                <input type="hidden" id="origin-y-dir" value="N"/>
               </div>
-
-              <!-- Anchor corner -->
-              <div class="fi" style="margin-bottom:.5rem;">
+              <div class="fi">
                 <label>Anchor Corner</label>
-                <select id="anchor-corner" style="width:100%;font-size:.9rem;padding:10px 14px;">
+                <select id="anchor-corner">
                   <option value="TL">Top-Left</option>
                   <option value="TR">Top-Right</option>
                   <option value="BL">Bottom-Left</option>
                   <option value="BR">Bottom-Right</option>
                 </select>
               </div>
-
-              <div style="font-family:var(--fm);font-size:.68rem;color:var(--muted);margin-top:.4rem;line-height:1.5;">
-                The selected tile corner will be placed at this offset from the polygon start point.
-              </div>
             </div>
-
-            <button class="bp" onclick="runTileCalc()" style="width:100%">⬛ Calculate Tiles</button>
+            <button class="bp" onclick="runTileCalc()" style="width:100%;">⬛ Calculate Tiles</button>
           </div>
 
-          <div class="card" id="tile-results" style="display:none">
+          <div class="card" id="tile-results" style="display:none;">
             <div class="ctitle">Results</div>
             <div class="stat-grid">
               <div class="stat-card"><div class="stat-label">Full Tiles</div><div class="stat-val sv-blue" id="r-full">0</div><div class="stat-sub">installed as-is</div></div>
               <div class="stat-card"><div class="stat-label">Cut Positions</div><div class="stat-val sv-yellow" id="r-cut-pos">0</div><div class="stat-sub">need cutting</div></div>
-              <div class="stat-card"><div class="stat-label">Tiles to Cut</div><div class="stat-val sv-orange" id="r-cut-tiles">0</div><div class="stat-sub">after reuse</div></div>
-              <div class="stat-card"><div class="stat-label">Reused Pieces</div><div class="stat-val sv-green" id="r-reused">0</div><div class="stat-sub">cut offcuts reused</div></div>
-              <div class="stat-card" style="grid-column:1/-1;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2)">
+              <div class="stat-card"><div class="stat-label">New Tiles to Cut</div><div class="stat-val sv-orange" id="r-cut-tiles">0</div><div class="stat-sub">fresh tiles used</div></div>
+              <div class="stat-card"><div class="stat-label">Reused Pieces</div><div class="stat-val sv-green" id="r-reused">0</div><div class="stat-sub">offcuts reused</div></div>
+              <div class="stat-card" style="grid-column:1/-1;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2);">
                 <div class="stat-label">Tiles to Purchase</div>
-                <div class="stat-val sv-blue" id="r-purchase" style="font-size:2.2rem">0</div>
-                <div class="stat-sub">full tiles + tiles needed for cuts</div>
+                <div class="stat-val sv-blue" id="r-purchase" style="font-size:2.2rem;">0</div>
+                <div class="stat-sub">full + tiles for cuts</div>
               </div>
-              <div class="stat-card" style="grid-column:1/-1">
-                <div class="stat-label">Waste</div>
+              <div class="stat-card" style="grid-column:1/-1;">
+                <div class="stat-label">Estimated Waste</div>
                 <div class="stat-val sv-red" id="r-waste">0%</div>
-                <div class="stat-sub">estimated cut waste</div>
               </div>
             </div>
           </div>
@@ -375,15 +360,14 @@
 
         <!-- RIGHT: TILE CANVAS -->
         <div>
-          <div class="card" style="padding:1rem">
-            <div class="ctitle" style="margin-bottom:1rem">Tile Layout Preview</div>
-            <div class="tile-canvas-wrap">
+          <div class="card" style="padding:1rem;">
+            <div class="ctitle" style="margin-bottom:1rem;">Tile Layout Preview</div>
+            <div class="canvas-wrap" style="overflow:auto;max-height:520px;">
               <canvas id="tile-canvas"></canvas>
             </div>
             <div class="tile-legend">
-              <div class="legend-item"><div class="legend-dot" style="background:rgba(0,194,255,.5);border:1px solid var(--accent)"></div>Full Tile</div>
-              <div class="legend-item"><div class="legend-dot" style="background:rgba(255,184,0,.4);border:1px solid var(--warn)"></div>Cut Tile</div>
-              <div class="legend-item"><div class="legend-dot" style="background:rgba(255,59,92,.15);border:1px solid var(--danger)"></div>Outside</div>
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(0,194,255,.4);border:1px solid var(--accent)"></div>Full Tile</div>
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(255,107,53,.4);border:1px solid var(--accent2)"></div>Cut Tile (labeled)</div>
             </div>
           </div>
         </div>
@@ -395,12 +379,12 @@
 <!-- DELETE MODAL -->
 <div class="modal-bg" id="del-modal">
   <div class="modal">
-    <div style="font-size:2rem;margin-bottom:.75rem">⚠️</div>
+    <div style="font-size:2rem;margin-bottom:.75rem;">⚠️</div>
     <div class="modal-title">Delete Entry?</div>
-    <div class="modal-msg">This saved area will be permanently deleted. This cannot be undone.</div>
+    <div class="modal-msg">This saved area will be permanently deleted.</div>
     <div class="modal-acts">
-      <button class="btn-confirm" id="btn-del-confirm">Delete</button>
-      <button class="btn-cancel2" id="btn-del-cancel">Cancel</button>
+      <button class="btn-confirm" id="btn-del-confirm-el">Delete</button>
+      <button class="btn-cancel2" id="btn-del-cancel-el">Cancel</button>
     </div>
   </div>
 </div>
@@ -408,21 +392,23 @@
 <div id="toast"></div>
 
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, addDoc, getDoc, getDocs, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
+// ── API KEY CHECK ──────────────────────────────────────────────
 const _apiKey = sessionStorage.getItem('st_api_key');
 if (!_apiKey) { window.location.href = '../index.html'; }
+
 const firebaseConfig = {
-  apiKey: _apiKey,
-  authDomain: "equiptrack-e1011.firebaseapp.com",
-  projectId: "equiptrack-e1011",
-  storageBucket: "equiptrack-e1011.firebasestorage.app",
-  messagingSenderId: "468749948486",
-  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
+  apiKey:            _apiKey,
+  authDomain:        'equiptrack-e1011.firebaseapp.com',
+  projectId:         'equiptrack-e1011',
+  storageBucket:     'equiptrack-e1011.firebasestorage.app',
+  messagingSenderId: '468749948486',
+  appId:             '1:468749948486:web:8bbcd38e0435e92d86dc47'
 };
 
 const app  = initializeApp(firebaseConfig);
@@ -430,25 +416,32 @@ const auth = getAuth(app);
 const db   = getFirestore(app);
 
 // ── STATE ─────────────────────────────────────────────────────
-let segments  = []; // [{dir:'N',len:5}, ...]
-let isClosed  = false;
-let areaVal   = null;
-let savedData = [];
+let segments   = [];
+let isClosed   = false;
+let areaVal    = null;
+let savedData  = [];
 let pendingDelId = null;
-let currentDir = null;
+let currentDir   = null;
+let originXDir   = 'E';
+let originYDir   = 'N';
 
 // ── AUTH ──────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
   if (user) {
-    const snap = await getDoc(doc(db,'users',user.uid));
-    if (!snap.exists()) { await signOut(auth); return; }
-    const data = snap.data();
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display   = 'block';
-    document.getElementById('display-name').textContent   = data.username || user.email;
-    setToday();
-    await loadSaved();
-    drawCanvas();
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (!snap.exists()) { await signOut(auth); return; }
+      const data = snap.data();
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display   = 'block';
+      document.getElementById('display-name').textContent   = data.username || user.email;
+      setToday();
+      drawCanvas();
+      await loadSaved();
+    } catch(e) {
+      document.getElementById('login-err').textContent = 'Error: ' + e.message;
+      await signOut(auth);
+    }
   } else {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display   = 'none';
@@ -460,87 +453,92 @@ document.getElementById('login-btn-el').addEventListener('click', async () => {
   const password = document.getElementById('login-pass').value;
   const errEl    = document.getElementById('login-err');
   const btn      = document.getElementById('login-btn-el');
-  errEl.textContent='';
-  if (!username||!password){errEl.textContent='Please enter username and password.';return;}
-  btn.textContent='Logging in...';btn.disabled=true;
+  errEl.textContent = '';
+  if (!username || !password) { errEl.textContent = 'Please enter username and password.'; return; }
+  btn.textContent = 'Logging in...'; btn.disabled = true;
   try {
-    await signInWithEmailAndPassword(auth, username.toLowerCase()+'@equiptrack.app', password);
+    await signInWithEmailAndPassword(auth, username.toLowerCase() + '@equiptrack.app', password);
   } catch(e) {
-    if(e.code==='auth/invalid-credential'||e.code==='auth/user-not-found'||e.code==='auth/wrong-password'){
-      errEl.textContent='Invalid username or password.';
-    } else if(e.code==='auth/network-request-failed'){
-      errEl.textContent='Network error. Check your connection.';
-    } else { errEl.textContent='Login failed: '+e.message; }
-  } finally {btn.textContent='Login';btn.disabled=false;}
+    if (e.code === 'auth/invalid-credential' || e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
+      errEl.textContent = 'Invalid username or password.';
+    } else if (e.code === 'auth/network-request-failed') {
+      errEl.textContent = 'Network error. Check your connection.';
+    } else {
+      errEl.textContent = 'Login failed: ' + e.message;
+    }
+  } finally { btn.textContent = 'Login'; btn.disabled = false; }
 });
 
-document.getElementById('btn-logout').addEventListener('click', ()=>signOut(auth));
+document.getElementById('btn-logout-el').addEventListener('click', () => signOut(auth));
 
-// ── UTILS ─────────────────────────────────────────────────────
-window.switchTab = function(id,btn){
-  document.querySelectorAll('.tc').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  btn.classList.add('active');
-  if(id==='t2') renderSaved();
-};
+document.getElementById('grout-toggle').addEventListener('change', function() {
+  document.getElementById('grout-row').style.display = this.checked ? 'block' : 'none';
+});
 
-function setToday(){
-  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
-}
-
-function toast(msg,err=false){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.className='show'+(err?' err':'');
-  setTimeout(()=>t.className='',3500);
-}
-
-// ── DIRECTION ────────────────────────────────────────────────
-window.setDir = function(dir){
-  currentDir = dir;
-  document.getElementById('f-dir').value = dir;
-  ['N','S','E','W'].forEach(d=>{
-    document.getElementById('arr-'+d).classList.toggle('active', d===dir);
-  });
-};
-
-// ── ORIGIN DIRECTION ─────────────────────────────────────────
-window.setOriginDir = function(axis, dir) {
-  if(axis === 'x') {
-    document.getElementById('origin-x-dir').value = dir;
-    document.getElementById('ox-left').classList.toggle('active',  dir === 'W');
-    document.getElementById('ox-right').classList.toggle('active', dir === 'E');
-  } else {
-    document.getElementById('origin-y-dir').value = dir;
-    document.getElementById('oy-up').classList.toggle('active',   dir === 'N');
-    document.getElementById('oy-down').classList.toggle('active', dir === 'S');
+// ── TABS ──────────────────────────────────────────────────────
+window.switchTab = function(n) {
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('tab-' + i).classList.toggle('active', i === n);
+    document.getElementById('tab-btn-' + i).classList.toggle('active', i === n);
+  }
+  if (n === 2) renderSaved();
+  if (n === 3) {
+    const hasArea = isClosed && areaVal !== null;
+    document.getElementById('no-area-msg').style.display  = hasArea ? 'none'  : 'block';
+    document.getElementById('tile-content').style.display = hasArea ? 'block' : 'none';
   }
 };
 
-// Init origin direction buttons
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('ox-right').classList.add('active');
-  document.getElementById('oy-up').classList.add('active');
-});
+// ── UTILS ─────────────────────────────────────────────────────
+function setToday() {
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+}
 
-// ── SEGMENTS ─────────────────────────────────────────────────
-window.addSegment = function(){
-  const dir = currentDir;
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
+  setTimeout(() => { t.className = ''; }, 3500);
+}
+
+function fdate(d) {
+  if (!d) return '—';
+  try {
+    const dt = new Date(d);
+    if (isNaN(dt)) return d;
+    return dt.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+  } catch { return d; }
+}
+
+// ── AREA TOOL ─────────────────────────────────────────────────
+window.setDir = function(dir) {
+  currentDir = dir;
+  ['N','S','E','W'].forEach(d => document.getElementById('arr-' + d).classList.toggle('active', d === dir));
+};
+
+window.addSegment = function() {
+  if (!currentDir) { toast('Select a direction.', true); return; }
   const len = parseFloat(document.getElementById('f-len').value);
-  if (!dir){ toast('Select a direction.',true); return; }
-  if (!len || len<=0){ toast('Enter a valid length.',true); return; }
-  if (isClosed){ toast('Polygon is closed. Clear to start new.',true); return; }
-  segments.push({dir, len});
-  document.getElementById('f-len').value='';
+  if (!len || len <= 0) { toast('Enter a valid length.', true); return; }
+  if (isClosed) { toast('Polygon is closed. Clear to start new.', true); return; }
+  segments.push({ dir: currentDir, len });
+  document.getElementById('f-len').value = '';
   renderSegList();
   drawCanvas();
 };
 
-function renderSegList(){
+window.delSegment = function(i) {
+  segments.splice(i, 1);
+  isClosed = false; areaVal = null;
+  document.getElementById('result-box').style.display = 'none';
+  document.getElementById('btn-save-area').disabled = true;
+  renderSegList(); drawCanvas();
+};
+
+function renderSegList() {
   const el = document.getElementById('seg-list');
-  if(!segments.length){el.innerHTML='<div class="empty-seg">No segments added yet.</div>';return;}
-  const arrows = {N:'↑',S:'↓',E:'→',W:'←'};
-  el.innerHTML = segments.map((s,i)=>`
+  if (!segments.length) { el.innerHTML = '<div class="empty-seg">No segments yet.</div>'; return; }
+  const arrows = { N:'↑', S:'↓', E:'→', W:'←' };
+  el.innerHTML = segments.map((s, i) => `
     <div class="seg-item">
       <span class="seg-num">${i+1}</span>
       <span class="seg-dir">${arrows[s.dir]}</span>
@@ -549,216 +547,143 @@ function renderSegList(){
     </div>`).join('');
 }
 
-window.delSegment = function(i){
-  segments.splice(i,1);
-  isClosed = false;
-  areaVal  = null;
-  document.getElementById('result-box').style.display='none';
-  document.getElementById('btn-save').disabled=true;
-  renderSegList();
-  drawCanvas();
+window.closePolygon = function() {
+  if (segments.length < 3) { toast('Need at least 3 segments.', true); return; }
+  isClosed = true; toast('Polygon closed!'); drawCanvas();
 };
 
-window.closePolygon = function(){
-  if(segments.length < 3){ toast('Need at least 3 segments to close.',true); return; }
-  isClosed = true;
-  toast('Polygon closed!');
-  drawCanvas();
-};
-
-window.calculateArea = function(){
-  if(!isClosed){ toast('Close the polygon first.',true); return; }
+window.calculateArea = function() {
+  if (!isClosed) { toast('Close the polygon first.', true); return; }
   const pts = getPoints();
-  const area = shoelace(pts);
-  areaVal = area;
-  document.getElementById('result-val').textContent = area.toFixed(4);
-  document.getElementById('result-box').style.display='flex';
-  document.getElementById('btn-save').disabled = false;
+  areaVal = shoelace(pts);
+  document.getElementById('result-val').textContent = areaVal.toFixed(4);
+  document.getElementById('result-box').style.display = 'flex';
+  document.getElementById('btn-save-area').disabled = false;
   toast('Area calculated!');
 };
 
-window.clearAll = function(){
-  segments=[];isClosed=false;areaVal=null;currentDir=null;
-  ['N','S','E','W'].forEach(d=>document.getElementById('arr-'+d).classList.remove('active'));
-  document.getElementById('f-dir').value='';
-  document.getElementById('f-len').value='';
-  document.getElementById('f-notes').value='';
-  document.getElementById('result-box').style.display='none';
-  document.getElementById('btn-save').disabled=true;
-  renderSegList();
-  drawCanvas();
-  setToday();
+window.clearAll = function() {
+  segments = []; isClosed = false; areaVal = null; currentDir = null;
+  ['N','S','E','W'].forEach(d => document.getElementById('arr-' + d).classList.remove('active'));
+  document.getElementById('f-len').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('result-box').style.display = 'none';
+  document.getElementById('btn-save-area').disabled = true;
+  renderSegList(); drawCanvas(); setToday();
 };
 
-// ── GEOMETRY ──────────────────────────────────────────────────
-function getPoints(){
-  let x=0, y=0;
-  const pts=[{x,y}];
-  const dirMap = {N:{dx:0,dy:1}, S:{dx:0,dy:-1}, E:{dx:1,dy:0}, W:{dx:-1,dy:0}};
-  for(const s of segments){
-    const d=dirMap[s.dir];
-    x += d.dx * s.len;
-    y += d.dy * s.len;
-    pts.push({x,y});
+function getPoints() {
+  let x = 0, y = 0;
+  const pts = [{ x, y }];
+  const dirMap = { N:{dx:0,dy:1}, S:{dx:0,dy:-1}, E:{dx:1,dy:0}, W:{dx:-1,dy:0} };
+  for (const s of segments) {
+    const d = dirMap[s.dir];
+    x += d.dx * s.len; y += d.dy * s.len;
+    pts.push({ x, y });
   }
   return pts;
 }
 
-function shoelace(pts){
-  let area=0;
-  const n=pts.length;
-  for(let i=0;i<n;i++){
-    const j=(i+1)%n;
-    area += pts[i].x * pts[j].y;
-    area -= pts[j].x * pts[i].y;
-  }
-  return Math.abs(area)/2;
+function shoelace(pts) {
+  let a = 0; const n = pts.length;
+  for (let i = 0; i < n; i++) { const j = (i+1)%n; a += pts[i].x*pts[j].y - pts[j].x*pts[i].y; }
+  return Math.abs(a) / 2;
 }
 
-// ── CANVAS ────────────────────────────────────────────────────
-function drawCanvas(){
+function drawCanvas() {
   const canvas = document.getElementById('poly-canvas');
   const ctx    = canvas.getContext('2d');
-  const W=canvas.width, H=canvas.height;
-  ctx.clearRect(0,0,W,H);
-
-  // Grid background
-  ctx.strokeStyle='rgba(42,47,63,.5)';
-  ctx.lineWidth=1;
-  for(let x=0;x<=W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<=H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-
-  if(!segments.length) return;
-
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(42,47,63,.5)'; ctx.lineWidth = 1;
+  for (let x = 0; x <= W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  if (!segments.length) return;
   const pts = getPoints();
-
-  // Scale to fit canvas
-  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
-  const minX=Math.min(...xs), maxX=Math.max(...xs);
-  const minY=Math.min(...ys), maxY=Math.max(...ys);
-  const rangeX=maxX-minX||1, rangeY=maxY-minY||1;
-  const pad=50;
-  const scaleX=(W-pad*2)/rangeX, scaleY=(H-pad*2)/rangeY;
-  const scale=Math.min(scaleX,scaleY);
-
-  const toCanvas=(p)=>({
-    x: pad + (p.x-minX)*scale,
-    y: H - pad - (p.y-minY)*scale
-  });
-
-  const cpts = pts.map(toCanvas);
-
-  // Fill if closed
-  if(isClosed){
-    ctx.beginPath();
-    ctx.moveTo(cpts[0].x, cpts[0].y);
-    for(let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
-    ctx.closePath();
-    ctx.fillStyle='rgba(0,194,255,.08)';
-    ctx.fill();
+  const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+  const pad = 50;
+  const scale = Math.min((W-pad*2)/(maxX-minX||1), (H-pad*2)/(maxY-minY||1));
+  const toC = p => ({ x: pad+(p.x-minX)*scale, y: H-pad-(p.y-minY)*scale });
+  const cpts = pts.map(toC);
+  if (isClosed) {
+    ctx.beginPath(); ctx.moveTo(cpts[0].x,cpts[0].y);
+    for (let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
+    ctx.closePath(); ctx.fillStyle='rgba(0,194,255,.08)'; ctx.fill();
   }
-
-  // Draw segments
-  ctx.strokeStyle='#00c2ff';
-  ctx.lineWidth=2;
-  ctx.beginPath();
-  ctx.moveTo(cpts[0].x,cpts[0].y);
-  for(let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
-  if(isClosed) ctx.closePath();
+  ctx.strokeStyle='#00c2ff'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(cpts[0].x,cpts[0].y);
+  for (let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
+  if (isClosed) ctx.closePath();
   ctx.stroke();
-
-  // Closing dashed line if not closed
-  if(!isClosed && cpts.length>1){
-    ctx.setLineDash([5,5]);
-    ctx.strokeStyle='rgba(0,194,255,.3)';
-    ctx.beginPath();
-    ctx.moveTo(cpts[cpts.length-1].x,cpts[cpts.length-1].y);
-    ctx.lineTo(cpts[0].x,cpts[0].y);
-    ctx.stroke();
-    ctx.setLineDash([]);
+  if (!isClosed && cpts.length > 1) {
+    ctx.setLineDash([5,5]); ctx.strokeStyle='rgba(0,194,255,.3)';
+    ctx.beginPath(); ctx.moveTo(cpts[cpts.length-1].x,cpts[cpts.length-1].y);
+    ctx.lineTo(cpts[0].x,cpts[0].y); ctx.stroke(); ctx.setLineDash([]);
   }
-
-  // Direction arrows on segments
-  const arrows={N:'↑',S:'↓',E:'→',W:'←'};
-  ctx.fillStyle='rgba(0,194,255,.8)';
-  ctx.font='12px Share Tech Mono';
-  ctx.textAlign='center';
-  for(let i=0;i<segments.length;i++){
-    const mid={x:(cpts[i].x+cpts[i+1].x)/2, y:(cpts[i].y+cpts[i+1].y)/2};
+  const arrows = { N:'↑', S:'↓', E:'→', W:'←' };
+  ctx.fillStyle='rgba(0,194,255,.8)'; ctx.font='11px Share Tech Mono'; ctx.textAlign='center';
+  for (let i=0;i<segments.length;i++) {
+    const mid = {x:(cpts[i].x+cpts[i+1].x)/2, y:(cpts[i].y+cpts[i+1].y)/2};
     ctx.fillText(arrows[segments[i].dir]+' '+segments[i].len+'m', mid.x, mid.y-6);
   }
-
-  // Points
-  cpts.forEach((p,i)=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,i===0?5:3,0,Math.PI*2);
-    ctx.fillStyle = i===0 ? '#00ff9d' : '#00c2ff';
-    ctx.fill();
+  cpts.forEach((p,i) => {
+    ctx.beginPath(); ctx.arc(p.x,p.y,i===0?5:3,0,Math.PI*2);
+    ctx.fillStyle=i===0?'#00ff9d':'#00c2ff'; ctx.fill();
   });
-
-  // Start label
-  ctx.fillStyle='#00ff9d';
-  ctx.font='11px Share Tech Mono';
-  ctx.textAlign='left';
+  ctx.fillStyle='#00ff9d'; ctx.font='11px Share Tech Mono'; ctx.textAlign='left';
   ctx.fillText('START', cpts[0].x+8, cpts[0].y-6);
-
-  // Area label if calculated
-  if(areaVal!==null && isClosed){
-    const cx=cpts.reduce((s,p)=>s+p.x,0)/cpts.length;
-    const cy=cpts.reduce((s,p)=>s+p.y,0)/cpts.length;
-    ctx.fillStyle='rgba(0,255,157,.9)';
-    ctx.font='bold 14px Rajdhani';
-    ctx.textAlign='center';
+  if (areaVal !== null && isClosed) {
+    const cx=cpts.reduce((s,p)=>s+p.x,0)/cpts.length, cy=cpts.reduce((s,p)=>s+p.y,0)/cpts.length;
+    ctx.fillStyle='rgba(0,255,157,.9)'; ctx.font='bold 14px Rajdhani'; ctx.textAlign='center';
     ctx.fillText(areaVal.toFixed(2)+' m²', cx, cy);
   }
 }
 
-// ── SAVE ──────────────────────────────────────────────────────
-window.saveArea = async function(){
-  if(areaVal===null){ toast('Calculate area first.',true); return; }
+// ── SAVE AREA ─────────────────────────────────────────────────
+window.saveArea = async function() {
+  if (areaVal === null) { toast('Calculate area first.', true); return; }
   const date  = document.getElementById('f-date').value;
   const notes = document.getElementById('f-notes').value.trim();
-  if(!date){ toast('Enter a date.',true); return; }
-
+  if (!date) { toast('Enter a date.', true); return; }
   const payload = {
-    date,
-    notes,
-    area:       areaVal,
-    directions: segments.map(s=>s.dir),
-    lengths:    segments.map(s=>s.len),
+    date, notes, area: areaVal,
+    directions: segments.map(s => s.dir),
+    lengths:    segments.map(s => s.len),
     savedAt:    new Date().toISOString(),
   };
-
   try {
-    const ref = await addDoc(collection(db,'savedAreas'), payload);
-    savedData.push({id:ref.id,...payload});
+    const ref = await addDoc(collection(db, 'savedAreas'), payload);
+    savedData.unshift({ id: ref.id, ...payload });
+    renderSaved();
     toast('Area saved!');
-    document.getElementById('btn-save').disabled=true;
-  } catch(e){ toast('Error saving: '+e.message,true); }
+    document.getElementById('btn-save-area').disabled = true;
+  } catch(e) { toast('Error saving: ' + e.message, true); }
 };
 
-// ── LOAD SAVED ────────────────────────────────────────────────
-async function loadSaved(){
+// ── SAVED AREAS ────────────────────────────────────────────────
+async function loadSaved() {
   try {
-    const snap = await getDocs(collection(db,'savedAreas'));
-    savedData  = snap.docs.map(d=>({id:d.id,...d.data()}));
-    savedData.sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt));
-  } catch(e){ console.error(e); }
+    const snap = await getDocs(collection(db, 'savedAreas'));
+    savedData  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    savedData.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+    renderSaved();
+  } catch(e) { console.error('loadSaved error:', e); }
 }
 
-window.renderSaved = function(){
-  const q  = document.getElementById('search-saved').value.toLowerCase();
+window.renderSaved = function() {
+  const q  = document.getElementById('search-saved')?.value?.toLowerCase() || '';
   const tb = document.getElementById('saved-tbody');
-  const data = savedData.filter(d=>(d.notes||'').toLowerCase().includes(q)||(d.date||'').includes(q));
-  if(!data.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">NO SAVED AREAS</div></td></tr>';return;}
-  tb.innerHTML = data.map(d=>`
+  const data = savedData.filter(d => (d.notes||'').toLowerCase().includes(q) || (d.date||'').includes(q));
+  if (!data.length) { tb.innerHTML = '<tr><td colspan="5"><div class="empty">NO SAVED AREAS</div></td></tr>'; return; }
+  tb.innerHTML = data.map(d => `
     <tr>
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${d.date||'—'}</td>
       <td style="font-family:var(--fh);font-size:1.1rem;color:var(--accent3);font-weight:700">${(d.area||0).toFixed(4)} <span style="font-family:var(--fm);font-size:.7rem;color:var(--muted)">m²</span></td>
-      <td style="max-width:200px">${d.notes||'—'}</td>
-      <td style="font-family:var(--fm);font-size:.72rem;color:var(--muted)">${fdate(d.savedAt)}</td>
+      <td style="max-width:200px;">${d.notes||'—'}</td>
+      <td style="font-family:var(--fm);font-size:.72rem;color:var(--muted);">${fdate(d.savedAt)}</td>
       <td>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;">
           <button class="btn-use" onclick="useArea('${d.id}')">↩ Use</button>
           <button class="btn-del-row" onclick="delArea('${d.id}')">✕</button>
         </div>
@@ -766,611 +691,384 @@ window.renderSaved = function(){
     </tr>`).join('');
 };
 
-window.useArea = function(id){
-  const d = savedData.find(x=>x.id===id); if(!d) return;
-  segments = d.directions.map((dir,i)=>({dir, len:d.lengths[i]}));
-  isClosed = true;
-  areaVal  = d.area;
-  document.getElementById('f-date').value  = d.date||'';
-  document.getElementById('f-notes').value = d.notes||'';
+window.useArea = function(id) {
+  const d = savedData.find(x => x.id === id); if (!d) return;
+  segments = d.directions.map((dir, i) => ({ dir, len: d.lengths[i] }));
+  isClosed = true; areaVal = d.area;
+  document.getElementById('f-date').value  = d.date || '';
+  document.getElementById('f-notes').value = d.notes || '';
   document.getElementById('result-val').textContent = d.area.toFixed(4);
-  document.getElementById('result-box').style.display='flex';
-  document.getElementById('btn-save').disabled=false;
-  renderSegList();
-  drawCanvas();
-  switchTab('t1', document.querySelectorAll('.tb')[0]);
+  document.getElementById('result-box').style.display = 'flex';
+  document.getElementById('btn-save-area').disabled = false;
+  renderSegList(); drawCanvas();
+  switchTab(1);
   toast('Area loaded!');
 };
 
-window.delArea = function(id){
+window.delArea = function(id) {
   pendingDelId = id;
   document.getElementById('del-modal').classList.add('show');
 };
 
-document.getElementById('btn-del-confirm').addEventListener('click', async()=>{
-  if(!pendingDelId) return;
+document.getElementById('btn-del-confirm-el').addEventListener('click', async () => {
+  if (!pendingDelId) return;
   try {
-    await deleteDoc(doc(db,'savedAreas',pendingDelId));
-    savedData = savedData.filter(d=>d.id!==pendingDelId);
+    await deleteDoc(doc(db, 'savedAreas', pendingDelId));
+    savedData = savedData.filter(d => d.id !== pendingDelId);
     renderSaved();
     toast('Deleted.');
-  } catch(e){ toast('Error: '+e.message,true); }
+  } catch(e) { toast('Error: ' + e.message, true); }
   document.getElementById('del-modal').classList.remove('show');
-  pendingDelId=null;
+  pendingDelId = null;
 });
 
-document.getElementById('btn-del-cancel').addEventListener('click',()=>{
+document.getElementById('btn-del-cancel-el').addEventListener('click', () => {
   document.getElementById('del-modal').classList.remove('show');
-  pendingDelId=null;
+  pendingDelId = null;
 });
 
-function fdate(d){
-  if(!d) return '—';
-  try{ const dt=new Date(d); if(isNaN(dt)) return d;
-    return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
-  catch{ return d; }
-}
-
-// ── TILE CALCULATOR ───────────────────────────────────────────
-document.getElementById('grout-toggle').addEventListener('change', function(){
-  document.getElementById('grout-input-row').style.display = this.checked ? 'block' : 'none';
-});
-
-// Show/hide tile content based on area availability
-const origSwitchTab = window.switchTab;
-window.switchTab = function(id, btn){
-  origSwitchTab(id, btn);
-  if(id === 't3'){
-    const hasArea = isClosed && areaVal !== null;
-    document.getElementById('no-area-msg').style.display  = hasArea ? 'none'  : 'block';
-    document.getElementById('tile-content').style.display = hasArea ? 'block' : 'none';
+// ── ORIGIN DIRECTION ──────────────────────────────────────────
+window.setOriginDir = function(axis, dir) {
+  if (axis === 'x') {
+    originXDir = dir;
+    document.getElementById('ox-W').classList.toggle('active', dir === 'W');
+    document.getElementById('ox-E').classList.toggle('active', dir === 'E');
+  } else {
+    originYDir = dir;
+    document.getElementById('oy-N').classList.toggle('active', dir === 'N');
+    document.getElementById('oy-S').classList.toggle('active', dir === 'S');
   }
 };
 
-window.runTileCalc = function(){
-  if(!isClosed || areaVal === null){ toast('Calculate polygon area first.',true); return; }
+// ── TILE CALCULATOR ───────────────────────────────────────────
+const CUT_COLORS = [
+  {fill:'rgba(255,107,53,.35)',  stroke:'#ff6b35',  text:'#ff6b35'},
+  {fill:'rgba(192,132,252,.35)', stroke:'#c084fc',  text:'#c084fc'},
+  {fill:'rgba(255,184,0,.35)',   stroke:'#ffb800',  text:'#ffb800'},
+  {fill:'rgba(255,59,92,.3)',    stroke:'#ff3b5c',  text:'#ff3b5c'},
+  {fill:'rgba(0,255,157,.25)',   stroke:'#00ff9d',  text:'#00ff9d'},
+  {fill:'rgba(74,158,255,.35)',  stroke:'#4a9eff',  text:'#4a9eff'},
+  {fill:'rgba(240,192,64,.35)',  stroke:'#f0c040',  text:'#f0c040'},
+  {fill:'rgba(251,113,133,.35)', stroke:'#fb7185',  text:'#fb7185'},
+];
 
-  const tileW  = parseFloat(document.getElementById('tile-w').value) / 100; // convert cm to m
+function getLabelColor(label) {
+  if (!label || label === '?') return CUT_COLORS[0];
+  const n = parseInt(label.replace('C','')) - 1;
+  return CUT_COLORS[n % CUT_COLORS.length];
+}
+
+window.runTileCalc = function() {
+  if (!isClosed || areaVal === null) { toast('Calculate an area first.', true); return; }
+  const tileW  = parseFloat(document.getElementById('tile-w').value) / 100;
   const tileH  = parseFloat(document.getElementById('tile-h').value) / 100;
   const useGap = document.getElementById('grout-toggle').checked;
   const gap    = useGap ? parseFloat(document.getElementById('grout-size').value) / 100 : 0;
-
-  if(!tileW || !tileH || tileW<=0 || tileH<=0){ toast('Enter valid tile dimensions.',true); return; }
-
-  const stepX = tileW + gap; // tile + grout
-  const stepY = tileH + gap;
-
-  // Get polygon points in meters
+  if (!tileW || !tileH || tileW <= 0 || tileH <= 0) { toast('Enter valid tile dimensions.', true); return; }
+  const stepX = tileW + gap, stepY = tileH + gap;
   const polyPts = getPoints();
-
-  // Bounding box of polygon
   const xs = polyPts.map(p=>p.x), ys = polyPts.map(p=>p.y);
   const minX=Math.min(...xs), maxX=Math.max(...xs);
   const minY=Math.min(...ys), maxY=Math.max(...ys);
 
-  // User-defined grid origin relative to polygon start point
-  const startPt    = polyPts[0];
-  const oxDist     = parseFloat(document.getElementById('origin-x').value) || 0;
-  const oyDist     = parseFloat(document.getElementById('origin-y').value) || 0;
-  const oxDir      = document.getElementById('origin-x-dir').value;
-  const oyDir      = document.getElementById('origin-y-dir').value;
-  const anchorCorner = document.getElementById('anchor-corner').value;
+  // Grid origin
+  const sp       = polyPts[0];
+  const oxDist   = parseFloat(document.getElementById('origin-x').value) || 0;
+  const oyDist   = parseFloat(document.getElementById('origin-y').value) || 0;
+  const anchor   = document.getElementById('anchor-corner').value;
+  const originX  = sp.x + (originXDir === 'E' ? oxDist : -oxDist);
+  const originY  = sp.y + (originYDir === 'N' ? oyDist : -oyDist);
+  const aox      = originX + (anchor === 'TR' || anchor === 'BR' ? -tileW : 0);
+  const aoy      = originY + (anchor === 'BL' || anchor === 'BR' ? -tileH : 0);
+  const startX   = aox - Math.ceil((aox - minX) / stepX) * stepX;
+  const startY   = aoy - Math.ceil((aoy - minY) / stepY) * stepY;
 
-  // The user-specified point where the chosen corner of a tile should land
-  const originX = startPt.x + (oxDir === 'E' ? oxDist : -oxDist);
-  const originY = startPt.y + (oyDir === 'N' ? oyDist : -oyDist);
-
-  // Adjust grid start based on which corner is anchored
-  // TL = top-left corner at origin → grid starts at originX, originY
-  // TR = top-right corner → shift grid left by one tile width
-  // BL = bottom-left corner → shift grid up by one tile height
-  // BR = bottom-right corner → shift grid left + up
-  const cornerOffsetX = (anchorCorner === 'TR' || anchorCorner === 'BR') ? -tileW : 0;
-  const cornerOffsetY = (anchorCorner === 'BL' || anchorCorner === 'BR') ? -tileH : 0;
-  const anchoredX = originX + cornerOffsetX;
-  const anchoredY = originY + cornerOffsetY;
-
-  // Extend grid to cover full bounding box from anchor point
-  const startX = anchoredX - Math.ceil((anchoredX - minX) / stepX) * stepX;
-  const startY = anchoredY - Math.ceil((anchoredY - minY) / stepY) * stepY;
-
-  // Generate all tile positions
-  let fullTiles = 0;
-  let cutPositions = []; // {x,y,w,h, insideFraction, insideShape}
+  // ── STEP 1: CLASSIFY TILES ──────────────────────────────────
+  let fullCount = 0;
   const tileRects = [];
+  const cutTiles  = [];
 
-  for(let gx = startX; gx < maxX + stepX; gx += stepX){
-    for(let gy = startY; gy < maxY + stepY; gy += stepY){
+  for (let gx = startX; gx < maxX + stepX; gx += stepX) {
+    for (let gy = startY; gy < maxY + stepY; gy += stepY) {
       const status = getTileStatus({x:gx, y:gy, w:tileW, h:tileH}, polyPts);
-      if(status === 'full'){
-        fullTiles++;
+      if (status === 'full') {
+        fullCount++;
         tileRects.push({x:gx, y:gy, w:tileW, h:tileH, type:'full'});
-      } else if(status === 'cut'){
-        const tileObj = {x:gx, y:gy, w:tileW, h:tileH, type:'cut'};
-        tileRects.push(tileObj);
-        cutPositions.push(tileObj); // same reference
+      } else if (status === 'cut') {
+        const obj = {x:gx, y:gy, w:tileW, h:tileH, type:'cut', label:'?'};
+        tileRects.push(obj);
+        cutTiles.push({gx, gy, obj});
       }
-      // 'outside' tiles are ignored
     }
   }
 
-  // ── CUT PIECE REUSE LOGIC (Polygon-based) ───────────────────
-  // Each cut position is clipped against the polygon to get its exact shape.
-  // Each piece in the offcut pool is stored as a polygon with edge types (factory/cut).
-  // For each cut position:
-  //   1. Clip tile grid cell against area polygon → needed shape
-  //   2. Search offcut pool for a piece whose shape fits (with rotation)
-  //      Rule: cut edges of the offcut must align with cut edges of the position
-  //   3. If fit found → use it, store remaining offcut polygon back to pool
-  //   4. If no fit → use a fresh tile, clip to get needed piece, store offcut
-
-  // Build needed pieces — clip each cut tile cell against the polygon
-  const neededPieces = cutPositions.map((t, idx) => {
-    const tileRect = [
-      {x:t.x,       y:t.y,       eType:'factory'},
-      {x:t.x+t.w,   y:t.y,       eType:'factory'},
-      {x:t.x+t.w,   y:t.y+t.h,   eType:'factory'},
-      {x:t.x,       y:t.y+t.h,   eType:'factory'},
-    ];
-    const clipped = clipPolygon(tileRect, polyPts); // Sutherland-Hodgman clip
-    return { tileObj: t, shape: clipped };
+  // ── STEP 2: BUILD REQUIREMENTS ──────────────────────────────
+  // For each cut tile: get clipped shape + which sides face full tiles
+  const reqs = cutTiles.map(({gx, gy, obj}) => {
+    const clipped = clipRect({x:gx,y:gy,w:tileW,h:tileH}, polyPts);
+    const nbLeft   = getTileStatus({x:gx-stepX, y:gy,       w:tileW, h:tileH}, polyPts);
+    const nbRight  = getTileStatus({x:gx+stepX, y:gy,       w:tileW, h:tileH}, polyPts);
+    const nbBottom = getTileStatus({x:gx,       y:gy-stepY, w:tileW, h:tileH}, polyPts);
+    const nbTop    = getTileStatus({x:gx,       y:gy+stepY, w:tileW, h:tileH}, polyPts);
+    return {
+      obj, clipped,
+      factoryNeeded: {
+        left:   nbLeft   === 'full',
+        right:  nbRight  === 'full',
+        bottom: nbBottom === 'full',
+        top:    nbTop    === 'full',
+      }
+    };
   });
 
-  // Offcut pool — each entry: { shape: [{x,y,eType}...], sourceLabel, cuts: 0 }
-  let offcutPool = [];
+  // ── STEP 3: ASSIGN CUTS WITH REUSE ──────────────────────────
+  // Excess pool: {w, h, factoryEdges:{L,R,T,B}, label}
+  const excessPool = [];
   let cutTilesNeeded = 0;
-  let reusedCount = 0;
-  let sourceTileCounter = 0;
+  let reusedCount    = 0;
+  let srcCount       = 0;
 
-  for(const piece of neededPieces){
-    if(!piece.shape || piece.shape.length < 3){
-      // Fallback: assign fresh tile label even if clip failed
-      cutTilesNeeded++;
-      sourceTileCounter++;
-      piece.tileObj.label = 'C' + sourceTileCounter;
-      continue;
+  for (const req of reqs) {
+    if (!req.clipped || req.clipped.length < 3) {
+      cutTilesNeeded++; srcCount++;
+      req.obj.label = 'C' + srcCount; continue;
     }
+    const bb    = bbox(req.clipped);
+    const needW = bb.maxX - bb.minX;
+    const needH = bb.maxY - bb.minY;
+    const fn    = req.factoryNeeded;
 
-    // Try to find a fitting offcut from the pool
-    const fitIdx = findOffcutFit(offcutPool, piece.shape, tileW, tileH);
+    // Find matching excess
+    const idx = findExcess(excessPool, needW, needH, fn);
 
-    if(fitIdx >= 0){
-      // Reuse offcut
-      const used = offcutPool.splice(fitIdx, 1)[0];
-      piece.tileObj.label = used.sourceLabel;
+    if (idx >= 0) {
+      const ex = excessPool.splice(idx, 1)[0];
+      req.obj.label = ex.label;
       reusedCount++;
-      // Compute leftover from used offcut after fitting
-      const leftover = computeLeftover(used.shape, piece.shape);
-      if(leftover && leftover.length >= 3 && polyArea(leftover) > 0.0001){
-        offcutPool.push({ shape: leftover, sourceLabel: used.sourceLabel, cuts: used.cuts + 1 });
-      }
+      // Remaining pieces after use
+      const remW = ex.w - needW, remH = ex.h - needH;
+      if (remW > 0.01) excessPool.push({w:remW, h:ex.h, label:ex.label,
+        factoryEdges:{L:false, R:ex.factoryEdges.R, T:ex.factoryEdges.T, B:ex.factoryEdges.B}});
+      if (remH > 0.01) excessPool.push({w:needW, h:remH, label:ex.label,
+        factoryEdges:{L:ex.factoryEdges.L, R:ex.factoryEdges.R, T:ex.factoryEdges.T, B:false}});
     } else {
-      // Need a fresh tile
-      cutTilesNeeded++;
-      sourceTileCounter++;
-      const label = 'C' + sourceTileCounter;
-      piece.tileObj.label = label;
-
-      // Fresh tile as polygon — all factory edges
-      const freshTile = [
-        {x:0,     y:0,     eType:'factory'},
-        {x:tileW, y:0,     eType:'factory'},
-        {x:tileW, y:tileH, eType:'factory'},
-        {x:0,     y:tileH, eType:'factory'},
-      ];
-
-      // Normalize needed shape to origin for offcut computation
-      const normShape = normalizeShape(piece.shape);
-      // Offcut = fresh tile minus the needed piece bounding box
-      const offcuts = getOffcutsFromTile(tileW, tileH, normShape);
-      for(const oc of offcuts){
-        if(oc.length >= 3 && polyArea(oc) > 0.0001){
-          offcutPool.push({ shape: oc, sourceLabel: label, cuts: 0 });
-        }
-      }
+      cutTilesNeeded++; srcCount++;
+      const label = 'C' + srcCount;
+      req.obj.label = label;
+      // Generate excess from fresh tile
+      // Piece occupies bottom-left of tile by default
+      const remW = tileW - needW, remH = tileH - needH;
+      if (remW > 0.01) excessPool.push({w:remW, h:tileH, label,
+        factoryEdges:{L:false, R:true,  T:true, B:true}});
+      if (remH > 0.01) excessPool.push({w:needW, h:remH, label,
+        factoryEdges:{L:true,  R:true,  T:true, B:false}});
     }
   }
 
-  const totalPurchase = fullTiles + cutTilesNeeded;
-  const tileArea  = tileW * tileH;
-  const totalCutArea = neededPieces.reduce((s,p)=> s + (p.shape ? Math.abs(polyArea(p.shape)) : 0), 0);
-  const wasteArea = Math.max(0, (cutTilesNeeded * tileArea) - totalCutArea);
-  const wastePct  = cutTilesNeeded > 0 ? ((wasteArea / (totalPurchase * tileArea)) * 100).toFixed(1) : '0.0';
+  // ── STEP 4: RESULTS ─────────────────────────────────────────
+  const total    = fullCount + cutTilesNeeded;
+  const tileArea = tileW * tileH;
+  const cutArea  = reqs.reduce((s,r) => s + (r.clipped ? shoelace(r.clipped) : 0), 0);
+  const waste    = Math.max(0, cutTilesNeeded * tileArea - cutArea);
+  const wastePct = cutTilesNeeded > 0 ? ((waste / (total * tileArea)) * 100).toFixed(1) : '0.0';
 
-  // Update results
-  document.getElementById('r-full').textContent     = fullTiles;
-  document.getElementById('r-cut-pos').textContent  = cutPositions.length;
-  document.getElementById('r-cut-tiles').textContent= cutTilesNeeded;
-  document.getElementById('r-reused').textContent   = reusedCount;
-  document.getElementById('r-purchase').textContent = totalPurchase;
-  document.getElementById('r-waste').textContent    = wastePct + '%';
+  document.getElementById('r-full').textContent      = fullCount;
+  document.getElementById('r-cut-pos').textContent   = cutTiles.length;
+  document.getElementById('r-cut-tiles').textContent = cutTilesNeeded;
+  document.getElementById('r-reused').textContent    = reusedCount;
+  document.getElementById('r-purchase').textContent  = total;
+  document.getElementById('r-waste').textContent     = wastePct + '%';
   document.getElementById('tile-results').style.display = 'block';
 
-  // Draw tile canvas with labels
-  drawTileCanvas(tileRects, polyPts, stepX, stepY);
+  drawTileCanvas(tileRects, polyPts, originX, originY, anchor);
   toast('Tile calculation complete!');
 };
 
-// ── POLYGON-BASED TILE HELPERS ───────────────────────────────
-
-// Polygon area (Shoelace)
-function polyArea(pts){
-  let a=0; const n=pts.length;
-  for(let i=0;i<n;i++){ const j=(i+1)%n; a+=pts[i].x*pts[j].y - pts[j].x*pts[i].y; }
-  return Math.abs(a)/2;
+// ── TILE HELPERS ──────────────────────────────────────────────
+function getTileStatus(tile, poly) {
+  const EPS = 1e-9;
+  const corners = [
+    {x:tile.x+EPS,       y:tile.y+EPS},
+    {x:tile.x+tile.w-EPS,y:tile.y+EPS},
+    {x:tile.x+tile.w-EPS,y:tile.y+tile.h-EPS},
+    {x:tile.x+EPS,       y:tile.y+tile.h-EPS},
+  ];
+  const ins = corners.map(p => ptInPoly(p, poly));
+  if (ins.every(Boolean)) return 'full';
+  if (ins.some(Boolean))  return 'cut';
+  const tc = {x:tile.x+tile.w/2, y:tile.y+tile.h/2};
+  if (ptInPoly(tc, poly)) return 'cut';
+  if (poly.some(p => p.x>tile.x+EPS && p.x<tile.x+tile.w-EPS && p.y>tile.y+EPS && p.y<tile.y+tile.h-EPS)) return 'cut';
+  if (polyEdgesCrossTile(tile, poly)) return 'cut';
+  return 'outside';
 }
 
-// Normalize shape to origin (translate so min x,y = 0)
-function normalizeShape(pts){
-  const minX=Math.min(...pts.map(p=>p.x)), minY=Math.min(...pts.map(p=>p.y));
-  return pts.map(p=>({...p, x:p.x-minX, y:p.y-minY}));
+function ptInPoly(pt, poly) {
+  let inside = false; const n = poly.length;
+  for (let i=0,j=n-1;i<n;j=i++) {
+    const xi=poly[i].x,yi=poly[i].y,xj=poly[j].x,yj=poly[j].y;
+    if (((yi>pt.y)!==(yj>pt.y)) && (pt.x<(xj-xi)*(pt.y-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
 }
 
-// Sutherland-Hodgman polygon clipping
-function clipPolygon(subjectPts, clipPts){
-  let output = subjectPts.map(p=>({x:p.x, y:p.y, eType:p.eType||'factory'}));
-  // Try both winding directions
-  for(let pass=0; pass<2; pass++){
-    const clip = pass===0 ? clipPts : [...clipPts].reverse();
-    let result = [...output];
-    const n = clip.length;
-    for(let i=0;i<n;i++){
-      if(!result.length) break;
-      const inp = result;
-      result = [];
-      const a = clip[i], b = clip[(i+1)%n];
-      for(let j=0;j<inp.length;j++){
-        const curr = inp[j], prev = inp[(j+inp.length-1)%inp.length];
-        const currIn = isInsideEdge(curr, a, b);
-        const prevIn = isInsideEdge(prev, a, b);
-        if(currIn){
-          if(!prevIn){
-            const inter = lineIntersect(prev, curr, a, b);
-            if(inter) result.push({x:inter.x, y:inter.y, eType:'cut'});
-          }
-          result.push({...curr});
-        } else if(prevIn){
-          const inter = lineIntersect(prev, curr, a, b);
-          if(inter) result.push({x:inter.x, y:inter.y, eType:'cut'});
-        }
-      }
+function polyEdgesCrossTile(tile, poly) {
+  const te = [
+    [{x:tile.x,y:tile.y},{x:tile.x+tile.w,y:tile.y}],
+    [{x:tile.x+tile.w,y:tile.y},{x:tile.x+tile.w,y:tile.y+tile.h}],
+    [{x:tile.x+tile.w,y:tile.y+tile.h},{x:tile.x,y:tile.y+tile.h}],
+    [{x:tile.x,y:tile.y+tile.h},{x:tile.x,y:tile.y}],
+  ];
+  const n = poly.length;
+  for (let i=0;i<n;i++) {
+    const a=poly[i], b=poly[(i+1)%n];
+    for (const [c,d] of te) if (segsIntersect(a,b,c,d)) return true;
+  }
+  return false;
+}
+
+function segsIntersect(a,b,c,d) {
+  const det=(x1,y1,x2,y2)=>x1*y2-x2*y1;
+  const d1x=b.x-a.x,d1y=b.y-a.y,d2x=d.x-c.x,d2y=d.y-c.y;
+  const dn=det(d1x,d1y,d2x,d2y);
+  if (Math.abs(dn)<1e-10) return false;
+  const t=det(c.x-a.x,c.y-a.y,d2x,d2y)/dn;
+  const u=det(c.x-a.x,c.y-a.y,d1x,d1y)/dn;
+  return t>1e-9&&t<1-1e-9&&u>1e-9&&u<1-1e-9;
+}
+
+// Clip rect against polygon using Sutherland-Hodgman
+function clipRect(rect, poly) {
+  let out = [{x:rect.x,y:rect.y},{x:rect.x+rect.w,y:rect.y},{x:rect.x+rect.w,y:rect.y+rect.h},{x:rect.x,y:rect.y+rect.h}];
+  const n = poly.length;
+  for (let i=0;i<n;i++) {
+    if (!out.length) return [];
+    const inp=out; out=[];
+    const a=poly[i], b=poly[(i+1)%n];
+    for (let j=0;j<inp.length;j++) {
+      const cur=inp[j], prv=inp[(j+inp.length-1)%inp.length];
+      const cIn=inside(cur,a,b), pIn=inside(prv,a,b);
+      if (cIn) { if(!pIn){const x=intersect(prv,cur,a,b);if(x)out.push(x);} out.push({...cur}); }
+      else if (pIn) { const x=intersect(prv,cur,a,b);if(x)out.push(x); }
     }
-    if(result.length >= 3) return result;
   }
-  return [];
+  return out;
 }
 
-function isInsideEdge(pt, a, b){
-  // Works for both CW and CCW — using left-side test
-  return (b.x-a.x)*(pt.y-a.y) - (b.y-a.y)*(pt.x-a.x) <= 0;
+function inside(p,a,b){return(b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x)<=0;}
+function intersect(p1,p2,p3,p4){
+  const d1x=p2.x-p1.x,d1y=p2.y-p1.y,d2x=p4.x-p3.x,d2y=p4.y-p3.y;
+  const d=d1x*d2y-d1y*d2x;
+  if(Math.abs(d)<1e-10)return null;
+  const t=((p3.x-p1.x)*d2y-(p3.y-p1.y)*d2x)/d;
+  return{x:p1.x+t*d1x,y:p1.y+t*d1y};
 }
 
-function lineIntersect(p1, p2, p3, p4){
-  const d1x=p2.x-p1.x, d1y=p2.y-p1.y;
-  const d2x=p4.x-p3.x, d2y=p4.y-p3.y;
-  const denom=d1x*d2y-d1y*d2x;
-  if(Math.abs(denom)<1e-10) return null;
-  const t=((p3.x-p1.x)*d2y-(p3.y-p1.y)*d2x)/denom;
-  return {x:p1.x+t*d1x, y:p1.y+t*d1y};
+function bbox(pts){
+  return{minX:Math.min(...pts.map(p=>p.x)),maxX:Math.max(...pts.map(p=>p.x)),
+    minY:Math.min(...pts.map(p=>p.y)),maxY:Math.max(...pts.map(p=>p.y))};
 }
 
-// Bounding box of a polygon
-function polyBBox(pts){
-  return {
-    minX:Math.min(...pts.map(p=>p.x)), maxX:Math.max(...pts.map(p=>p.x)),
-    minY:Math.min(...pts.map(p=>p.y)), maxY:Math.max(...pts.map(p=>p.y))
-  };
-}
-
-// Get offcuts from a fresh tile after removing the needed piece bounding box
-function getOffcutsFromTile(tileW, tileH, normShape){
-  const bb = polyBBox(normShape);
-  const pieces = [];
-  // Right strip
-  if(tileW - bb.maxX > 0.01){
-    pieces.push([
-      {x:bb.maxX, y:0,      eType:'cut'},
-      {x:tileW,   y:0,      eType:'factory'},
-      {x:tileW,   y:tileH,  eType:'factory'},
-      {x:bb.maxX, y:tileH,  eType:'cut'},
-    ]);
-  }
-  // Top strip
-  if(tileH - bb.maxY > 0.01){
-    pieces.push([
-      {x:0,       y:bb.maxY, eType:'cut'},
-      {x:bb.maxX, y:bb.maxY, eType:'cut'},
-      {x:bb.maxX, y:tileH,   eType:'factory'},
-      {x:0,       y:tileH,   eType:'factory'},
-    ]);
-  }
-  return pieces;
-}
-
-// Check if an offcut shape fits a needed shape (with 4 rotations)
-function findOffcutFit(pool, neededShape, tileW, tileH){
-  if(!neededShape || neededShape.length < 3) return -1;
-  const nb = polyBBox(neededShape);
-  const needW = nb.maxX - nb.minX, needH = nb.maxY - nb.minY;
+// Find excess piece that satisfies needW x needH with required factory edges
+// factoryNeeded: {left, right, bottom, top} — true means must be factory
+function findExcess(pool, needW, needH, fn) {
   const EPS = 0.005;
-
-  for(let i=0;i<pool.length;i++){
-    const oc = pool[i];
-    if(!oc.shape || oc.shape.length < 3) continue;
-    const ob = polyBBox(oc.shape);
-    const ocW = ob.maxX - ob.minX, ocH = ob.maxY - ob.minY;
-
-    // Check original and 90° rotation fit
-    const fitsNormal  = ocW >= needW - EPS && ocH >= needH - EPS;
-    const fitsRotated = ocW >= needH - EPS && ocH >= needW - EPS;
-
-    if(fitsNormal || fitsRotated){
-      // Verify cut edge alignment:
-      // The offcut must have at least as many cut edges as the needed piece
-      const neededCutEdges = countCutEdges(neededShape);
-      const offcutCutEdges = countCutEdges(oc.shape);
-      if(offcutCutEdges >= neededCutEdges) return i;
+  for (let i=0;i<pool.length;i++) {
+    const ex = pool[i];
+    // Try 4 rotations: 0,90,180,270
+    for (let rot=0;rot<4;rot++) {
+      const dims  = rot%2===0 ? {w:ex.w,h:ex.h} : {w:ex.h,h:ex.w};
+      if (dims.w < needW-EPS || dims.h < needH-EPS) continue;
+      // Rotate factory edges to match rotation
+      const ef = rotEdges(ex.factoryEdges, rot);
+      // Check that every required factory edge is satisfied
+      let ok = true;
+      if (fn.left   && !ef.L) { ok=false; }
+      if (fn.right  && !ef.R) { ok=false; }
+      if (fn.bottom && !ef.B) { ok=false; }
+      if (fn.top    && !ef.T) { ok=false; }
+      if (ok) return i;
     }
   }
   return -1;
 }
 
-function countCutEdges(pts){
-  return pts.filter(p => p.eType === 'cut').length;
+// Rotate edge labels: 0=0°, 1=90°, 2=180°, 3=270°
+function rotEdges(e, rot) {
+  const sides = ['L','B','R','T'];
+  const result = {};
+  const vals   = [e.L, e.B, e.R, e.T];
+  for (let i=0;i<4;i++) result[sides[i]] = vals[(i+rot)%4];
+  return result;
 }
 
-// Compute leftover polygon after using part of an offcut
-function computeLeftover(offcutShape, usedShape){
-  if(!offcutShape || !usedShape) return null;
-  const ob = polyBBox(offcutShape);
-  const ub = polyBBox(usedShape);
-  const remW = (ob.maxX - ob.minX) - (ub.maxX - ub.minX);
-  const remH = (ob.maxY - ob.minY) - (ub.maxY - ub.minY);
-  if(remW < 0.01 && remH < 0.01) return null;
-  // Return approximate rectangular leftover
-  const lw = ob.maxX - ob.minX, lh = ob.maxY - ob.minY;
-  const uw = ub.maxX - ub.minX;
-  if(remW > 0.01){
-    return [
-      {x:ob.minX+uw, y:ob.minY, eType:'cut'},
-      {x:ob.maxX,    y:ob.minY, eType:'factory'},
-      {x:ob.maxX,    y:ob.maxY, eType:'factory'},
-      {x:ob.minX+uw, y:ob.maxY, eType:'cut'},
-    ];
-  }
-  return null;
-}
-
-// Helper: get polygon bounding values
-function getMinPolyX(poly){ return Math.min(...poly.map(p=>p.x)); }
-function getMaxPolyX(poly){ return Math.max(...poly.map(p=>p.x)); }
-function getMinPolyY(poly){ return Math.min(...poly.map(p=>p.y)); }
-function getMaxPolyY(poly){ return Math.max(...poly.map(p=>p.y)); }
-function isEdgeInsidePoly(edge, poly){
-  const mid = {x: edge.x + edge.w/2, y: edge.y + edge.h/2};
-  return pointInPolygon(mid, poly);
-}
-
-function getTileStatus(tile, poly){
-  const EPS = 1e-9; // small tolerance to handle floating point edge cases
-
-  const corners = [
-    {x:tile.x + EPS,        y:tile.y + EPS},
-    {x:tile.x+tile.w - EPS, y:tile.y + EPS},
-    {x:tile.x+tile.w - EPS, y:tile.y+tile.h - EPS},
-    {x:tile.x + EPS,        y:tile.y+tile.h - EPS},
-  ];
-
-  const inside = corners.map(p => pointInPolygon(p, poly));
-  const allIn  = inside.every(Boolean);
-  const anyIn  = inside.some(Boolean);
-
-  if(allIn) return 'full';
-  if(anyIn) return 'cut';
-
-  // No corners inside — check if any polygon edge crosses the tile,
-  // or if the tile is fully inside the polygon (all corners inside)
-  const tc = {x: tile.x + tile.w/2, y: tile.y + tile.h/2};
-  if(pointInPolygon(tc, poly)) return 'cut';
-
-  // Check if any polygon vertex is strictly inside the tile (not on boundary)
-  const tileContainsPt = poly.some(p =>
-    p.x > tile.x + EPS && p.x < tile.x + tile.w - EPS &&
-    p.y > tile.y + EPS && p.y < tile.y + tile.h - EPS
-  );
-  if(tileContainsPt) return 'cut';
-
-  // Check if any polygon edge crosses any tile edge
-  if(polyEdgesCrossTile(tile, poly)) return 'cut';
-
-  return 'outside';
-}
-
-function polyEdgesCrossTile(tile, poly){
-  // Tile edges as segments
-  const tileEdges = [
-    [{x:tile.x,       y:tile.y},       {x:tile.x+tile.w, y:tile.y}],
-    [{x:tile.x+tile.w,y:tile.y},       {x:tile.x+tile.w, y:tile.y+tile.h}],
-    [{x:tile.x+tile.w,y:tile.y+tile.h},{x:tile.x,        y:tile.y+tile.h}],
-    [{x:tile.x,       y:tile.y+tile.h},{x:tile.x,        y:tile.y}],
-  ];
-  const n = poly.length;
-  for(let i=0;i<n;i++){
-    const a = poly[i], b = poly[(i+1)%n];
-    for(const [c,d] of tileEdges){
-      if(segmentsIntersect(a,b,c,d)) return true;
-    }
-  }
-  return false;
-}
-
-function segmentsIntersect(a,b,c,d){
-  const det=(x1,y1,x2,y2)=>x1*y2-x2*y1;
-  const dx1=b.x-a.x, dy1=b.y-a.y;
-  const dx2=d.x-c.x, dy2=d.y-c.y;
-  const denom=det(dx1,dy1,dx2,dy2);
-  if(Math.abs(denom)<1e-10) return false; // parallel
-  const dx3=c.x-a.x, dy3=c.y-a.y;
-  const t=det(dx3,dy3,dx2,dy2)/denom;
-  const u=det(dx3,dy3,dx1,dy1)/denom;
-  return t>1e-9 && t<1-1e-9 && u>1e-9 && u<1-1e-9;
-}
-
-function getIntersectionBounds(tile, poly){
-  // Approximate intersection box using sampling
-  const sampleN = 10;
-  let minX=tile.x+tile.w, maxX=tile.x, minY=tile.y+tile.h, maxY=tile.y;
-  for(let i=0;i<=sampleN;i++){
-    for(let j=0;j<=sampleN;j++){
-      const px = tile.x + (tile.w * i/sampleN);
-      const py = tile.y + (tile.h * j/sampleN);
-      if(pointInPolygon({x:px,y:py}, poly)){
-        minX=Math.min(minX,px); maxX=Math.max(maxX,px);
-        minY=Math.min(minY,py); maxY=Math.max(maxY,py);
-      }
-    }
-  }
-  const w = Math.max(0.001, maxX-minX);
-  const h = Math.max(0.001, maxY-minY);
-  return {w, h};
-}
-
-function pointInPolygon(pt, poly){
-  let inside=false;
-  const n=poly.length;
-  for(let i=0,j=n-1;i<n;j=i++){
-    const xi=poly[i].x, yi=poly[i].y;
-    const xj=poly[j].x, yj=poly[j].y;
-    const intersect=((yi>pt.y)!==(yj>pt.y))&&(pt.x<(xj-xi)*(pt.y-yi)/(yj-yi)+xi);
-    if(intersect) inside=!inside;
-  }
-  return inside;
-}
-
-// Color palette for cut tile groups
-const CUT_COLORS = [
-  {fill:'rgba(255,107,53,.3)',  stroke:'rgba(255,107,53,.8)',  text:'#ff6b35'},
-  {fill:'rgba(192,132,252,.3)', stroke:'rgba(192,132,252,.8)', text:'#c084fc'},
-  {fill:'rgba(255,184,0,.3)',   stroke:'rgba(255,184,0,.8)',   text:'#ffb800'},
-  {fill:'rgba(255,59,92,.25)',  stroke:'rgba(255,59,92,.7)',   text:'#ff3b5c'},
-  {fill:'rgba(0,255,157,.2)',   stroke:'rgba(0,255,157,.6)',   text:'#00ff9d'},
-  {fill:'rgba(74,158,255,.3)',  stroke:'rgba(74,158,255,.8)',  text:'#4a9eff'},
-  {fill:'rgba(240,192,64,.3)',  stroke:'rgba(240,192,64,.8)',  text:'#f0c040'},
-  {fill:'rgba(251,113,133,.3)', stroke:'rgba(251,113,133,.8)', text:'#fb7185'},
-];
-
-function getLabelColor(label) {
-  if(!label || label==='?') return {fill:'rgba(255,184,0,.25)',stroke:'rgba(255,184,0,.6)',text:'#ffb800'};
-  const num = parseInt(label.replace('C','')) - 1;
-  return CUT_COLORS[num % CUT_COLORS.length];
-}
-
-function drawTileCanvas(tiles, poly, stepX, stepY){
+// Draw tile canvas
+function drawTileCanvas(tiles, poly, originX, originY, anchor) {
   const canvas = document.getElementById('tile-canvas');
   const allPts = [...poly, ...tiles.map(t=>[{x:t.x,y:t.y},{x:t.x+t.w,y:t.y+t.h}]).flat()];
-  const xs = allPts.map(p=>p.x), ys = allPts.map(p=>p.y);
-  const minX=Math.min(...xs), maxX=Math.max(...xs);
-  const minY=Math.min(...ys), maxY=Math.max(...ys);
-
-  const PAD=40, SCALE=Math.min(800/(maxX-minX||1), 800/(maxY-minY||1), 120);
-  const W=Math.ceil((maxX-minX)*SCALE+PAD*2);
-  const H=Math.ceil((maxY-minY)*SCALE+PAD*2);
+  const xs=allPts.map(p=>p.x), ys=allPts.map(p=>p.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+  const PAD=40, SCALE=Math.min(700/(maxX-minX||1), 700/(maxY-minY||1), 150);
+  const W=Math.ceil((maxX-minX)*SCALE+PAD*2), H=Math.ceil((maxY-minY)*SCALE+PAD*2);
   canvas.width=W; canvas.height=H;
-
   const ctx=canvas.getContext('2d');
   ctx.clearRect(0,0,W,H);
-
-  const toC=(p)=>({x:PAD+(p.x-minX)*SCALE, y:H-PAD-(p.y-minY)*SCALE});
+  const toC=p=>({x:PAD+(p.x-minX)*SCALE, y:H-PAD-(p.y-minY)*SCALE});
 
   // Draw tiles
-  for(const t of tiles){
-    const tl=toC({x:t.x,     y:t.y+t.h});
-    const br=toC({x:t.x+t.w, y:t.y});
+  for (const t of tiles) {
+    const tl=toC({x:t.x,y:t.y+t.h}), br=toC({x:t.x+t.w,y:t.y});
     const tw=br.x-tl.x, th=br.y-tl.y;
-
-    if(t.type==='full'){
-      ctx.fillStyle='rgba(0,194,255,.2)';
-      ctx.strokeStyle='rgba(0,194,255,.5)';
-      ctx.fillRect(tl.x,tl.y,tw,th);
-      ctx.lineWidth=0.8;
-      ctx.strokeRect(tl.x,tl.y,tw,th);
+    if (t.type==='full') {
+      ctx.fillStyle='rgba(0,194,255,.2)'; ctx.strokeStyle='rgba(0,194,255,.5)';
+      ctx.fillRect(tl.x,tl.y,tw,th); ctx.lineWidth=0.8; ctx.strokeRect(tl.x,tl.y,tw,th);
     } else {
-      // Cut tile — colored by source label
-      const col = getLabelColor(t.label);
-      ctx.fillStyle = col.fill;
-      ctx.strokeStyle = col.stroke;
-      ctx.fillRect(tl.x,tl.y,tw,th);
-      ctx.lineWidth=1.2;
-      ctx.strokeRect(tl.x,tl.y,tw,th);
-
-      // Draw label in center of tile
+      const col=getLabelColor(t.label);
+      ctx.fillStyle=col.fill; ctx.strokeStyle=col.stroke;
+      ctx.fillRect(tl.x,tl.y,tw,th); ctx.lineWidth=1.2; ctx.strokeRect(tl.x,tl.y,tw,th);
       const cx2=(tl.x+br.x)/2, cy2=(tl.y+br.y)/2;
-      const fontSize = Math.max(8, Math.min(14, tw*0.35, th*0.5));
-      ctx.fillStyle = col.text;
-      ctx.font = `bold ${fontSize}px Rajdhani`;
-      ctx.textAlign='center';
-      ctx.textBaseline='middle';
+      const fs=Math.max(8,Math.min(14,tw*.35,th*.5));
+      ctx.fillStyle=col.text; ctx.font=`bold ${fs}px Rajdhani`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.fillText(t.label||'?', cx2, cy2);
     }
   }
 
-  // Draw polygon outline
+  // Polygon outline
   const cpts=poly.map(toC);
-  ctx.beginPath();
-  ctx.moveTo(cpts[0].x,cpts[0].y);
-  for(let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
-  ctx.closePath();
-  ctx.strokeStyle='#00ff9d';
-  ctx.lineWidth=2.5;
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cpts[0].x,cpts[0].y);
+  for (let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
+  ctx.closePath(); ctx.strokeStyle='#00ff9d'; ctx.lineWidth=2.5; ctx.stroke();
 
-  // Start point marker
-  const sp = toC(poly[0]);
-  ctx.beginPath(); ctx.arc(sp.x,sp.y,5,0,Math.PI*2);
-  ctx.fillStyle='#00ff9d'; ctx.fill();
-  ctx.fillStyle='rgba(0,255,157,.9)';
-  ctx.font='10px Share Tech Mono';
-  ctx.textAlign='left';
-  ctx.textBaseline='alphabetic';
-  ctx.fillText('START',sp.x+8,sp.y+4);
+  // Start point
+  const sp=toC(poly[0]);
+  ctx.beginPath(); ctx.arc(sp.x,sp.y,5,0,Math.PI*2); ctx.fillStyle='#00ff9d'; ctx.fill();
+  ctx.fillStyle='rgba(0,255,157,.9)'; ctx.font='10px Share Tech Mono';
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.fillText('START',sp.x+8,sp.y+4);
 
-  // Grid origin marker — show the user-defined anchor point
-  const oxDist2    = parseFloat(document.getElementById('origin-x')?.value) || 0;
-  const oyDist2    = parseFloat(document.getElementById('origin-y')?.value) || 0;
-  const oxDir2     = document.getElementById('origin-x-dir')?.value || 'E';
-  const oyDir2     = document.getElementById('origin-y-dir')?.value || 'N';
-  const corner2    = document.getElementById('anchor-corner')?.value || 'TL';
-  const cornerLabels = {'TL':'Top-Left','TR':'Top-Right','BL':'Bottom-Left','BR':'Bottom-Right'};
-  const originPt = toC({
-    x: poly[0].x + (oxDir2==='E'? oxDist2:-oxDist2),
-    y: poly[0].y + (oyDir2==='N'? oyDist2:-oyDist2)
+  // Anchor point
+  const ap=toC({x:originX,y:originY});
+  ctx.beginPath(); ctx.arc(ap.x,ap.y,5,0,Math.PI*2); ctx.fillStyle='#f0c040'; ctx.fill();
+  ctx.fillStyle='rgba(240,192,64,.9)'; ctx.font='10px Share Tech Mono';
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  const cornerLabels={'TL':'Top-Left','TR':'Top-Right','BL':'Bottom-Left','BR':'Bottom-Right'};
+  ctx.fillText('ANCHOR ('+cornerLabels[anchor]+')',ap.x+8,ap.y+4);
+
+  // Legend
+  const labels=[...new Set(tiles.filter(t=>t.type==='cut').map(t=>t.label))].sort((a,b)=>{
+    const na=parseInt(a.replace('C','')), nb=parseInt(b.replace('C',''));
+    return na-nb;
   });
-  ctx.beginPath(); ctx.arc(originPt.x,originPt.y,5,0,Math.PI*2);
-  ctx.fillStyle='#f0c040'; ctx.fill();
-  ctx.fillStyle='rgba(240,192,64,.9)';
-  ctx.font='10px Share Tech Mono';
-  ctx.textAlign='left';
-  ctx.textBaseline='alphabetic';
-  ctx.fillText('ANCHOR ('+cornerLabels[corner2]+')',originPt.x+8,originPt.y+4);
-
-  // Draw cut group legend at bottom
-  const labels = [...new Set(tiles.filter(t=>t.type==='cut').map(t=>t.label))].sort();
-  if(labels.length > 0){
-    const legX=PAD, legY=H-10;
-    ctx.font='9px Share Tech Mono';
-    ctx.textBaseline='alphabetic';
-    let lx=legX;
-    for(const lbl of labels){
+  if (labels.length>0) {
+    let lx=PAD;
+    ctx.font='9px Share Tech Mono'; ctx.textBaseline='alphabetic';
+    for (const lbl of labels) {
       const col=getLabelColor(lbl);
-      ctx.fillStyle=col.fill;
-      ctx.strokeStyle=col.stroke;
-      ctx.lineWidth=1;
-      ctx.fillRect(lx,legY-10,12,10);
-      ctx.strokeRect(lx,legY-10,12,10);
-      ctx.fillStyle=col.text;
-      ctx.textAlign='left';
-      ctx.fillText(lbl,lx+14,legY-1);
-      lx += 14 + ctx.measureText(lbl).width + 12;
+      ctx.fillStyle=col.fill; ctx.strokeStyle=col.stroke; ctx.lineWidth=1;
+      ctx.fillRect(lx,H-14,12,10); ctx.strokeRect(lx,H-14,12,10);
+      ctx.fillStyle=col.text; ctx.textAlign='left';
+      ctx.fillText(lbl,lx+14,H-5);
+      lx += 14+ctx.measureText(lbl).width+12;
     }
   }
 }
