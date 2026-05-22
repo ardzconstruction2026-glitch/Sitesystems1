@@ -465,7 +465,20 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, addDoc, getDoc, getDocs, deleteDoc, setDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import firebaseConfig from '../references/firebase-config.js';
+
+const _apiKey = sessionStorage.getItem('st_api_key');
+if (!_apiKey) {
+  // Redirect to main index to enter API key
+  window.location.href = '../index.html';
+}
+const firebaseConfig = {
+  apiKey: _apiKey,
+  authDomain: "equiptrack-e1011.firebaseapp.com",
+  projectId: "equiptrack-e1011",
+  storageBucket: "equiptrack-e1011.firebasestorage.app",
+  messagingSenderId: "468749948486",
+  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
+};
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
