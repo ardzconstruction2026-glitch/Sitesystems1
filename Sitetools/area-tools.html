@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SiteTools — Area Calculator v1.1</title>
+<title>SiteTools — Area Calculator</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
 <style>
   :root{
@@ -165,7 +165,7 @@
 <!-- APP -->
 <div id="app-screen">
   <header>
-    <div class="logo">Site<span>Tools</span> <span style="font-size:.9rem;color:var(--muted);font-weight:400;letter-spacing:1px">/ Area</span> <span style="font-family:var(--fm);font-size:.65rem;color:var(--accent);letter-spacing:1px;background:rgba(0,194,255,.1);border:1px solid rgba(0,194,255,.2);padding:2px 8px;border-radius:10px;">v1.1</span></div>
+    <div class="logo">Site<span>Tools</span> <span style="font-size:.9rem;color:var(--muted);font-weight:400;letter-spacing:1px">/ Area</span></div>
     <div class="hright">
       <div class="user-info">Logged in as <strong id="display-name"></strong></div>
       <button class="btn-logout" id="btn-logout">Logout</button>
@@ -415,11 +415,7 @@ import { getFirestore, collection, doc, addDoc, getDoc, getDocs, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const _apiKey = sessionStorage.getItem('st_api_key');
-if (!_apiKey) {
-  // Try to redirect to index, fallback to showing error
-  try { window.location.href = '../index.html'; }
-  catch(e) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:monospace;color:#ff3b5c;background:#0d0f14;text-align:center;padding:2rem">No API key found.<br>Please open from the main index page.</div>'; }
-}
+if (!_apiKey) { window.location.href = '../index.html'; }
 const firebaseConfig = {
   apiKey: _apiKey,
   authDomain: "equiptrack-e1011.firebaseapp.com",
@@ -444,22 +440,15 @@ let currentDir = null;
 // ── AUTH ──────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
   if (user) {
-    try {
-      const snap = await getDoc(doc(db,'users',user.uid));
-      if (!snap.exists()) { await signOut(auth); return; }
-      const data = snap.data();
-      // Allow all roles to use tools
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app-screen').style.display   = 'block';
-      document.getElementById('display-name').textContent   = data.username || user.email;
-      setToday();
-      await loadSaved();
-      drawCanvas();
-    } catch(e) {
-      console.error('Auth error:', e);
-      document.getElementById('login-err').textContent = 'Error loading user data: ' + e.message;
-      await signOut(auth);
-    }
+    const snap = await getDoc(doc(db,'users',user.uid));
+    if (!snap.exists()) { await signOut(auth); return; }
+    const data = snap.data();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display   = 'block';
+    document.getElementById('display-name').textContent   = data.username || user.email;
+    setToday();
+    await loadSaved();
+    drawCanvas();
   } else {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display   = 'none';
@@ -494,11 +483,6 @@ window.switchTab = function(id,btn){
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
   if(id==='t2') renderSaved();
-  if(id==='t3'){
-    const hasArea = isClosed && areaVal !== null;
-    document.getElementById('no-area-msg').style.display  = hasArea ? 'none'  : 'block';
-    document.getElementById('tile-content').style.display = hasArea ? 'block' : 'none';
-  }
 };
 
 function setToday(){
@@ -820,377 +804,29 @@ document.getElementById('btn-del-cancel').addEventListener('click',()=>{
   pendingDelId=null;
 });
 
+function fdate(d){
+  if(!d) return '—';
+  try{ const dt=new Date(d); if(isNaN(dt)) return d;
+    return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+  catch{ return d; }
+}
+
 // ── TILE CALCULATOR ───────────────────────────────────────────
 document.getElementById('grout-toggle').addEventListener('change', function(){
   document.getElementById('grout-input-row').style.display = this.checked ? 'block' : 'none';
 });
 
 // Show/hide tile content based on area availability
-window.runTileCalc = function(){
-  if(!isClosed || areaVal === null){ toast('Calculate polygon area first.',true); return; }
-
-  const tileW  = parseFloat(document.getElementById('tile-w').value) / 100;
-  const tileH  = parseFloat(document.getElementById('tile-h').value) / 100;
-  const useGap = document.getElementById('grout-toggle').checked;
-  const gap    = useGap ? parseFloat(document.getElementById('grout-size').value) / 100 : 0;
-  if(!tileW||!tileH||tileW<=0||tileH<=0){ toast('Enter valid tile dimensions.',true); return; }
-
-  const stepX = tileW + gap;
-  const stepY = tileH + gap;
-  const polyPts = getPoints();
-  const xs = polyPts.map(p=>p.x), ys = polyPts.map(p=>p.y);
-  const minX=Math.min(...xs), maxX=Math.max(...xs);
-  const minY=Math.min(...ys), maxY=Math.max(...ys);
-
-  // Grid origin
-  const startPt     = polyPts[0];
-  const oxDist      = parseFloat(document.getElementById('origin-x').value)||0;
-  const oyDist      = parseFloat(document.getElementById('origin-y').value)||0;
-  const oxDir       = document.getElementById('origin-x-dir').value;
-  const oyDir       = document.getElementById('origin-y-dir').value;
-  const anchorCorner= document.getElementById('anchor-corner').value;
-  const originX     = startPt.x + (oxDir==='E'? oxDist:-oxDist);
-  const originY     = startPt.y + (oyDir==='N'? oyDist:-oyDist);
-  const cornerOffX  = (anchorCorner==='TR'||anchorCorner==='BR')? -tileW:0;
-  const cornerOffY  = (anchorCorner==='BL'||anchorCorner==='BR')? -tileH:0;
-  const anchoredX   = originX + cornerOffX;
-  const anchoredY   = originY + cornerOffY;
-  const startX      = anchoredX - Math.ceil((anchoredX-minX)/stepX)*stepX;
-  const startY      = anchoredY - Math.ceil((anchoredY-minY)/stepY)*stepY;
-
-  // ── STEP 1: CLASSIFY TILES ───────────────────────────────────
-  let fullTiles = 0;
-  const tileRects   = [];   // all tiles for drawing
-  const cutTiles    = [];   // tiles needing cuts {gx,gy,tileObj}
-
-  for(let gx=startX; gx<maxX+stepX; gx+=stepX){
-    for(let gy=startY; gy<maxY+stepY; gy+=stepY){
-      const status = getTileStatus({x:gx,y:gy,w:tileW,h:tileH}, polyPts);
-      if(status==='full'){
-        fullTiles++;
-        tileRects.push({x:gx,y:gy,w:tileW,h:tileH,type:'full'});
-      } else if(status==='cut'){
-        const tObj = {x:gx,y:gy,w:tileW,h:tileH,type:'cut',label:'?'};
-        tileRects.push(tObj);
-        cutTiles.push({gx,gy,tileObj:tObj});
-      }
-    }
+const origSwitchTab = window.switchTab;
+window.switchTab = function(id, btn){
+  origSwitchTab(id, btn);
+  if(id === 't3'){
+    const hasArea = isClosed && areaVal !== null;
+    document.getElementById('no-area-msg').style.display  = hasArea ? 'none'  : 'block';
+    document.getElementById('tile-content').style.display = hasArea ? 'block' : 'none';
   }
-
-  // ── STEP 2: BUILD CUT REQUIREMENTS ──────────────────────────
-  // For each cut tile, determine:
-  //   neededShape: the polygon inside the area (clipped)
-  //   fullTileEdges: which sides of the grid cell face a full tile (must stay factory)
-  //   boundaryEdges: which sides face the polygon boundary (will be cut)
-
-  const requirements = cutTiles.map(({gx,gy,tileObj}) => {
-    const cell = {x:gx, y:gy, w:tileW, h:tileH};
-
-    // Clip cell against polygon → needed shape
-    const clipped = sutherlandHodgman(rectToVerts(cell), polyPts);
-
-    // Determine which cell sides face a full tile (those sides must remain factory)
-    // A side faces a full tile if the neighbor cell in that direction is 'full'
-    const neighbors = {
-      left:   getTileStatus({x:gx-stepX, y:gy,       w:tileW,h:tileH}, polyPts),
-      right:  getTileStatus({x:gx+stepX, y:gy,       w:tileW,h:tileH}, polyPts),
-      bottom: getTileStatus({x:gx,       y:gy-stepY, w:tileW,h:tileH}, polyPts),
-      top:    getTileStatus({x:gx,       y:gy+stepY, w:tileW,h:tileH}, polyPts),
-    };
-    const fullTileEdges = {
-      left:   neighbors.left==='full',
-      right:  neighbors.right==='full',
-      bottom: neighbors.bottom==='full',
-      top:    neighbors.top==='full',
-    };
-
-    return { tileObj, cell, clipped, fullTileEdges };
-  });
-
-  // ── STEP 3: PROCESS EACH CUT — REUSE OR NEW TILE ─────────────
-  // Excess pool: [{shape, factoryEdges:{left,right,top,bottom}, sourceLabel}]
-  // shape is stored relative to a local origin (0,0) = bottom-left of the tile
-  const excessPool = [];
-  let cutTilesNeeded  = 0;
-  let reusedCount     = 0;
-  let sourceTileCount = 0;
-
-  for(const req of requirements){
-    if(!req.clipped || req.clipped.length < 3){
-      req.tileObj.label = 'C?'; continue;
-    }
-
-    // Normalize needed shape to (0,0) origin
-    // Align so that full-tile-facing edges are at 0 or tileW/tileH accordingly
-    const normNeeded = normalizeToCell(req.clipped, req.cell);
-
-    // Find matching excess piece
-    const matchIdx = findExcessMatch(excessPool, normNeeded, req.fullTileEdges, tileW, tileH);
-
-    if(matchIdx >= 0){
-      // Reuse excess piece
-      const ex = excessPool.splice(matchIdx, 1)[0];
-      req.tileObj.label = ex.sourceLabel;
-      reusedCount++;
-      // Remaining excess after using this piece
-      const remaining = subtractShape(ex, normNeeded, tileW, tileH);
-      for(const r of remaining){
-        if(r.area > 0.0001) excessPool.push(r);
-      }
-    } else {
-      // New tile needed
-      cutTilesNeeded++;
-      sourceTileCount++;
-      const label = 'C' + sourceTileCount;
-      req.tileObj.label = label;
-
-      // Generate excess from new tile
-      const newExcess = generateExcess(normNeeded, req.fullTileEdges, tileW, tileH, label);
-      for(const ex of newExcess){
-        if(ex.area > 0.0001) excessPool.push(ex);
-      }
-    }
-  }
-
-  // ── STEP 4: RESULTS ──────────────────────────────────────────
-  const totalPurchase = fullTiles + cutTilesNeeded;
-  const tileArea      = tileW * tileH;
-  const totalCutArea  = requirements.reduce((s,r)=> s+(r.clipped? shoelaceArea(r.clipped):0), 0);
-  const wasteArea     = Math.max(0,(cutTilesNeeded*tileArea)-totalCutArea);
-  const wastePct      = cutTilesNeeded>0 ? ((wasteArea/(totalPurchase*tileArea))*100).toFixed(1):'0.0';
-
-  document.getElementById('r-full').textContent     = fullTiles;
-  document.getElementById('r-cut-pos').textContent  = cutTiles.length;
-  document.getElementById('r-cut-tiles').textContent= cutTilesNeeded;
-  document.getElementById('r-reused').textContent   = reusedCount;
-  document.getElementById('r-purchase').textContent = totalPurchase;
-  document.getElementById('r-waste').textContent    = wastePct+'%';
-  document.getElementById('tile-results').style.display='block';
-
-  drawTileCanvas(tileRects, polyPts, stepX, stepY);
-  toast('Tile calculation complete!');
 };
 
-// ── GEOMETRY HELPERS ─────────────────────────────────────────
-
-function rectToVerts(r){
-  return [{x:r.x,y:r.y},{x:r.x+r.w,y:r.y},{x:r.x+r.w,y:r.y+r.h},{x:r.x,y:r.y+r.h}];
-}
-
-function shoelaceArea(pts){
-  let a=0; const n=pts.length;
-  for(let i=0;i<n;i++){const j=(i+1)%n; a+=pts[i].x*pts[j].y-pts[j].x*pts[i].y;}
-  return Math.abs(a)/2;
-}
-
-// Sutherland-Hodgman clip — returns array of {x,y} points
-function sutherlandHodgman(subject, clip){
-  let out = subject.map(p=>({x:p.x,y:p.y}));
-  const n = clip.length;
-  for(let i=0;i<n;i++){
-    if(!out.length) return [];
-    const inp = out; out=[];
-    const a=clip[i], b=clip[(i+1)%n];
-    for(let j=0;j<inp.length;j++){
-      const cur=inp[j], prv=inp[(j+inp.length-1)%inp.length];
-      const cIn=inside(cur,a,b), pIn=inside(prv,a,b);
-      if(cIn){ if(!pIn){const x=intersect(prv,cur,a,b); if(x) out.push(x);} out.push({...cur}); }
-      else if(pIn){ const x=intersect(prv,cur,a,b); if(x) out.push(x); }
-    }
-  }
-  return out;
-}
-
-function inside(p,a,b){ return (b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x)<=0; }
-function intersect(p1,p2,p3,p4){
-  const d1x=p2.x-p1.x,d1y=p2.y-p1.y,d2x=p4.x-p3.x,d2y=p4.y-p3.y;
-  const d=d1x*d2y-d1y*d2x;
-  if(Math.abs(d)<1e-10) return null;
-  const t=((p3.x-p1.x)*d2y-(p3.y-p1.y)*d2x)/d;
-  return {x:p1.x+t*d1x, y:p1.y+t*d1y};
-}
-
-// Normalize clipped shape into cell-local coordinates (0,0 at cell bottom-left)
-function normalizeToCell(pts, cell){
-  return pts.map(p=>({x:p.x-cell.x, y:p.y-cell.y}));
-}
-
-// Find an excess piece that satisfies the needed cut
-// Match rule: factory edges of excess must cover full-tile-facing edges of needed cut
-// Tries 4 rotations (0°, 90°, 180°, 270°)
-function findExcessMatch(pool, normNeeded, fullTileEdges, tileW, tileH){
-  const needBB = bbox(normNeeded);
-  const needW  = needBB.maxX-needBB.minX;
-  const needH  = needBB.maxY-needBB.minY;
-  const EPS    = 0.005;
-
-  for(let i=0;i<pool.length;i++){
-    const ex = pool[i];
-    // Try all 4 rotations
-    const rotations = [0,1,2,3];
-    for(const rot of rotations){
-      const exFact = rotateEdges(ex.factoryEdges, rot);
-      const exDims  = rot%2===0
-        ? {w: ex.w, h: ex.h}
-        : {w: ex.h, h: ex.w};
-
-      if(exDims.w < needW-EPS || exDims.h < needH-EPS) continue;
-
-      // Check: for each side where fullTileEdges is true, exFact must also be true
-      let valid = true;
-      for(const side of ['left','right','top','bottom']){
-        const rotatedSide = rotateSide(side, rot);
-        if(fullTileEdges[side] && !exFact[rotatedSide]){
-          valid=false; break;
-        }
-      }
-      if(valid) return i;
-    }
-  }
-  return -1;
-}
-
-// Generate excess pieces from a fresh tile after cutting the needed piece
-// fullTileEdges tells which sides of the needed piece face full tiles (factory stays)
-function generateExcess(normNeeded, fullTileEdges, tileW, tileH, label){
-  const bb = bbox(normNeeded);
-  const nW = bb.maxX-bb.minX, nH = bb.maxY-bb.minY;
-  const pieces = [];
-
-  // Right strip
-  const rW = tileW - (bb.minX + nW);
-  if(rW > 0.01){
-    pieces.push({
-      w: rW, h: tileH,
-      area: rW*tileH,
-      sourceLabel: label,
-      factoryEdges: {
-        left:   false,         // cut edge (where we cut)
-        right:  true,          // factory
-        bottom: true,          // factory
-        top:    true,          // factory
-      }
-    });
-  }
-
-  // Top strip (above needed piece)
-  const tH = tileH - (bb.minY + nH);
-  if(tH > 0.01){
-    pieces.push({
-      w: bb.minX + nW,
-      h: tH,
-      area: (bb.minX+nW)*tH,
-      sourceLabel: label,
-      factoryEdges: {
-        left:   true,    // factory
-        right:  true,    // factory (if right strip not taken) or cut
-        bottom: false,   // cut edge
-        top:    true,    // factory
-      }
-    });
-  }
-
-  // Bottom strip (below needed piece, if offset from bottom)
-  if(bb.minY > 0.01){
-    pieces.push({
-      w: tileW,
-      h: bb.minY,
-      area: tileW*bb.minY,
-      sourceLabel: label,
-      factoryEdges: {
-        left:   true,
-        right:  true,
-        bottom: true,
-        top:    false,  // cut edge
-      }
-    });
-  }
-
-  // Left strip (left of needed piece, if offset from left)
-  if(bb.minX > 0.01){
-    pieces.push({
-      w: bb.minX,
-      h: tileH,
-      area: bb.minX*tileH,
-      sourceLabel: label,
-      factoryEdges: {
-        left:   true,
-        right:  false,  // cut edge
-        bottom: true,
-        top:    true,
-      }
-    });
-  }
-
-  return pieces;
-}
-
-// Subtract used shape from excess piece, return remaining pieces
-function subtractShape(ex, normNeeded, tileW, tileH){
-  const nb = bbox(normNeeded);
-  const nW = nb.maxX-nb.minX, nH = nb.maxY-nb.minY;
-  const remaining = [];
-  // Remaining width strip
-  const remW = ex.w - nW;
-  if(remW > 0.01){
-    remaining.push({
-      w: remW, h: ex.h,
-      area: remW*ex.h,
-      sourceLabel: ex.sourceLabel,
-      factoryEdges: {
-        left:   false,
-        right:  ex.factoryEdges.right,
-        bottom: ex.factoryEdges.bottom,
-        top:    ex.factoryEdges.top,
-      }
-    });
-  }
-  // Remaining height strip
-  const remH = ex.h - nH;
-  if(remH > 0.01){
-    remaining.push({
-      w: nW, h: remH,
-      area: nW*remH,
-      sourceLabel: ex.sourceLabel,
-      factoryEdges: {
-        left:   ex.factoryEdges.left,
-        right:  ex.factoryEdges.right,
-        bottom: false,
-        top:    ex.factoryEdges.top,
-      }
-    });
-  }
-  return remaining;
-}
-
-function bbox(pts){
-  return {
-    minX:Math.min(...pts.map(p=>p.x)), maxX:Math.max(...pts.map(p=>p.x)),
-    minY:Math.min(...pts.map(p=>p.y)), maxY:Math.max(...pts.map(p=>p.y))
-  };
-}
-
-function rotateEdges(edges, rot){
-  const sides = ['left','bottom','right','top'];
-  const result = {};
-  for(let i=0;i<4;i++){
-    result[sides[i]] = edges[sides[(i+rot)%4]];
-  }
-  return result;
-}
-
-function rotateSide(side, rot){
-  const order = ['left','bottom','right','top'];
-  const idx = order.indexOf(side);
-  return order[(idx+rot)%4];
-}
-
-// ── TILE CALCULATOR ───────────────────────────────────────────
-document.getElementById('grout-toggle').addEventListener('change', function(){
-  document.getElementById('grout-input-row').style.display = this.checked ? 'block' : 'none';
-});
-
-// Show/hide tile content based on area availability
 window.runTileCalc = function(){
   if(!isClosed || areaVal === null){ toast('Calculate polygon area first.',true); return; }
 
@@ -1355,7 +991,165 @@ window.runTileCalc = function(){
   toast('Tile calculation complete!');
 };
 
+// ── POLYGON-BASED TILE HELPERS ───────────────────────────────
 
+// Polygon area (Shoelace)
+function polyArea(pts){
+  let a=0; const n=pts.length;
+  for(let i=0;i<n;i++){ const j=(i+1)%n; a+=pts[i].x*pts[j].y - pts[j].x*pts[i].y; }
+  return Math.abs(a)/2;
+}
+
+// Normalize shape to origin (translate so min x,y = 0)
+function normalizeShape(pts){
+  const minX=Math.min(...pts.map(p=>p.x)), minY=Math.min(...pts.map(p=>p.y));
+  return pts.map(p=>({...p, x:p.x-minX, y:p.y-minY}));
+}
+
+// Sutherland-Hodgman polygon clipping
+function clipPolygon(subjectPts, clipPts){
+  let output = subjectPts.map(p=>({x:p.x, y:p.y, eType:p.eType||'factory'}));
+  // Try both winding directions
+  for(let pass=0; pass<2; pass++){
+    const clip = pass===0 ? clipPts : [...clipPts].reverse();
+    let result = [...output];
+    const n = clip.length;
+    for(let i=0;i<n;i++){
+      if(!result.length) break;
+      const inp = result;
+      result = [];
+      const a = clip[i], b = clip[(i+1)%n];
+      for(let j=0;j<inp.length;j++){
+        const curr = inp[j], prev = inp[(j+inp.length-1)%inp.length];
+        const currIn = isInsideEdge(curr, a, b);
+        const prevIn = isInsideEdge(prev, a, b);
+        if(currIn){
+          if(!prevIn){
+            const inter = lineIntersect(prev, curr, a, b);
+            if(inter) result.push({x:inter.x, y:inter.y, eType:'cut'});
+          }
+          result.push({...curr});
+        } else if(prevIn){
+          const inter = lineIntersect(prev, curr, a, b);
+          if(inter) result.push({x:inter.x, y:inter.y, eType:'cut'});
+        }
+      }
+    }
+    if(result.length >= 3) return result;
+  }
+  return [];
+}
+
+function isInsideEdge(pt, a, b){
+  // Works for both CW and CCW — using left-side test
+  return (b.x-a.x)*(pt.y-a.y) - (b.y-a.y)*(pt.x-a.x) <= 0;
+}
+
+function lineIntersect(p1, p2, p3, p4){
+  const d1x=p2.x-p1.x, d1y=p2.y-p1.y;
+  const d2x=p4.x-p3.x, d2y=p4.y-p3.y;
+  const denom=d1x*d2y-d1y*d2x;
+  if(Math.abs(denom)<1e-10) return null;
+  const t=((p3.x-p1.x)*d2y-(p3.y-p1.y)*d2x)/denom;
+  return {x:p1.x+t*d1x, y:p1.y+t*d1y};
+}
+
+// Bounding box of a polygon
+function polyBBox(pts){
+  return {
+    minX:Math.min(...pts.map(p=>p.x)), maxX:Math.max(...pts.map(p=>p.x)),
+    minY:Math.min(...pts.map(p=>p.y)), maxY:Math.max(...pts.map(p=>p.y))
+  };
+}
+
+// Get offcuts from a fresh tile after removing the needed piece bounding box
+function getOffcutsFromTile(tileW, tileH, normShape){
+  const bb = polyBBox(normShape);
+  const pieces = [];
+  // Right strip
+  if(tileW - bb.maxX > 0.01){
+    pieces.push([
+      {x:bb.maxX, y:0,      eType:'cut'},
+      {x:tileW,   y:0,      eType:'factory'},
+      {x:tileW,   y:tileH,  eType:'factory'},
+      {x:bb.maxX, y:tileH,  eType:'cut'},
+    ]);
+  }
+  // Top strip
+  if(tileH - bb.maxY > 0.01){
+    pieces.push([
+      {x:0,       y:bb.maxY, eType:'cut'},
+      {x:bb.maxX, y:bb.maxY, eType:'cut'},
+      {x:bb.maxX, y:tileH,   eType:'factory'},
+      {x:0,       y:tileH,   eType:'factory'},
+    ]);
+  }
+  return pieces;
+}
+
+// Check if an offcut shape fits a needed shape (with 4 rotations)
+function findOffcutFit(pool, neededShape, tileW, tileH){
+  if(!neededShape || neededShape.length < 3) return -1;
+  const nb = polyBBox(neededShape);
+  const needW = nb.maxX - nb.minX, needH = nb.maxY - nb.minY;
+  const EPS = 0.005;
+
+  for(let i=0;i<pool.length;i++){
+    const oc = pool[i];
+    if(!oc.shape || oc.shape.length < 3) continue;
+    const ob = polyBBox(oc.shape);
+    const ocW = ob.maxX - ob.minX, ocH = ob.maxY - ob.minY;
+
+    // Check original and 90° rotation fit
+    const fitsNormal  = ocW >= needW - EPS && ocH >= needH - EPS;
+    const fitsRotated = ocW >= needH - EPS && ocH >= needW - EPS;
+
+    if(fitsNormal || fitsRotated){
+      // Verify cut edge alignment:
+      // The offcut must have at least as many cut edges as the needed piece
+      const neededCutEdges = countCutEdges(neededShape);
+      const offcutCutEdges = countCutEdges(oc.shape);
+      if(offcutCutEdges >= neededCutEdges) return i;
+    }
+  }
+  return -1;
+}
+
+function countCutEdges(pts){
+  return pts.filter(p => p.eType === 'cut').length;
+}
+
+// Compute leftover polygon after using part of an offcut
+function computeLeftover(offcutShape, usedShape){
+  if(!offcutShape || !usedShape) return null;
+  const ob = polyBBox(offcutShape);
+  const ub = polyBBox(usedShape);
+  const remW = (ob.maxX - ob.minX) - (ub.maxX - ub.minX);
+  const remH = (ob.maxY - ob.minY) - (ub.maxY - ub.minY);
+  if(remW < 0.01 && remH < 0.01) return null;
+  // Return approximate rectangular leftover
+  const lw = ob.maxX - ob.minX, lh = ob.maxY - ob.minY;
+  const uw = ub.maxX - ub.minX;
+  if(remW > 0.01){
+    return [
+      {x:ob.minX+uw, y:ob.minY, eType:'cut'},
+      {x:ob.maxX,    y:ob.minY, eType:'factory'},
+      {x:ob.maxX,    y:ob.maxY, eType:'factory'},
+      {x:ob.minX+uw, y:ob.maxY, eType:'cut'},
+    ];
+  }
+  return null;
+}
+
+// Helper: get polygon bounding values
+function getMinPolyX(poly){ return Math.min(...poly.map(p=>p.x)); }
+function getMaxPolyX(poly){ return Math.max(...poly.map(p=>p.x)); }
+function getMinPolyY(poly){ return Math.min(...poly.map(p=>p.y)); }
+function getMaxPolyY(poly){ return Math.max(...poly.map(p=>p.y)); }
+function isEdgeInsidePoly(edge, poly){
+  const mid = {x: edge.x + edge.w/2, y: edge.y + edge.h/2};
+  return pointInPolygon(mid, poly);
+}
 
 function getTileStatus(tile, poly){
   const EPS = 1e-9; // small tolerance to handle floating point edge cases
