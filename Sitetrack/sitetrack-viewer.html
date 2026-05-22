@@ -30,7 +30,8 @@
   .login-err{font-family:var(--fm);font-size:.75rem;color:var(--danger);text-align:center;margin-top:.75rem;min-height:1rem;}
   #app-screen{display:none;}
   header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
-  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent3);text-transform:uppercase;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent3);text-transform:uppercase;cursor:pointer;text-decoration:none;display:inline-block;}
+  .logo:hover{opacity:.85;}
   .logo span{color:var(--muted);font-weight:400;}
   .vtag{font-family:var(--fm);font-size:.68rem;letter-spacing:2px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
   .hright{display:flex;align-items:center;gap:1rem;}
@@ -42,7 +43,7 @@
   .bref:hover{background:rgba(0,255,157,.08);}
   .bref.loading .ri{animation:spin .8s linear infinite;display:inline-block;}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .content{padding:2rem;max-width:1200px;margin:0 auto;}
+  .content{padding:2rem;max-width:1300px;margin:0 auto;}
 
   /* STATS */
   .srow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem;}
@@ -67,7 +68,7 @@
   .ctitle::before{content:'';width:3px;height:16px;background:var(--accent3);border-radius:2px;}
   .rcount{margin-left:auto;font-family:var(--fm);font-size:.72rem;color:var(--muted);}
   .tw{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:900px;}
+  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1100px;}
   thead tr{background:var(--surface2);}
   th{font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 14px;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;}
   th:hover{color:var(--text);}
@@ -109,7 +110,7 @@
 <div id="app-screen">
   <header>
     <div style="display:flex;align-items:center;gap:12px;">
-      <div class="logo">Site<span>Track</span></div>
+      <a class="logo" href="sitetrack-index.html">Site<span>Track</span></a>
       <span class="vtag">VIEWER</span>
     </div>
     <div class="hright">
@@ -130,7 +131,7 @@
 
     <!-- FILTERS -->
     <div class="fbar">
-      <input class="si si-search" id="search" placeholder="Search by name, activity, location…" oninput="renderTable()"/>
+      <input class="si si-search" id="search" placeholder="Search by name, activity, location, item credited…" oninput="renderTable()"/>
       <select class="sf" id="f-date-filter" onchange="renderTable()"><option value="">All Dates</option></select>
       <select class="sf" id="f-desig" onchange="renderTable()">
         <option value="">All Designations</option>
@@ -138,6 +139,7 @@
         <option value="Labor">Labor</option>
       </select>
       <select class="sf" id="f-location" onchange="renderTable()"><option value="">All Locations</option></select>
+      <select class="sf" id="f-item" onchange="renderTable()"><option value="">All Items Credited</option></select>
       <button class="btn-export" onclick="exportCSV()">📥 Export CSV</button>
     </div>
 
@@ -154,8 +156,9 @@
             <th onclick="sort(4)">Activity</th>
             <th onclick="sort(5)">Location</th>
             <th onclick="sort(6)">Floor</th>
-            <th onclick="sort(7)">Qty</th>
-            <th onclick="sort(8)">Unit</th>
+            <th onclick="sort(7)">Item Credited</th>
+            <th onclick="sort(8)">Qty</th>
+            <th onclick="sort(9)">Unit</th>
             <th>Labor Assigned</th>
           </tr></thead>
           <tbody id="main-tbody"></tbody>
@@ -173,20 +176,7 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-const _apiKey = sessionStorage.getItem('st_api_key');
-if (!_apiKey) {
-  // Redirect to main index to enter API key
-  window.location.href = '../index.html';
-}
-const firebaseConfig = {
-  apiKey: _apiKey,
-  authDomain: "equiptrack-e1011.firebaseapp.com",
-  projectId: "equiptrack-e1011",
-  storageBucket: "equiptrack-e1011.firebasestorage.app",
-  messagingSenderId: "468749948486",
-  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
-};
+import firebaseConfig from '../references/firebase-config.js';
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -247,10 +237,13 @@ window.refreshAll = async function() {
 function populateFilters() {
   const dates = [...new Set(allData.map(d=>d.date).filter(Boolean))].sort().reverse();
   const locs  = [...new Set(allData.map(d=>d.location).filter(Boolean))].sort();
+  const items = [...new Set(allData.map(d=>d.itemCredited).filter(Boolean))].sort();
   const dSel  = document.getElementById('f-date-filter');
   const lSel  = document.getElementById('f-location');
+  const iSel  = document.getElementById('f-item');
   dSel.innerHTML = '<option value="">All Dates</option>' + dates.map(d=>`<option>${d}</option>`).join('');
   lSel.innerHTML = '<option value="">All Locations</option>' + locs.map(l=>`<option>${l}</option>`).join('');
+  iSel.innerHTML = '<option value="">All Items Credited</option>' + items.map(i=>`<option>${i}</option>`).join('');
 }
 
 function updateStats() {
@@ -266,17 +259,19 @@ window.renderTable = function() {
   const date = document.getElementById('f-date-filter').value;
   const desig= document.getElementById('f-desig').value;
   const loc  = document.getElementById('f-location').value;
+  const item = document.getElementById('f-item').value;
 
   let data = allData.filter(d => {
-    const matchQ = [d.name,d.activity,d.location,d.floorLevel,d.labor].join(' ').toLowerCase().includes(q);
+    const matchQ = [d.name,d.activity,d.location,d.floorLevel,d.labor,d.itemCredited].join(' ').toLowerCase().includes(q);
     const matchD = !date  || d.date===date;
     const matchDg= !desig || d.designation===desig;
     const matchL = !loc   || d.location===loc;
-    return matchQ && matchD && matchDg && matchL;
+    const matchI = !item  || d.itemCredited===item;
+    return matchQ && matchD && matchDg && matchL && matchI;
   });
 
   const ss = sortState;
-  const keys = ['id','date','name','designation','activity','location','floorLevel','quantity','unit'];
+  const keys = ['id','date','name','designation','activity','location','floorLevel','itemCredited','quantity','unit'];
   if (ss.col>=0 && ss.col<keys.length) {
     data.sort((a,b) => {
       const av=String(a[keys[ss.col]]||'').toLowerCase(), bv=String(b[keys[ss.col]]||'').toLowerCase();
@@ -286,7 +281,7 @@ window.renderTable = function() {
 
   document.getElementById('rcount').textContent = data.length+' records';
   const tb = document.getElementById('main-tbody');
-  if (!data.length) { tb.innerHTML='<tr><td colspan="10"><div class="empty">NO RECORDS FOUND</div></td></tr>'; return; }
+  if (!data.length) { tb.innerHTML='<tr><td colspan="11"><div class="empty">NO RECORDS FOUND</div></td></tr>'; return; }
   tb.innerHTML = data.map((d,i) => `
     <tr>
       <td style="font-family:var(--fm);color:var(--muted);font-size:.75rem">${i+1}</td>
@@ -296,6 +291,7 @@ window.renderTable = function() {
       <td>${d.activity||'—'}</td>
       <td>${d.location||'—'}</td>
       <td>${d.floorLevel||'—'}</td>
+      <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent2)">${d.itemCredited||'—'}</td>
       <td style="font-family:var(--fm)">${d.quantity||'—'}</td>
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent3)">${d.unit||'—'}</td>
       <td style="max-width:180px;word-break:break-word;font-size:.78rem">${d.labor||'—'}</td>
@@ -314,9 +310,9 @@ window.sort = function(col) {
 
 window.exportCSV = function() {
   if (!allData.length) { toast('No data to export.',true); return; }
-  const headers = ['Date','Name','Designation','Activity','Location','Floor Level','Quantity','Unit','Labor Assigned'];
-  const rows = allData.map(d=>[d.date,d.name,d.designation,d.activity,d.location,d.floorLevel,d.quantity,d.unit,d.labor]);
-  const csv  = [headers,...rows].map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  const headers = ['Date','Name','Designation','Activity','Location','Floor Level','Item Credited','Quantity','Unit','Labor Assigned'];
+  const rows = allData.map(d=>[d.date,d.name,d.designation,d.activity,d.location,d.floorLevel,d.itemCredited,d.quantity,d.unit,d.labor]);
+  const csv  = [headers,...rows].map(r=>r.map(c=>'\"'+(c||'').toString().replace(/"/g,'""')+'\"').join(',')).join('\n');
   const blob = new Blob([csv],{type:'text/csv'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);

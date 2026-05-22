@@ -34,7 +34,8 @@
   /* APP */
   #app-screen{display:none;}
   header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
-  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;cursor:pointer;text-decoration:none;display:inline-block;}
+  .logo:hover{opacity:.85;}
   .logo span{color:var(--muted);font-weight:400;}
   .hright{display:flex;align-items:center;gap:1rem;}
   .user-info{font-family:var(--fm);font-size:.75rem;color:var(--muted);letter-spacing:1px;}
@@ -109,7 +110,7 @@
   .btn-clear{background:rgba(255,59,92,.08);border:1px solid var(--danger);color:var(--danger);}
   .btn-clear:hover{background:rgba(255,59,92,.18);}
   .tw{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:900px;}
+  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1000px;}
   thead tr{background:var(--surface2);}
   th{font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 12px;text-align:left;white-space:nowrap;}
   td{padding:9px 12px;border-bottom:1px solid rgba(42,47,63,.5);vertical-align:middle;}
@@ -210,7 +211,7 @@
 <!-- APP -->
 <div id="app-screen">
   <header>
-    <div class="logo">Site<span>Track</span></div>
+    <a class="logo" href="sitetrack-index.html">Site<span>Track</span></a>
     <div class="hright">
       <div class="conn"><div class="cdot" id="cdot"></div><span id="ctxt">Online</span></div>
       <div class="badge" id="badge">0 pending</div>
@@ -275,14 +276,22 @@
           </button>
           <input type="hidden" id="f-floorLevel"/>
         </div>
-        <!-- Quantity -->
+        <!-- Item Credited -->
         <div class="fi">
-          <label>Quantity <span style="color:var(--accent)">*</span></label>
+          <label>Item Credited</label>
+          <button type="button" class="picker-trigger" id="trg-itemCredited" onclick="openPicker('itemCredited','Item Credited')">
+            <span class="placeholder" id="lbl-itemCredited">Select item…</span><span class="chevron">▼</span>
+          </button>
+          <input type="hidden" id="f-itemCredited"/>
+        </div>
+        <!-- Quantity (optional) -->
+        <div class="fi">
+          <label>Quantity</label>
           <input type="number" id="f-quantity" placeholder="0" min="0" step="any"/>
         </div>
-        <!-- Unit -->
+        <!-- Unit (optional, Firestore-backed) -->
         <div class="fi">
-          <label>Unit <span style="color:var(--accent)">*</span></label>
+          <label>Unit</label>
           <button type="button" class="picker-trigger" id="trg-unit" onclick="openPicker('unit','Unit')">
             <span class="placeholder" id="lbl-unit">Select unit…</span><span class="chevron">▼</span>
           </button>
@@ -324,10 +333,10 @@
           <thead><tr>
             <th>#</th><th>Date</th><th>Name</th><th>Designation</th>
             <th>Activity</th><th>Location</th><th>Floor</th>
-            <th>Qty</th><th>Unit</th><th>Labor</th><th>Status</th><th>Actions</th>
+            <th>Item Credited</th><th>Qty</th><th>Unit</th><th>Labor</th><th>Status</th><th>Actions</th>
           </tr></thead>
           <tbody id="entries-body">
-            <tr><td colspan="12" class="empty-td">No saved entries yet.</td></tr>
+            <tr><td colspan="13" class="empty-td">No saved entries yet.</td></tr>
           </tbody>
         </table>
       </div>
@@ -343,6 +352,8 @@
         <button class="mgr-tab" onclick="switchMgr('activity',this)">Activity</button>
         <button class="mgr-tab" onclick="switchMgr('location',this)">Location</button>
         <button class="mgr-tab" onclick="switchMgr('floorLevel',this)">Floor Level</button>
+        <button class="mgr-tab" onclick="switchMgr('unit',this)">Units</button>
+        <button class="mgr-tab" onclick="switchMgr('itemCredited',this)">Item Credited</button>
       </div>
 
       <!-- Workers -->
@@ -393,6 +404,30 @@
         <textarea class="paste-area" id="bulk-floorLevel" placeholder='["G/F","1/F","2/F","3/F"]'></textarea>
         <div style="margin-top:.5rem"><button class="btn-add" onclick="bulkImport('floorLevel','bulk-floorLevel')">Import List</button></div>
       </div>
+
+      <!-- Units -->
+      <div id="mgr-unit" class="mgr-section">
+        <div class="mgr-add-row">
+          <input id="add-unit" placeholder="Add unit…" onkeydown="if(event.key==='Enter'){event.preventDefault();addListItem('unit','add-unit')}"/>
+          <button class="btn-add" onclick="addListItem('unit','add-unit')">+ Add</button>
+        </div>
+        <div id="list-unit" class="item-list"></div>
+        <div class="mgr-sub">Bulk Import</div>
+        <textarea class="paste-area" id="bulk-unit" placeholder='["sqm","lm","pcs","bags","kg"]'></textarea>
+        <div style="margin-top:.5rem"><button class="btn-add" onclick="bulkImport('unit','bulk-unit')">Import List</button></div>
+      </div>
+
+      <!-- Item Credited -->
+      <div id="mgr-itemCredited" class="mgr-section">
+        <div class="mgr-add-row">
+          <input id="add-itemCredited" placeholder="Add item credited…" onkeydown="if(event.key==='Enter'){event.preventDefault();addListItem('itemCredited','add-itemCredited')}"/>
+          <button class="btn-add" onclick="addListItem('itemCredited','add-itemCredited')">+ Add</button>
+        </div>
+        <div id="list-itemCredited" class="item-list"></div>
+        <div class="mgr-sub">Bulk Import</div>
+        <textarea class="paste-area" id="bulk-itemCredited" placeholder='["Concrete Works","Rebar","Formwork"]'></textarea>
+        <div style="margin-top:.5rem"><button class="btn-add" onclick="bulkImport('itemCredited','bulk-itemCredited')">Import List</button></div>
+      </div>
     </div>
   </div>
 </div>
@@ -430,35 +465,21 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, addDoc, getDoc, getDocs, deleteDoc, setDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-const _apiKey = sessionStorage.getItem('st_api_key');
-if (!_apiKey) {
-  // Redirect to main index to enter API key
-  window.location.href = '../index.html';
-}
-const firebaseConfig = {
-  apiKey: _apiKey,
-  authDomain: "equiptrack-e1011.firebaseapp.com",
-  projectId: "equiptrack-e1011",
-  storageBucket: "equiptrack-e1011.firebasestorage.app",
-  messagingSenderId: "468749948486",
-  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
-};
+import firebaseConfig from '../references/firebase-config.js';
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// ── HARDCODED UNITS ───────────────────────────────────────────
-const UNITS = ['sqm','lm','pcs','sets','bags','drums','liters','cu.m','kg','tons','lot','days','hrs'];
-
 // ── STATE ─────────────────────────────────────────────────────
-let workers    = [];
-let activities = [];
-let locations  = [];
-let floorLevels= [];
-let entries    = JSON.parse(localStorage.getItem('st_entries') || '[]');
-let editingId  = null;
+let workers      = [];
+let activities   = [];
+let locations    = [];
+let floorLevels  = [];
+let units        = [];
+let itemsCredited= [];
+let entries      = JSON.parse(localStorage.getItem('st_entries') || '[]');
+let editingId    = null;
 let pendingDelId = null;
 
 // Multi-select state for labor
@@ -535,16 +556,20 @@ document.getElementById('btn-logout').addEventListener('click', () => signOut(au
 // ── LOAD LISTS ────────────────────────────────────────────────
 async function loadLists() {
   try {
-    const [wS, aS, lS, fS] = await Promise.all([
+    const [wS, aS, lS, fS, uS, iS] = await Promise.all([
       getDocs(collection(db,'workers')),
       getDocs(collection(db,'activities')),
       getDocs(collection(db,'locations')),
       getDocs(collection(db,'floorLevels')),
+      getDocs(collection(db,'units')),
+      getDocs(collection(db,'itemCredited')),
     ]);
-    workers     = wS.docs.map(d=>({id:d.id,...d.data()}));
-    activities  = aS.docs.map(d=>({id:d.id,...d.data()}));
-    locations   = lS.docs.map(d=>({id:d.id,...d.data()}));
-    floorLevels = fS.docs.map(d=>({id:d.id,...d.data()}));
+    workers       = wS.docs.map(d=>({id:d.id,...d.data()}));
+    activities    = aS.docs.map(d=>({id:d.id,...d.data()}));
+    locations     = lS.docs.map(d=>({id:d.id,...d.data()}));
+    floorLevels   = fS.docs.map(d=>({id:d.id,...d.data()}));
+    units         = uS.docs.map(d=>({id:d.id,...d.data()}));
+    itemsCredited = iS.docs.map(d=>({id:d.id,...d.data()}));
     renderAllMgrLists();
   } catch(e) { console.error('loadLists error:',e); }
 }
@@ -584,7 +609,7 @@ function setDesig(btn) {
 
 let addDesigVal = '';
 window.setAddDesig = function(btn) {
-  document.querySelectorAll('.mgr-tabs ~ * #add-desig-skilled, .mgr-tabs ~ * #add-desig-labor').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#mgr-workers .toggle-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   addDesigVal = btn.getAttribute('data-val');
 };
@@ -615,7 +640,6 @@ document.getElementById('picker-overlay').addEventListener('click', (e) => {
 function closePicker() {
   document.getElementById('picker-overlay').classList.remove('open');
   if (isMulti) {
-    // Commit labor selection
     const val = laborSelected.join(', ');
     document.getElementById('f-labor').value = val;
     const lbl = document.getElementById('lbl-labor');
@@ -636,7 +660,9 @@ function getPickerItems(field, search) {
   } else if (field === 'floorLevel') {
     return floorLevels.map(f=>f.name).filter(n=>n.toLowerCase().includes(search));
   } else if (field === 'unit') {
-    return UNITS.filter(u=>u.toLowerCase().includes(search));
+    return units.map(u=>u.name).filter(n=>n.toLowerCase().includes(search));
+  } else if (field === 'itemCredited') {
+    return itemsCredited.map(i=>i.name).filter(n=>n.toLowerCase().includes(search));
   } else if (field === 'labor') {
     const laborWorkers = workers.filter(w=>w.designation==='Labor').map(w=>w.name);
     const extras = ['Not Applicable','None'];
@@ -653,12 +679,12 @@ function renderPickerList(search) {
   if (isMulti) {
     el.innerHTML = items.map(item => `
       <div class="option-chip ${laborSelected.includes(item)?'selected':''}"
-        onclick="toggleLaborChip(this,'${item}')">${item}</div>`).join('');
+        onclick="toggleLaborChip(this,'${item.replace(/'/g,"\\'")}'">${item}</div>`).join('');
   } else {
     const cur = document.getElementById('f-'+currentPicker)?.value || '';
     el.innerHTML = items.map(item => `
       <div class="option-chip ${cur===item?'selected':''}"
-        onclick="selectPickerItem('${item}')">${item}</div>`).join('');
+        onclick="selectPickerItem('${item.replace(/'/g,"\\'")}'">${item}</div>`).join('');
   }
 }
 
@@ -670,7 +696,6 @@ window.selectPickerItem = function(val) {
   lbl.style.color = 'var(--text)';
   document.getElementById('trg-'+field).classList.add('selected');
 
-  // Auto-fill designation when name is selected
   if (field === 'name') {
     const worker = workers.find(w => w.name === val);
     if (worker) {
@@ -698,21 +723,23 @@ window.toggleLaborChip = function(el, val) {
 // ── FORM SUBMIT ───────────────────────────────────────────────
 function getFormData() {
   return {
-    date:       v('f-date'),
-    name:       v('f-name'),
-    designation:v('f-desig'),
-    activity:   v('f-activity'),
-    location:   v('f-location'),
-    floorLevel: v('f-floorLevel'),
-    quantity:   v('f-quantity'),
-    unit:       v('f-unit'),
-    labor:      v('f-labor'),
+    date:         v('f-date'),
+    name:         v('f-name'),
+    designation:  v('f-desig'),
+    activity:     v('f-activity'),
+    location:     v('f-location'),
+    floorLevel:   v('f-floorLevel'),
+    itemCredited: v('f-itemCredited'),
+    quantity:     v('f-quantity'),
+    unit:         v('f-unit'),
+    labor:        v('f-labor'),
   };
 }
 
 function validateForm() {
   const d = getFormData();
-  const required = ['date','name','designation','activity','location','floorLevel','quantity','unit','labor'];
+  // Quantity and Unit are optional — only these fields are required
+  const required = ['date','name','designation','activity','location','floorLevel','labor'];
   return required.every(k => d[k] && d[k].trim() !== '');
 }
 
@@ -729,7 +756,6 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
     document.getElementById('btn-submit').textContent = 'Submit Entry';
   } else {
     const entry = { ...data, id: Date.now().toString()+Math.random().toString(36).slice(2), status:'pending', createdAt: new Date().toISOString() };
-    // Try to upload directly if online
     if (navigator.onLine) {
       try {
         await addDoc(collection(db,'siteActivities'), { ...entry, status:'uploaded' });
@@ -763,12 +789,13 @@ document.getElementById('btn-clear').addEventListener('click', () => {
 
 function clearForm() {
   setToday();
-  ['f-name','f-desig','f-activity','f-location','f-floorLevel','f-unit','f-labor'].forEach(id=>document.getElementById(id).value='');
+  ['f-name','f-desig','f-activity','f-location','f-floorLevel','f-itemCredited','f-unit','f-labor'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-quantity').value='';
   document.querySelectorAll('#desig-group .toggle-btn').forEach(b=>b.classList.remove('active'));
-  ['name','activity','location','floorLevel','unit'].forEach(f=>{
+  ['name','activity','location','floorLevel','itemCredited','unit'].forEach(f=>{
     const lbl=document.getElementById('lbl-'+f);
-    if(lbl){lbl.textContent=f==='floorLevel'?'Select floor…':`Select ${f}…`;lbl.style.color='';}
+    const placeholders={'name':'Select name…','activity':'Select activity…','location':'Select location…','floorLevel':'Select floor…','itemCredited':'Select item…','unit':'Select unit…'};
+    if(lbl){lbl.textContent=placeholders[f]||'Select…';lbl.style.color='';}
     const trg=document.getElementById('trg-'+f);
     if(trg) trg.classList.remove('selected');
   });
@@ -784,7 +811,7 @@ function saveEntries() { localStorage.setItem('st_entries', JSON.stringify(entri
 function renderTable() {
   const tbody = document.getElementById('entries-body');
   document.getElementById('entry-count').textContent = entries.length + (entries.length===1?' entry':' entries');
-  if (!entries.length) { tbody.innerHTML='<tr><td colspan="12" class="empty-td">No saved entries yet.</td></tr>'; return; }
+  if (!entries.length) { tbody.innerHTML='<tr><td colspan="13" class="empty-td">No saved entries yet.</td></tr>'; return; }
   tbody.innerHTML = entries.slice().reverse().map((e,i) => {
     const num = entries.length - i;
     const isUploaded  = e.status==='uploaded';
@@ -798,7 +825,8 @@ function renderTable() {
       <td class="muted-td">${num}</td>
       <td>${e.date}</td><td>${e.name}</td><td>${e.designation}</td>
       <td>${e.activity}</td><td>${e.location}</td><td>${e.floorLevel}</td>
-      <td>${e.quantity}</td><td>${e.unit}</td>
+      <td>${e.itemCredited||'—'}</td>
+      <td>${e.quantity||'—'}</td><td>${e.unit||'—'}</td>
       <td style="max-width:150px;word-break:break-word">${e.labor}</td>
       <td>${statusHTML}</td>
       <td><div class="row-acts">
@@ -847,9 +875,13 @@ window.editEntry = function(id) {
   document.getElementById('lbl-location').textContent = e.location; document.getElementById('lbl-location').style.color='var(--text)'; document.getElementById('trg-location').classList.add('selected');
   document.getElementById('f-floorLevel').value= e.floorLevel;
   document.getElementById('lbl-floorLevel').textContent = e.floorLevel; document.getElementById('lbl-floorLevel').style.color='var(--text)'; document.getElementById('trg-floorLevel').classList.add('selected');
-  document.getElementById('f-quantity').value  = e.quantity;
-  document.getElementById('f-unit').value      = e.unit;
-  document.getElementById('lbl-unit').textContent = e.unit; document.getElementById('lbl-unit').style.color='var(--text)'; document.getElementById('trg-unit').classList.add('selected');
+  const ic = e.itemCredited||'';
+  document.getElementById('f-itemCredited').value = ic;
+  document.getElementById('lbl-itemCredited').textContent = ic||'Select item…'; document.getElementById('lbl-itemCredited').style.color=ic?'var(--text)':'';
+  if(ic) document.getElementById('trg-itemCredited').classList.add('selected');
+  document.getElementById('f-quantity').value  = e.quantity||'';
+  document.getElementById('f-unit').value      = e.unit||'';
+  if(e.unit){document.getElementById('lbl-unit').textContent=e.unit;document.getElementById('lbl-unit').style.color='var(--text)';document.getElementById('trg-unit').classList.add('selected');}
   document.getElementById('f-labor').value     = e.labor;
   document.getElementById('lbl-labor').textContent = e.labor; document.getElementById('lbl-labor').style.color='var(--text)'; document.getElementById('trg-labor').classList.add('selected');
   laborSelected = e.labor.split(',').map(s=>s.trim()).filter(Boolean);
@@ -913,11 +945,29 @@ window.switchMgr = function(key, btn) {
   document.getElementById('mgr-'+key).classList.add('active');
 };
 
+function getListData(field) {
+  if (field==='activity')     return activities;
+  if (field==='location')     return locations;
+  if (field==='floorLevel')   return floorLevels;
+  if (field==='unit')         return units;
+  if (field==='itemCredited') return itemsCredited;
+  return [];
+}
+
+function getCollectionName(field) {
+  if (field==='activity')     return 'activities';
+  if (field==='location')     return 'locations';
+  if (field==='floorLevel')   return 'floorLevels';
+  if (field==='unit')         return 'units';
+  if (field==='itemCredited') return 'itemCredited';
+  return field;
+}
+
 function renderAllMgrLists() {
   renderWorkerList();
-  renderMgrList('activity', activities.map(a=>a.name), 'list-activity');
-  renderMgrList('location', locations.map(l=>l.name), 'list-location');
-  renderMgrList('floorLevel', floorLevels.map(f=>f.name), 'list-floorLevel');
+  ['activity','location','floorLevel','unit','itemCredited'].forEach(f=>{
+    renderMgrList(f, getListData(f).map(x=>x.name), 'list-'+f);
+  });
 }
 
 function renderWorkerList() {
@@ -955,7 +1005,7 @@ window.addWorker = async function() {
     workers.push({id:ref.id,name,designation:desig});
     renderWorkerList();
     document.getElementById('add-worker-name').value='';
-    document.querySelectorAll('#add-desig-skilled,#add-desig-labor').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('#mgr-workers .toggle-btn').forEach(b=>b.classList.remove('active'));
     addDesigVal='';
     showToast('Worker added!');
   } catch(e){ showToast('Error adding worker.','error'); }
@@ -964,10 +1014,10 @@ window.addWorker = async function() {
 window.addListItem = async function(field, inputId) {
   const val = document.getElementById(inputId).value.trim();
   if (!val) return;
-  const col = field==='activity'?activities:field==='location'?locations:floorLevels;
+  const col = getListData(field);
   if (col.some(x=>x.name.toLowerCase()===val.toLowerCase())) { showToast('Already exists.','error'); return; }
   try {
-    const colName = field==='activity'?'activities':field==='location'?'locations':'floorLevels';
+    const colName = getCollectionName(field);
     const ref = await addDoc(collection(db,colName),{name:val});
     col.push({id:ref.id,name:val});
     renderAllMgrLists();
@@ -982,8 +1032,8 @@ window.bulkImport = async function(field, textareaId) {
   let parsed;
   try { parsed = JSON.parse(raw); } catch { showToast('Invalid JSON.','error'); return; }
   if (!Array.isArray(parsed)) { showToast('Must be a JSON array.','error'); return; }
-  const colName = field==='activity'?'activities':field==='location'?'locations':'floorLevels';
-  const col     = field==='activity'?activities:field==='location'?locations:floorLevels;
+  const colName = getCollectionName(field);
+  const col     = getListData(field);
   let added=0;
   for (const item of parsed) {
     const val = String(item).trim();
@@ -1008,8 +1058,8 @@ async function removeItem(colName, id) {
 }
 
 async function removeListItem(field, idx) {
-  const col     = field==='activity'?activities:field==='location'?locations:floorLevels;
-  const colName = field==='activity'?'activities':field==='location'?'locations':'floorLevels';
+  const col     = getListData(field);
+  const colName = getCollectionName(field);
   const item    = col[idx]; if(!item) return;
   try {
     await deleteDoc(doc(db,colName,item.id));

@@ -31,7 +31,8 @@
   .access-denied{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1rem;text-align:center;padding:2rem;}
   #app-screen{display:none;}
   header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
-  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;cursor:pointer;text-decoration:none;display:inline-block;}
+  .logo:hover{opacity:.85;}
   .logo span{color:var(--muted);font-weight:400;}
   .vtag{font-family:var(--fm);font-size:.68rem;letter-spacing:2px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
   .hright{display:flex;align-items:center;gap:1rem;}
@@ -43,7 +44,7 @@
   .bref:hover{background:rgba(240,192,64,.08);}
   .bref.loading .ri{animation:spin .8s linear infinite;display:inline-block;}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .content{padding:2rem;max-width:1200px;margin:0 auto;}
+  .content{padding:2rem;max-width:1300px;margin:0 auto;}
 
   /* PURGE */
   .purge-section{background:rgba(255,59,92,.05);border:1px solid rgba(255,59,92,.2);border-radius:8px;padding:1.5rem 2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
@@ -59,6 +60,8 @@
   .si-search{flex:1;min-width:180px;}
   .sf{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--fb);font-size:.85rem;outline:none;cursor:pointer;}
   .sf option{background:var(--surface2);}
+  .btn-export{font-family:var(--fh);font-size:.85rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:7px 14px;border-radius:var(--r);cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .btn-export:hover{background:rgba(74,158,255,.08);}
 
   /* TABLE */
   .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
@@ -66,7 +69,7 @@
   .ctitle::before{content:'';width:3px;height:16px;background:var(--accent);border-radius:2px;}
   .rcount{margin-left:auto;font-family:var(--fm);font-size:.72rem;color:var(--muted);}
   .tw{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1000px;}
+  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1200px;}
   thead tr{background:var(--surface2);}
   th{font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 12px;text-align:left;white-space:nowrap;}
   td{padding:8px 12px;border-bottom:1px solid rgba(42,47,63,.5);vertical-align:middle;}
@@ -160,7 +163,7 @@
 <div id="app-screen">
   <header>
     <div style="display:flex;align-items:center;gap:10px;">
-      <div class="logo">Site<span>Track</span></div>
+      <a class="logo" href="sitetrack-index.html">Site<span>Track</span></a>
       <span class="vtag">MASTER</span>
     </div>
     <div class="hright">
@@ -177,13 +180,15 @@
     </div>
 
     <div class="fbar">
-      <input class="si si-search" id="search" placeholder="Search by name, activity, location…" oninput="renderTable()"/>
+      <input class="si si-search" id="search" placeholder="Search by name, activity, location, item credited…" oninput="renderTable()"/>
       <select class="sf" id="f-date" onchange="renderTable()"><option value="">All Dates</option></select>
       <select class="sf" id="f-desig" onchange="renderTable()">
         <option value="">All Designations</option>
         <option value="Skilled">Skilled</option>
         <option value="Labor">Labor</option>
       </select>
+      <select class="sf" id="f-item" onchange="renderTable()"><option value="">All Items Credited</option></select>
+      <button class="btn-export" onclick="exportCSV()">📥 Export CSV</button>
     </div>
 
     <div class="card">
@@ -192,7 +197,7 @@
         <table>
           <thead><tr>
             <th>Date</th><th>Name</th><th>Designation</th><th>Activity</th>
-            <th>Location</th><th>Floor</th><th>Qty</th><th>Unit</th><th>Labor</th><th>Actions</th>
+            <th>Location</th><th>Floor</th><th>Item Credited</th><th>Qty</th><th>Unit</th><th>Labor</th><th>Actions</th>
           </tr></thead>
           <tbody id="main-tbody"></tbody>
         </table>
@@ -209,20 +214,7 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, updateDoc, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-const _apiKey = sessionStorage.getItem('st_api_key');
-if (!_apiKey) {
-  // Redirect to main index to enter API key
-  window.location.href = '../index.html';
-}
-const firebaseConfig = {
-  apiKey: _apiKey,
-  authDomain: "equiptrack-e1011.firebaseapp.com",
-  projectId: "equiptrack-e1011",
-  storageBucket: "equiptrack-e1011.firebasestorage.app",
-  messagingSenderId: "468749948486",
-  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
-};
+import firebaseConfig from '../references/firebase-config.js';
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -284,31 +276,36 @@ async function loadAll() {
   try {
     const snap = await getDocs(collection(db,'siteActivities'));
     allData = snap.docs.map(d=>({id:d.id,...d.data()}));
-    populateDateFilter();
+    populateFilters();
     renderTable();
   } catch(e) { toast('Failed to load.',true); }
   finally { btn.classList.remove('loading'); ov.classList.remove('show'); }
 }
 
-function populateDateFilter() {
+function populateFilters() {
   const dates = [...new Set(allData.map(d=>d.date).filter(Boolean))].sort().reverse();
-  const sel   = document.getElementById('f-date');
-  sel.innerHTML = '<option value="">All Dates</option>' + dates.map(d=>`<option>${d}</option>`).join('');
+  const items = [...new Set(allData.map(d=>d.itemCredited).filter(Boolean))].sort();
+  const dSel  = document.getElementById('f-date');
+  const iSel  = document.getElementById('f-item');
+  dSel.innerHTML = '<option value="">All Dates</option>' + dates.map(d=>`<option>${d}</option>`).join('');
+  iSel.innerHTML = '<option value="">All Items Credited</option>' + items.map(i=>`<option>${i}</option>`).join('');
 }
 
 window.renderTable = function() {
   const q    = document.getElementById('search').value.toLowerCase();
   const date = document.getElementById('f-date').value;
   const desig= document.getElementById('f-desig').value;
+  const item = document.getElementById('f-item').value;
   let data = allData.filter(d => {
-    const matchQ  = [d.name,d.activity,d.location,d.floorLevel].join(' ').toLowerCase().includes(q);
+    const matchQ  = [d.name,d.activity,d.location,d.floorLevel,d.itemCredited].join(' ').toLowerCase().includes(q);
     const matchD  = !date  || d.date===date;
     const matchDg = !desig || d.designation===desig;
-    return matchQ && matchD && matchDg;
+    const matchI  = !item  || d.itemCredited===item;
+    return matchQ && matchD && matchDg && matchI;
   });
   document.getElementById('rcount').textContent = data.length+' records';
   const tb = document.getElementById('main-tbody');
-  if (!data.length) { tb.innerHTML='<tr><td colspan="10"><div class="empty">NO RECORDS FOUND</div></td></tr>'; return; }
+  if (!data.length) { tb.innerHTML='<tr><td colspan="11"><div class="empty">NO RECORDS FOUND</div></td></tr>'; return; }
   tb.innerHTML = data.map((d,i) => `
     <tr id="row-${i}">
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${d.date||'—'}</td>
@@ -317,6 +314,7 @@ window.renderTable = function() {
       <td>${d.activity||'—'}</td>
       <td>${d.location||'—'}</td>
       <td>${d.floorLevel||'—'}</td>
+      <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent2)">${d.itemCredited||'—'}</td>
       <td style="font-family:var(--fm)">${d.quantity||'—'}</td>
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent3)">${d.unit||'—'}</td>
       <td style="max-width:150px;word-break:break-word;font-size:.78rem">${d.labor||'—'}</td>
@@ -341,6 +339,7 @@ window.editRow = function(i) {
     <td><input class="iedit" id="ed-activity-${i}" value="${d.activity||''}"/></td>
     <td><input class="iedit" id="ed-location-${i}" value="${d.location||''}"/></td>
     <td><input class="iedit" id="ed-floor-${i}" value="${d.floorLevel||''}"/></td>
+    <td><input class="iedit" id="ed-item-${i}" value="${d.itemCredited||''}" placeholder="Item credited…"/></td>
     <td><input class="iedit" id="ed-qty-${i}" type="number" value="${d.quantity||''}" style="min-width:60px"/></td>
     <td><input class="iedit" id="ed-unit-${i}" value="${d.unit||''}" style="min-width:60px"/></td>
     <td><input class="iedit" id="ed-labor-${i}" value="${d.labor||''}"/></td>
@@ -353,15 +352,16 @@ window.editRow = function(i) {
 window.saveRow = async function(i) {
   const d = allData[i];
   const updated = {
-    date:        document.getElementById('ed-date-'+i).value,
-    name:        document.getElementById('ed-name-'+i).value.trim(),
-    designation: document.getElementById('ed-desig-'+i).value,
-    activity:    document.getElementById('ed-activity-'+i).value.trim(),
-    location:    document.getElementById('ed-location-'+i).value.trim(),
-    floorLevel:  document.getElementById('ed-floor-'+i).value.trim(),
-    quantity:    document.getElementById('ed-qty-'+i).value,
-    unit:        document.getElementById('ed-unit-'+i).value.trim(),
-    labor:       document.getElementById('ed-labor-'+i).value.trim(),
+    date:         document.getElementById('ed-date-'+i).value,
+    name:         document.getElementById('ed-name-'+i).value.trim(),
+    designation:  document.getElementById('ed-desig-'+i).value,
+    activity:     document.getElementById('ed-activity-'+i).value.trim(),
+    location:     document.getElementById('ed-location-'+i).value.trim(),
+    floorLevel:   document.getElementById('ed-floor-'+i).value.trim(),
+    itemCredited: document.getElementById('ed-item-'+i).value.trim(),
+    quantity:     document.getElementById('ed-qty-'+i).value,
+    unit:         document.getElementById('ed-unit-'+i).value.trim(),
+    labor:        document.getElementById('ed-labor-'+i).value.trim(),
   };
   try {
     await updateDoc(doc(db,'siteActivities',d.id), updated);
@@ -394,6 +394,20 @@ document.getElementById('btn-del-cancel').addEventListener('click', () => {
   document.getElementById('del-modal').classList.remove('show');
   pendingDelId = null;
 });
+
+// EXPORT CSV
+window.exportCSV = function() {
+  if (!allData.length) { toast('No data to export.',true); return; }
+  const headers = ['Date','Name','Designation','Activity','Location','Floor Level','Item Credited','Quantity','Unit','Labor Assigned'];
+  const rows = allData.map(d=>[d.date,d.name,d.designation,d.activity,d.location,d.floorLevel,d.itemCredited,d.quantity,d.unit,d.labor]);
+  const csv  = [headers,...rows].map(r=>r.map(c=>'\"'+(c||'').toString().replace(/"/g,'""')+'\"').join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `sitetrack-master-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  toast('Exported!');
+};
 
 // PURGE
 document.getElementById('btn-open-purge').addEventListener('click', () => {
