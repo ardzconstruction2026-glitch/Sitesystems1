@@ -1,6 +1,6 @@
 // firebase-config.js
 const _apiKey = sessionStorage.getItem('st_api_key');
-if (!_apiKey) window.location.href = '../../index.html';
+if (!_apiKey) window.location.href = '../index.html';
 
 export const firebaseConfig = {
   apiKey: _apiKey,
