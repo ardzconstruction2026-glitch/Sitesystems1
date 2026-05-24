@@ -24,8 +24,7 @@
   .login-err{font-family:var(--fm);font-size:.75rem;color:var(--danger);text-align:center;margin-top:.75rem;min-height:1rem;}
   #app-screen{display:none;}
   header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
-  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;text-decoration:none;cursor:pointer;}
-  .logo:hover{opacity:.8;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
   .logo span{color:var(--muted);font-weight:400;}
   .vtag{font-family:var(--fm);font-size:.68rem;letter-spacing:2px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
   .hright{display:flex;align-items:center;gap:1rem;}
@@ -48,13 +47,11 @@
   .sl{font-family:var(--fm);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
   .sv{font-family:var(--fh);font-size:2rem;font-weight:700;line-height:1;}
   .purple{color:var(--accent);}.blue{color:var(--accent4);}.green{color:var(--accent3);}.orange{color:var(--accent2);}
-  .fbar{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.4rem;margin-bottom:1rem;display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;}
-  .si{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 14px;font-family:var(--fb);font-size:.88rem;outline:none;min-width:160px;flex:1;}
+  .fbar{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.4rem;margin-bottom:1rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center;}
+  .si{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 14px;font-family:var(--fb);font-size:.88rem;outline:none;min-width:180px;flex:1;}
   .si:focus{border-color:var(--accent);}
   .sf{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 14px;font-family:var(--fb);font-size:.88rem;outline:none;cursor:pointer;}
   .sf option{background:var(--surface2);}
-  .date-filter{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 14px;font-family:var(--fm);font-size:.82rem;outline:none;cursor:pointer;white-space:nowrap;}
-  .date-filter:focus{border-color:var(--accent);}
   .btn-export{font-family:var(--fh);font-size:.85rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:7px 16px;border-radius:var(--r);cursor:pointer;transition:all .2s;white-space:nowrap;}
   .btn-export:hover{background:rgba(255,107,53,.08);}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
@@ -78,16 +75,7 @@
   .bal-pos{color:var(--accent3);font-family:var(--fm);font-weight:600;}
   .bal-neg{color:var(--danger);font-family:var(--fm);font-weight:600;}
   .bal-zero{color:var(--muted);font-family:var(--fm);}
-  .inv-basis-note{font-family:var(--fm);font-size:.7rem;color:var(--muted);padding:.5rem .75rem;background:rgba(0,194,255,.05);border:1px solid rgba(0,194,255,.15);border-radius:4px;line-height:1.5;}
-  .inv-basis-note.has-inv{color:var(--accent3);border-color:rgba(0,255,157,.2);background:rgba(0,255,157,.04);}
   .empty{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
-  /* History modal */
-  .modal-bg{display:none;position:fixed;inset:0;background:rgba(13,15,20,.85);z-index:300;align-items:center;justify-content:center;padding:1rem;}
-  .modal-bg.show{display:flex;}
-  .hist-modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2rem;max-width:640px;width:100%;max-height:80vh;overflow-y:auto;}
-  .hist-title{font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1.2rem;display:flex;justify-content:space-between;align-items:center;}
-  .btn-close-hist{font-family:var(--fm);font-size:.72rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 12px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:1px;}
-  .btn-close-hist:hover{border-color:var(--danger);color:var(--danger);}
   .overlay{display:none;position:fixed;inset:0;background:rgba(13,15,20,.7);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
   .overlay.show{display:flex;}
   .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
@@ -100,18 +88,6 @@
 </head>
 <body>
 <div class="overlay" id="overlay"><div class="spin"></div><div class="ltxt">LOADING...</div></div>
-
-<!-- HISTORY MODAL -->
-<div class="modal-bg" id="hist-modal">
-  <div class="hist-modal">
-    <div class="hist-title">
-      <span id="hist-mat-name">Material History</span>
-      <button class="btn-close-hist" id="hist-close">✕ Close</button>
-    </div>
-    <div id="hist-content"></div>
-  </div>
-</div>
-
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">Mat<span>Track</span></div>
@@ -126,7 +102,7 @@
 <div id="app-screen">
   <header>
     <div style="display:flex;align-items:center;gap:10px;">
-      <a href="material-index.html" class="logo">Mat<span>Track</span></a>
+      <div class="logo">Mat<span>Track</span></div>
       <span class="vtag">VIEWER</span>
     </div>
     <div class="hright">
@@ -146,9 +122,6 @@
   <div id="t1" class="tc active">
     <div class="fbar">
       <input class="si" id="inv-s" placeholder="Search by material, control no..." oninput="renderInv()"/>
-      <select class="sf" id="inv-mat-f" onchange="renderInv()"><option value="">All Materials</option></select>
-      <input type="date" class="date-filter" id="inv-date-from" onchange="renderInv()" title="From date"/>
-      <input type="date" class="date-filter" id="inv-date-to" onchange="renderInv()" title="To date"/>
       <button class="btn-export" onclick="exportCSV('inventory')">📥 Export</button>
     </div>
     <div class="card">
@@ -174,10 +147,6 @@
     </div>
     <div class="fbar">
       <input class="si" id="del-s" placeholder="Search by material, supplier..." oninput="renderDel()"/>
-      <select class="sf" id="del-mat-f" onchange="renderDel()"><option value="">All Materials</option></select>
-      <select class="sf" id="del-sup-f" onchange="renderDel()"><option value="">All Suppliers</option></select>
-      <input type="date" class="date-filter" id="del-date-from" onchange="renderDel()" title="From date"/>
-      <input type="date" class="date-filter" id="del-date-to" onchange="renderDel()" title="To date"/>
       <button class="btn-export" onclick="exportCSV('deliveries')">📥 Export</button>
     </div>
     <div class="card">
@@ -200,14 +169,11 @@
   <div id="t3" class="tc">
     <div class="fbar">
       <input class="si" id="po-s" placeholder="Search by material, person..." oninput="renderPo()"/>
-      <select class="sf" id="po-mat-f" onchange="renderPo()"><option value="">All Materials</option></select>
       <select class="sf" id="po-f" onchange="renderPo()">
         <option value="">All Types</option>
         <option value="Pull Out">Pull Out</option>
         <option value="Return">Return</option>
       </select>
-      <input type="date" class="date-filter" id="po-date-from" onchange="renderPo()" title="From date"/>
-      <input type="date" class="date-filter" id="po-date-to" onchange="renderPo()" title="To date"/>
       <button class="btn-export" onclick="exportCSV('pullouts')">📥 Export</button>
     </div>
     <div class="card">
@@ -229,12 +195,9 @@
 
   <!-- TAB 4: SUMMARY -->
   <div id="t4" class="tc">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem;">
-      <div id="sum-basis-note" class="inv-basis-note" style="flex:1;min-width:200px;display:none;"></div>
-      <div style="display:flex;gap:.75rem;flex-shrink:0;">
-        <button class="btn-export" onclick="exportCSV('summary')">📥 Export</button>
-        <button class="bref" style="border-color:var(--accent);color:var(--accent)" onclick="refreshAll()"><span class="ri">↻</span> Refresh</button>
-      </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;gap:1rem;">
+      <button class="btn-export" onclick="exportCSV('summary')">📥 Export</button>
+      <button class="bref" style="border-color:var(--accent);color:var(--accent)" onclick="renderSummary()"><span>↻</span> Recalculate</button>
     </div>
     <div class="card">
       <div class="ctitle">Material Summary</div>
@@ -242,7 +205,7 @@
         <thead><tr>
           <th>Material</th><th>Unit</th>
           <th>Latest Inventory</th><th>Inventory Date</th>
-          <th>Delivered After</th><th>Net Pull Out</th><th>Balance</th><th>History</th>
+          <th>Delivered After</th><th>Net Pull Out</th><th>Balance</th>
         </tr></thead>
         <tbody id="sum-tb"></tbody>
       </table></div>
@@ -254,8 +217,19 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { firebaseConfig } from '../references/firebase-config.js';
-
+const _apiKey = sessionStorage.getItem('st_api_key');
+if (!_apiKey) {
+  // Redirect to main index to enter API key
+  window.location.href = '../index.html';
+}
+const firebaseConfig = {
+  apiKey: _apiKey,
+  authDomain: "equiptrack-e1011.firebaseapp.com",
+  projectId: "equiptrack-e1011",
+  storageBucket: "equiptrack-e1011.firebasestorage.app",
+  messagingSenderId: "468749948486",
+  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
+};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let materials=[],deliveries=[],inventory=[],pullouts=[];
 let ss={inv:{c:-1,a:true},del:{c:-1,a:true},po:{c:-1,a:true}};
@@ -292,34 +266,10 @@ document.getElementById('login-btn-el').addEventListener('click',async()=>{
 });
 
 document.getElementById('btn-logout').addEventListener('click',()=>signOut(auth));
+
 document.getElementById('rbtn').addEventListener('click',refreshAll);
 
-// History modal
-document.getElementById('hist-close').addEventListener('click',()=>document.getElementById('hist-modal').classList.remove('show'));
-document.getElementById('hist-modal').addEventListener('click',e=>{if(e.target===document.getElementById('hist-modal'))document.getElementById('hist-modal').classList.remove('show');});
-
-window.showHistory=function(matName){
-  document.getElementById('hist-mat-name').textContent=matName+' — Transaction History';
-  const matInv=inventory.filter(i=>i.material===matName).sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const matDel=deliveries.filter(d=>d.material===matName).sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const matPo=pullouts.filter(p=>p.material===matName).sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const th=(cols)=>`<thead><tr style="background:var(--surface2)">${cols.map(c=>`<th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">${c}</th>`).join('')}</tr></thead>`;
-  const tdStyle='padding:8px 12px;border-bottom:1px solid rgba(42,47,63,.5)';
-  let html='';
-  html+=`<div style="font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">Inventory (${matInv.length})</div>`;
-  if(matInv.length){html+=`<table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:1.2rem">${th(['Control No.','Qty','Unit','Date'])}<tbody>${matInv.map(i=>`<tr><td style="${tdStyle};font-family:var(--fm);font-size:.75rem;color:var(--accent)">${i.ctrl||'—'}</td><td style="${tdStyle}">${i.quantity}</td><td style="${tdStyle};font-family:var(--fm);font-size:.75rem;color:var(--accent)">${i.unit}</td><td style="${tdStyle};font-family:var(--fm);font-size:.75rem">${i.date}</td></tr>`).join('')}</tbody></table>`;}
-  else html+=`<div style="font-family:var(--fm);font-size:.78rem;color:var(--muted);margin-bottom:1rem">No inventory records.</div>`;
-  html+=`<div style="font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">Deliveries (${matDel.length})</div>`;
-  if(matDel.length){html+=`<table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:1.2rem">${th(['Control No.','Qty','Supplier','Date'])}<tbody>${matDel.map(d=>`<tr><td style="${tdStyle};font-family:var(--fm);font-size:.75rem;color:var(--accent)">${d.ctrl||'—'}</td><td style="${tdStyle}">${d.quantity}</td><td style="${tdStyle};font-size:.8rem">${d.supplier||'—'}</td><td style="${tdStyle};font-family:var(--fm);font-size:.75rem">${d.date}</td></tr>`).join('')}</tbody></table>`;}
-  else html+=`<div style="font-family:var(--fm);font-size:.78rem;color:var(--muted);margin-bottom:1rem">No delivery records.</div>`;
-  html+=`<div style="font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">Pull Outs / Returns (${matPo.length})</div>`;
-  if(matPo.length){html+=`<table style="width:100%;border-collapse:collapse;font-size:.82rem">${th(['Control No.','Type','Qty','Person','Date'])}<tbody>${matPo.map(p=>`<tr><td style="${tdStyle};font-family:var(--fm);font-size:.75rem;color:var(--accent)">${p.ctrl||'—'}</td><td style="${tdStyle}"><span class="tag ${p.type==='Pull Out'?'tag-po':'tag-ret'}">${p.type}</span></td><td style="${tdStyle}">${p.quantity}</td><td style="${tdStyle};font-size:.8rem">${p.person||'—'}</td><td style="${tdStyle};font-family:var(--fm);font-size:.75rem">${p.date}</td></tr>`).join('')}</tbody></table>`;}
-  else html+=`<div style="font-family:var(--fm);font-size:.78rem;color:var(--muted)">No pull out / return records.</div>`;
-  document.getElementById('hist-content').innerHTML=html;
-  document.getElementById('hist-modal').classList.add('show');
-};
-
-window.refreshAll=async function(){
+async function refreshAll(){
   const btn=document.getElementById('rbtn'),ov=document.getElementById('overlay');
   btn.classList.add('loading');ov.classList.add('show');
   try{
@@ -328,22 +278,14 @@ window.refreshAll=async function(){
     deliveries=dS.docs.map(d=>({id:d.id,...d.data()}));
     inventory=iS.docs.map(d=>({id:d.id,...d.data()}));
     pullouts=pS.docs.map(d=>({id:d.id,...d.data()}));
-    updateStats();populateFilters();renderInv();renderDel();renderPo();renderSummary();
+    updateStats();renderInv();renderDel();renderPo();renderSummary();
   }catch(e){toast('Failed to load data.',true);}
   finally{btn.classList.remove('loading');ov.classList.remove('show');}
-};
+}
 
 function updateStats(){
   document.getElementById('s-del').textContent=deliveries.length;
   document.getElementById('s-mat').textContent=new Set(deliveries.map(d=>d.material)).size;
-}
-
-function populateFilters(){
-  const mats=[...new Set([...inventory,...deliveries,...pullouts].map(r=>r.material).filter(Boolean))].sort();
-  const suppliers=[...new Set(deliveries.map(d=>d.supplier).filter(Boolean))].sort();
-  const matOpts='<option value="">All Materials</option>'+mats.map(m=>`<option value="${m}">${m}</option>`).join('');
-  ['inv-mat-f','del-mat-f','po-mat-f'].forEach(id=>document.getElementById(id).innerHTML=matOpts);
-  document.getElementById('del-sup-f').innerHTML='<option value="">All Suppliers</option>'+suppliers.map(s=>`<option value="${s}">${s}</option>`).join('');
 }
 
 window.switchTab=function(id,btn){
@@ -357,22 +299,9 @@ window.switchTab=function(id,btn){
 function toast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='show'+(err?' err':'');setTimeout(()=>t.className='',3500);}
 function fdate(d){if(!d)return'—';try{const dt=new Date(d);if(isNaN(dt))return d;return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}catch{return d;}}
 
-function inDateRange(dateStr, fromId, toId){
-  const from=document.getElementById(fromId).value;
-  const to=document.getElementById(toId).value;
-  if(from && dateStr < from) return false;
-  if(to   && dateStr > to)   return false;
-  return true;
-}
-
 window.renderInv=function(){
   const q=document.getElementById('inv-s').value.toLowerCase();
-  const matF=document.getElementById('inv-mat-f').value;
-  let d=inventory.filter(i=>
-    [i.ctrl,i.material].join(' ').toLowerCase().includes(q) &&
-    (!matF||i.material===matF) &&
-    inDateRange(i.date,'inv-date-from','inv-date-to')
-  );
+  let d=inventory.filter(i=>[i.ctrl,i.material].join(' ').toLowerCase().includes(q));
   const s=ss.inv;
   if(s.c>=0){const k=['ctrl','material','quantity','unit','date'];d.sort((a,b)=>{const av=String(a[k[s.c]]||'').toLowerCase(),bv=String(b[k[s.c]]||'').toLowerCase();return s.a?av.localeCompare(bv):bv.localeCompare(av);});}
   document.getElementById('inv-rc').textContent=d.length+' records';
@@ -383,14 +312,7 @@ window.renderInv=function(){
 
 window.renderDel=function(){
   const q=document.getElementById('del-s').value.toLowerCase();
-  const matF=document.getElementById('del-mat-f').value;
-  const supF=document.getElementById('del-sup-f').value;
-  let d=deliveries.filter(i=>
-    [i.ctrl,i.material,i.supplier].join(' ').toLowerCase().includes(q) &&
-    (!matF||i.material===matF) &&
-    (!supF||(i.supplier||'')=== supF) &&
-    inDateRange(i.date,'del-date-from','del-date-to')
-  );
+  let d=deliveries.filter(i=>[i.ctrl,i.material,i.supplier].join(' ').toLowerCase().includes(q));
   const s=ss.del;
   if(s.c>=0){const k=['ctrl','material','quantity','unit','date','supplier'];d.sort((a,b)=>{const av=String(a[k[s.c]]||'').toLowerCase(),bv=String(b[k[s.c]]||'').toLowerCase();return s.a?av.localeCompare(bv):bv.localeCompare(av);});}
   document.getElementById('del-rc').textContent=d.length+' records';
@@ -402,13 +324,7 @@ window.renderDel=function(){
 window.renderPo=function(){
   const q=document.getElementById('po-s').value.toLowerCase();
   const f=document.getElementById('po-f').value;
-  const matF=document.getElementById('po-mat-f').value;
-  let d=pullouts.filter(i=>
-    [i.ctrl,i.material,i.person].join(' ').toLowerCase().includes(q) &&
-    (!f||i.type===f) &&
-    (!matF||i.material===matF) &&
-    inDateRange(i.date,'po-date-from','po-date-to')
-  );
+  let d=pullouts.filter(i=>[i.ctrl,i.material,i.person].join(' ').toLowerCase().includes(q)&&(!f||i.type===f));
   const s=ss.po;
   if(s.c>=0){const k=['ctrl','material','quantity','unit','type','person','date'];d.sort((a,b)=>{const av=String(a[k[s.c]]||'').toLowerCase(),bv=String(b[k[s.c]]||'').toLowerCase();return s.a?av.localeCompare(bv):bv.localeCompare(av);});}
   document.getElementById('po-rc').textContent=d.length+' records';
@@ -419,15 +335,12 @@ window.renderPo=function(){
 
 window.renderSummary=function(){
   const tb=document.getElementById('sum-tb');
-  const noteEl=document.getElementById('sum-basis-note');
-  if(!materials.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">NO MATERIALS IN DATABASE</div></td></tr>';noteEl.style.display='none';return;}
-  let anyNoInv=false;
+  if(!materials.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO MATERIALS IN DATABASE</div></td></tr>';return;}
   const rows=materials.map(m=>{
     const matInv=inventory.filter(i=>i.material===m.name).sort((a,b)=>new Date(b.date)-new Date(a.date));
     const latestInv=matInv[0]||null;
     const latestInvDate=latestInv?latestInv.date:null;
     const latestInvQty=latestInv?parseFloat(latestInv.quantity):0;
-    if(!latestInv)anyNoInv=true;
     const filteredDel=deliveries.filter(d=>d.material===m.name&&(!latestInvDate||d.date>latestInvDate));
     const filteredPo=pullouts.filter(p=>p.material===m.name&&p.type==='Pull Out'&&(!latestInvDate||p.date>latestInvDate));
     const filteredRet=pullouts.filter(p=>p.material===m.name&&p.type==='Return'&&(!latestInvDate||p.date>latestInvDate));
@@ -438,20 +351,9 @@ window.renderSummary=function(){
     const balance=latestInvQty+totalDel-netPo;
     return{name:m.name,unit:m.unit,latestInvQty,latestInvDate,totalDel,netPo,balance};
   });
-  noteEl.style.display='block';
-  if(anyNoInv){noteEl.className='inv-basis-note';noteEl.textContent='ℹ Some materials have no inventory recorded — their balance counts all transactions from the beginning.';}
-  else{noteEl.className='inv-basis-note has-inv';noteEl.textContent='✓ All materials have an inventory baseline. Deliveries and pull outs counted after each material\'s latest inventory date.';}
   tb.innerHTML=rows.map(r=>{
     const bc=r.balance>0?'bal-pos':r.balance<0?'bal-neg':'bal-zero';
-    return`<tr>
-      <td>${r.name}</td>
-      <td><span style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${r.unit}</span></td>
-      <td>${r.latestInvQty>0||r.latestInvDate?r.latestInvQty:'—'}</td>
-      <td style="font-family:var(--fm);font-size:.78rem">${r.latestInvDate||'<span style="color:var(--warn)">No inventory</span>'}</td>
-      <td>${r.totalDel}</td><td>${r.netPo}</td>
-      <td><span class="${bc}">${r.balance}</span></td>
-      <td><button style="font-family:var(--fm);font-size:.68rem;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.3);color:var(--accent);padding:4px 10px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px" onclick="showHistory('${r.name.replace(/'/g,"\\'")}')">📋 History</button></td>
-    </tr>`;
+    return`<tr><td>${r.name}</td><td><span style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${r.unit}</span></td><td>${r.latestInvQty>0||r.latestInvDate?r.latestInvQty:'—'}</td><td>${r.latestInvDate||'—'}</td><td>${r.totalDel}</td><td>${r.netPo}</td><td><span class="${bc}">${r.balance}</span></td></tr>`;
   }).join('');
 };
 
