@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SiteTools — Volume Calculator v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#0d0f14;--surface:#13161e;--surface2:#1a1e29;--border:#2a2f3f;
+    --accent:#00c2ff;--accent2:#ff6b35;--accent3:#00ff9d;--accent4:#c084fc;
+    --text:#d0d8f0;--muted:#5a6180;--danger:#ff3b5c;--warn:#ffb800;
+    --r:6px;--fh:'Rajdhani',sans-serif;--fm:'Share Tech Mono',monospace;--fb:'Exo 2',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;
+    background-image:radial-gradient(ellipse at 20% 0%,rgba(0,194,255,.06) 0%,transparent 60%),
+    radial-gradient(ellipse at 80% 100%,rgba(192,132,252,.05) 0%,transparent 60%);}
+
+  /* LOGIN */
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:100%;max-width:400px;}
+  .login-logo{font-family:var(--fh);font-size:1.8rem;font-weight:700;letter-spacing:3px;color:var(--accent);text-transform:uppercase;text-align:center;margin-bottom:.25rem;}
+  .login-logo span{color:var(--muted);font-weight:400;}
+  .login-sub{font-family:var(--fm);font-size:.72rem;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:2rem;text-transform:uppercase;}
+  .login-fi{display:flex;flex-direction:column;gap:6px;margin-bottom:1.2rem;}
+  .login-fi label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .login-fi input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:11px 14px;font-family:var(--fb);font-size:.95rem;outline:none;transition:border-color .2s;width:100%;}
+  .login-fi input:focus{border-color:var(--accent);}
+  .login-btn{width:100%;font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#000;border:none;padding:12px;border-radius:var(--r);cursor:pointer;transition:all .2s;margin-top:.5rem;}
+  .login-btn:hover{opacity:.85;}
+  .login-err{font-family:var(--fm);font-size:.75rem;color:var(--danger);text-align:center;margin-top:.75rem;min-height:1rem;}
+
+  /* APP */
+  #app-screen{display:none;}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:var(--fh);font-size:1.3rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;display:flex;align-items:center;gap:.75rem;}
+  .logo span{color:var(--muted);font-weight:400;}
+  .vtag{font-family:var(--fm);font-size:.65rem;color:var(--accent);letter-spacing:1px;background:rgba(0,194,255,.1);border:1px solid rgba(0,194,255,.2);padding:2px 8px;border-radius:10px;}
+  .hright{display:flex;align-items:center;gap:1rem;}
+  .user-info{font-family:var(--fm);font-size:.75rem;color:var(--muted);}
+  .user-info strong{color:var(--accent);}
+  .btn-logout{font-family:var(--fm);font-size:.75rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:var(--r);cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s;}
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+
+  /* TABS */
+  nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;}
+  .tb{font-family:var(--fh);font-size:.95rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:none;border:none;color:var(--muted);padding:14px 28px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+  .tb:hover{color:var(--text);}
+  .tb.active{color:var(--accent);border-bottom:2px solid var(--accent);}
+  .tc{display:none;padding:2rem;max-width:1100px;margin:0 auto;}
+  .tc.active{display:block;}
+
+  /* CARDS */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2rem;margin-bottom:1.5rem;}
+  .ctitle{font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .ctitle::before{content:'';width:3px;height:18px;background:var(--accent);border-radius:2px;}
+
+  /* FORM */
+  .fg{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+  .fg-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.2rem;}
+  .fg-4{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:1rem;align-items:end;}
+  .fi{display:flex;flex-direction:column;gap:6px;}
+  .fi.full{grid-column:1/-1;}
+  label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  input[type="number"],input[type="date"],input[type="text"],textarea{
+    background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+    color:var(--text);padding:10px 14px;font-family:var(--fb);font-size:.9rem;
+    outline:none;transition:border-color .2s;width:100%;}
+  input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,194,255,.1);}
+  textarea{resize:vertical;min-height:70px;}
+  select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+    color:var(--text);padding:10px 14px;font-family:var(--fb);font-size:.9rem;
+    outline:none;width:100%;cursor:pointer;}
+  select:focus{border-color:var(--accent);}
+  select option{background:var(--surface2);}
+
+  /* ENTRY ROW */
+  .entry-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem;}
+  .entry-item{display:grid;grid-template-columns:auto 110px 80px 1fr 1fr 1fr 1fr auto;gap:.6rem;
+    align-items:center;background:var(--surface2);border:1px solid var(--border);
+    border-radius:var(--r);padding:9px 14px;font-family:var(--fm);font-size:.8rem;}
+  .entry-num{color:var(--muted);font-size:.72rem;min-width:20px;text-align:right;}
+  .entry-type{display:inline-flex;align-items:center;gap:5px;}
+  .type-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .entry-mark{color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .entry-dim{color:var(--muted);font-size:.72rem;white-space:nowrap;}
+  .entry-vol{color:var(--accent3);font-family:var(--fh);font-size:1rem;font-weight:700;text-align:right;white-space:nowrap;}
+  .entry-unit{color:var(--muted);font-size:.68rem;align-self:end;margin-bottom:1px;}
+  .entry-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 4px;transition:color .2s;line-height:1;}
+  .entry-del:hover{color:var(--danger);}
+  .empty-list{font-family:var(--fm);font-size:.78rem;color:var(--muted);padding:1.5rem 0;text-align:center;}
+
+  /* TOTAL BAR */
+  .total-bar{background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.2);border-radius:8px;
+    padding:1.2rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem;}
+  .total-label{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .total-value{font-family:var(--fh);font-size:2.4rem;font-weight:700;color:var(--accent3);line-height:1;}
+  .total-unit{font-family:var(--fm);font-size:.9rem;color:var(--muted);}
+  .type-subtotals{display:flex;gap:1rem;flex-wrap:wrap;}
+  .sub-chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;
+    padding:4px 14px;display:flex;align-items:center;gap:7px;font-family:var(--fm);font-size:.72rem;}
+  .sub-chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .sub-chip-val{color:var(--accent3);}
+  .sub-chip-label{color:var(--muted);}
+
+  /* TYPE COLORS */
+  .col-beam   {color:#00c2ff;} .dot-beam   {background:#00c2ff;}
+  .col-column {color:#c084fc;} .dot-column {background:#c084fc;}
+  .col-footing{color:#ffb800;} .dot-footing{background:#ffb800;}
+  .col-slab   {color:#00ff9d;} .dot-slab   {background:#00ff9d;}
+  .col-wall   {color:#ff6b35;} .dot-wall   {background:#ff6b35;}
+  .col-other  {color:#5a6180;} .dot-other  {background:#5a6180;}
+
+  /* BUTTONS */
+  .btn-row{display:flex;gap:.75rem;flex-wrap:wrap;}
+  .bp{font-family:var(--fh);font-size:.9rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+    background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:var(--r);
+    cursor:pointer;transition:all .2s;}
+  .bp:hover{opacity:.85;transform:translateY(-1px);}
+  .bp:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+  .bp-green{background:var(--accent3);color:#000;}
+  .bp-orange{background:var(--accent2);color:#fff;}
+  .bp-purple{background:var(--accent4);color:#fff;}
+  .bp-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);}
+  .bp-danger:hover{background:rgba(255,59,92,.1);}
+
+  /* SAVED TABLE */
+  .fbar{display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;}
+  .si{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+    color:var(--text);padding:8px 12px;font-family:var(--fb);font-size:.85rem;outline:none;
+    flex:1;min-width:180px;}
+  .si:focus{border-color:var(--accent);}
+  .tw{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;}
+  thead tr{background:var(--surface2);}
+  th{font-family:var(--fm);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--muted);padding:10px 14px;text-align:left;white-space:nowrap;}
+  td{padding:10px 14px;border-bottom:1px solid rgba(42,47,63,.5);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .badge{font-family:var(--fm);font-size:.68rem;padding:2px 9px;border-radius:10px;white-space:nowrap;display:inline-block;}
+  .btn-use{font-family:var(--fm);font-size:.7rem;background:rgba(0,194,255,.1);border:1px solid rgba(0,194,255,.3);
+    color:var(--accent);padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s;
+    letter-spacing:.5px;text-transform:uppercase;}
+  .btn-use:hover{background:rgba(0,194,255,.2);}
+  .btn-del-row{font-family:var(--fm);font-size:.7rem;background:rgba(255,59,92,.08);
+    border:1px solid rgba(255,59,92,.3);color:var(--danger);padding:4px 10px;border-radius:4px;
+    cursor:pointer;transition:all .2s;letter-spacing:.5px;text-transform:uppercase;}
+  .btn-del-row:hover{background:rgba(255,59,92,.18);}
+  .empty{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem;}
+
+  /* SAVE SECTION */
+  .save-meta{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1rem;}
+
+  /* DETAIL MODAL */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(13,15,20,.85);z-index:300;
+    align-items:center;justify-content:center;padding:1rem;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:2rem;max-width:480px;width:100%;}
+  .modal-title{font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:2px;
+    text-transform:uppercase;color:var(--accent);margin-bottom:1rem;}
+  .modal-scroll{max-height:340px;overflow-y:auto;margin-bottom:1.2rem;}
+  .modal-row{display:flex;align-items:center;justify-content:space-between;
+    padding:7px 0;border-bottom:1px solid rgba(42,47,63,.4);font-family:var(--fm);font-size:.78rem;}
+  .modal-row:last-child{border-bottom:none;}
+  .modal-acts{display:flex;gap:1rem;justify-content:flex-end;}
+  .btn-cancel2{font-family:var(--fh);font-size:.9rem;letter-spacing:2px;text-transform:uppercase;
+    background:transparent;color:var(--muted);border:1px solid var(--border);padding:10px 24px;
+    border-radius:var(--r);cursor:pointer;}
+
+  /* DEL CONFIRM MODAL */
+  .del-modal{max-width:380px;text-align:center;}
+  .modal-danger-title{font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:2px;
+    text-transform:uppercase;color:var(--danger);margin-bottom:.75rem;}
+  .modal-msg{font-family:var(--fb);font-size:.88rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.5;}
+  .btn-confirm-del{font-family:var(--fh);font-size:.9rem;font-weight:700;letter-spacing:2px;
+    text-transform:uppercase;background:var(--danger);color:#fff;border:none;padding:10px 24px;
+    border-radius:var(--r);cursor:pointer;}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--border);
+    border-left:3px solid var(--accent3);color:var(--text);padding:12px 20px;border-radius:var(--r);
+    font-family:var(--fm);font-size:.82rem;opacity:0;transform:translateY(10px);
+    transition:all .3s;z-index:999;pointer-events:none;max-width:320px;}
+  #toast.show{opacity:1;transform:translateY(0);}
+  #toast.err{border-left-color:var(--danger);}
+
+  /* UNIT TOGGLE */
+  .unit-toggle{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;width:fit-content;}
+  .unit-btn{font-family:var(--fm);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;
+    background:transparent;border:none;color:var(--muted);padding:7px 16px;cursor:pointer;transition:all .2s;}
+  .unit-btn.active{background:var(--accent);color:#000;}
+
+  /* DIM HINT */
+  .dim-hint{font-family:var(--fm);font-size:.65rem;color:var(--muted);margin-top:4px;letter-spacing:.5px;}
+
+  @media(max-width:700px){
+    header{padding:0 1rem;} .tc{padding:1rem;} .tb{padding:12px 14px;font-size:.8rem;}
+    .fg{grid-template-columns:1fr;} .fg-3{grid-template-columns:1fr 1fr;}
+    .fg-4{grid-template-columns:1fr 1fr;} .btn-row{flex-direction:column;}
+    .entry-item{grid-template-columns:auto 1fr 1fr auto;gap:.4rem;}
+    .entry-dim,.entry-unit{display:none;}
+    .save-meta{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Site<span>Tools</span></div>
+    <div class="login-sub">Volume Calculator v1.0</div>
+    <div class="login-fi"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" autocomplete="username"/></div>
+    <div class="login-fi"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/></div>
+    <button class="login-btn" id="login-btn-el">Login</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <header>
+    <div class="logo">Site<span>Tools</span> / Volume <span class="vtag">v1.0</span></div>
+    <div class="hright">
+      <div class="user-info">Logged in as <strong id="display-name"></strong></div>
+      <button class="btn-logout" id="btn-logout-el">Logout</button>
+    </div>
+  </header>
+  <nav>
+    <button class="tb active" id="tab-btn-1" onclick="switchTab(1)">Volume Tool</button>
+    <button class="tb" id="tab-btn-2" onclick="switchTab(2)">Saved Reports</button>
+  </nav>
+
+  <!-- TAB 1: VOLUME TOOL -->
+  <div id="tab-1" class="tc active">
+
+    <!-- ADD ENTRY CARD -->
+    <div class="card">
+      <div class="ctitle">Add Concrete Element</div>
+
+      <!-- Unit toggle -->
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.2rem;">
+        <label style="margin:0;">Input Unit</label>
+        <div class="unit-toggle">
+          <button class="unit-btn active" id="unit-m"  onclick="setUnit('m')">m</button>
+          <button class="unit-btn"        id="unit-cm" onclick="setUnit('cm')">cm</button>
+          <button class="unit-btn"        id="unit-mm" onclick="setUnit('mm')">mm</button>
+        </div>
+        <span id="unit-hint" style="font-family:var(--fm);font-size:.7rem;color:var(--muted);">Dimensions in meters</span>
+      </div>
+
+      <div class="fg-4" style="margin-bottom:.75rem;">
+        <div class="fi">
+          <label>Structure Type</label>
+          <select id="f-type">
+            <option value="Beam">Beam</option>
+            <option value="Column">Column</option>
+            <option value="Footing">Footing</option>
+            <option value="Slab">Slab</option>
+            <option value="Wall">Wall</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="fi">
+          <label>Mark / Label</label>
+          <input type="text" id="f-mark" placeholder="e.g. B-1"/>
+        </div>
+        <div class="fi">
+          <label>Length (L)</label>
+          <input type="number" id="f-l" placeholder="0.00" min="0" step="any"/>
+        </div>
+        <div class="fi">
+          <label>Width (W)</label>
+          <input type="number" id="f-w" placeholder="0.00" min="0" step="any"/>
+        </div>
+        <div class="fi">
+          <label>Height / Depth (H)</label>
+          <input type="number" id="f-h" placeholder="0.00" min="0" step="any"/>
+        </div>
+      </div>
+      <div class="dim-hint" id="dim-hint">Volume = L × W × H (all values in meters → result in m³)</div>
+
+      <div class="btn-row" style="margin-top:1rem;">
+        <button class="bp" onclick="addEntry()">+ Add Element</button>
+        <button class="bp bp-danger" onclick="clearAll()">✕ Clear All</button>
+      </div>
+    </div>
+
+    <!-- ENTRY LIST + TOTALS -->
+    <div class="card">
+      <div class="ctitle">Elements</div>
+
+      <!-- TOTAL -->
+      <div class="total-bar" id="total-bar">
+        <div>
+          <div class="total-label">Total Concrete Volume</div>
+          <div style="display:flex;align-items:baseline;gap:.5rem;">
+            <div class="total-value" id="grand-total">0.0000</div>
+            <div class="total-unit">m³</div>
+          </div>
+        </div>
+        <div class="type-subtotals" id="subtotals"></div>
+      </div>
+
+      <!-- LIST -->
+      <div class="entry-list" id="entry-list">
+        <div class="empty-list">No elements added yet.</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:1.2rem;margin-top:.5rem;">
+        <div class="ctitle" style="margin-bottom:1rem;">Save Report</div>
+        <div class="save-meta">
+          <div class="fi">
+            <label>Report Date</label>
+            <input type="date" id="f-date"/>
+          </div>
+          <div class="fi">
+            <label>Project / Location</label>
+            <input type="text" id="f-project" placeholder="e.g. Block A — Ground Floor"/>
+          </div>
+          <div class="fi full">
+            <label>Notes</label>
+            <textarea id="f-notes" placeholder="Additional notes or remarks…"></textarea>
+          </div>
+        </div>
+        <button class="bp bp-purple" id="btn-save-el" disabled onclick="saveReport()">💾 Save Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SAVED REPORTS -->
+  <div id="tab-2" class="tc">
+    <div class="card">
+      <div class="ctitle">Saved Reports</div>
+      <div class="fbar">
+        <input class="si" id="search-saved" placeholder="Search by project, notes or date…" oninput="renderSaved()"/>
+      </div>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Project</th>
+              <th>Elements</th>
+              <th>Total Volume</th>
+              <th>Notes</th>
+              <th>Saved On</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="saved-tbody">
+            <tr><td colspan="7"><div class="empty">Loading…</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-bg" id="detail-modal">
+  <div class="modal">
+    <div class="modal-title" id="detail-title">Report Details</div>
+    <div class="modal-scroll" id="detail-body"></div>
+    <div class="modal-acts">
+      <button class="btn-cancel2" onclick="closeDetail()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-bg" id="del-modal">
+  <div class="modal del-modal">
+    <div style="font-size:2rem;margin-bottom:.75rem;">⚠️</div>
+    <div class="modal-danger-title">Delete Report?</div>
+    <div class="modal-msg">This saved report and all its elements will be permanently deleted.</div>
+    <div class="modal-acts" style="justify-content:center;">
+      <button class="btn-confirm-del" id="btn-del-confirm-el">Delete</button>
+      <button class="btn-cancel2" id="btn-del-cancel-el">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, addDoc, getDoc, getDocs, deleteDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── API KEY CHECK ─────────────────────────────────────────────
+const _apiKey = sessionStorage.getItem('st_api_key');
+if (!_apiKey) { window.location.href = '../index.html'; }
+
+const firebaseConfig = {
+  apiKey:            _apiKey,
+  authDomain:        'equiptrack-e1011.firebaseapp.com',
+  projectId:         'equiptrack-e1011',
+  storageBucket:     'equiptrack-e1011.firebasestorage.app',
+  messagingSenderId: '468749948486',
+  appId:             '1:468749948486:web:8bbcd38e0435e92d86dc47'
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── STATE ─────────────────────────────────────────────────────
+let entries      = [];    // { id, type, mark, l, w, h, vol }
+let entryCounter = 0;
+let savedData    = [];
+let pendingDelId = null;
+let inputUnit    = 'm';   // 'm' | 'cm' | 'mm'
+
+const TYPE_META = {
+  Beam:    { dot:'dot-beam',    col:'col-beam',    badge:'rgba(0,194,255,.12)',  btext:'#00c2ff' },
+  Column:  { dot:'dot-column',  col:'col-column',  badge:'rgba(192,132,252,.12)',btext:'#c084fc' },
+  Footing: { dot:'dot-footing', col:'col-footing', badge:'rgba(255,184,0,.12)',  btext:'#ffb800' },
+  Slab:    { dot:'dot-slab',    col:'col-slab',    badge:'rgba(0,255,157,.12)',  btext:'#00ff9d' },
+  Wall:    { dot:'dot-wall',    col:'col-wall',    badge:'rgba(255,107,53,.12)', btext:'#ff6b35' },
+  Other:   { dot:'dot-other',   col:'col-other',   badge:'rgba(90,97,128,.12)',  btext:'#5a6180' },
+};
+
+const UNIT_FACTORS = { m: 1, cm: 0.01, mm: 0.001 };
+const UNIT_LABELS  = { m: 'Dimensions in meters', cm: 'Dimensions in centimeters', mm: 'Dimensions in millimeters' };
+
+// ── AUTH ──────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (!snap.exists()) { await signOut(auth); return; }
+      const data = snap.data();
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display   = 'block';
+      document.getElementById('display-name').textContent   = data.username || user.email;
+      setToday();
+      renderList();
+      await loadSaved();
+    } catch(e) {
+      document.getElementById('login-err').textContent = 'Error: ' + e.message;
+      await signOut(auth);
+    }
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display   = 'none';
+  }
+});
+
+document.getElementById('login-btn-el').addEventListener('click', async () => {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  const errEl    = document.getElementById('login-err');
+  const btn      = document.getElementById('login-btn-el');
+  errEl.textContent = '';
+  if (!username || !password) { errEl.textContent = 'Please enter username and password.'; return; }
+  btn.textContent = 'Logging in…'; btn.disabled = true;
+  try {
+    await signInWithEmailAndPassword(auth, username.toLowerCase() + '@equiptrack.app', password);
+  } catch(e) {
+    if (['auth/invalid-credential','auth/user-not-found','auth/wrong-password'].includes(e.code)) {
+      errEl.textContent = 'Invalid username or password.';
+    } else if (e.code === 'auth/network-request-failed') {
+      errEl.textContent = 'Network error. Check your connection.';
+    } else {
+      errEl.textContent = 'Login failed: ' + e.message;
+    }
+  } finally { btn.textContent = 'Login'; btn.disabled = false; }
+});
+
+document.getElementById('btn-logout-el').addEventListener('click', () => signOut(auth));
+
+// ── UTILS ─────────────────────────────────────────────────────
+function setToday() {
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+}
+
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
+  setTimeout(() => { t.className = ''; }, 3500);
+}
+
+function fdate(d) {
+  if (!d) return '—';
+  try {
+    const dt = new Date(d + (d.length === 10 ? 'T00:00:00' : ''));
+    if (isNaN(dt)) return d;
+    return dt.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  } catch { return d; }
+}
+
+function fmt(n, dp=4) { return Number(n).toFixed(dp); }
+
+// ── TABS ──────────────────────────────────────────────────────
+window.switchTab = function(n) {
+  for (let i = 1; i <= 2; i++) {
+    document.getElementById('tab-' + i).classList.toggle('active', i === n);
+    document.getElementById('tab-btn-' + i).classList.toggle('active', i === n);
+  }
+  if (n === 2) renderSaved();
+};
+
+// ── UNIT TOGGLE ───────────────────────────────────────────────
+window.setUnit = function(u) {
+  inputUnit = u;
+  ['m','cm','mm'].forEach(x => document.getElementById('unit-' + x).classList.toggle('active', x === u));
+  document.getElementById('unit-hint').textContent = UNIT_LABELS[u];
+  const dp = u === 'm' ? 4 : u === 'cm' ? 6 : 9;
+  document.getElementById('dim-hint').textContent =
+    `Volume = L × W × H (all values in ${u} → result converted to m³)`;
+};
+
+// ── ADD ENTRY ─────────────────────────────────────────────────
+window.addEntry = function() {
+  const type = document.getElementById('f-type').value;
+  const mark = document.getElementById('f-mark').value.trim();
+  const lRaw = parseFloat(document.getElementById('f-l').value);
+  const wRaw = parseFloat(document.getElementById('f-w').value);
+  const hRaw = parseFloat(document.getElementById('f-h').value);
+
+  if (!mark)                    { toast('Enter a mark / label.', true); return; }
+  if (!lRaw || lRaw <= 0)       { toast('Enter a valid Length.', true); return; }
+  if (!wRaw || wRaw <= 0)       { toast('Enter a valid Width.',  true); return; }
+  if (!hRaw || hRaw <= 0)       { toast('Enter a valid Height.', true); return; }
+
+  const f   = UNIT_FACTORS[inputUnit];
+  const l   = lRaw * f;
+  const w   = wRaw * f;
+  const h   = hRaw * f;
+  const vol = l * w * h;
+
+  entryCounter++;
+  entries.push({ id: entryCounter, type, mark, lRaw, wRaw, hRaw, unit: inputUnit, l, w, h, vol });
+
+  // Clear dimension inputs only, keep type/unit
+  document.getElementById('f-mark').value = '';
+  document.getElementById('f-l').value    = '';
+  document.getElementById('f-w').value    = '';
+  document.getElementById('f-h').value    = '';
+
+  renderList();
+  toast(`${type} "${mark}" added — ${fmt(vol)} m³`);
+};
+
+window.delEntry = function(id) {
+  entries = entries.filter(e => e.id !== id);
+  renderList();
+};
+
+// ── RENDER LIST ───────────────────────────────────────────────
+function renderList() {
+  const el = document.getElementById('entry-list');
+
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty-list">No elements added yet.</div>';
+    updateTotals();
+    document.getElementById('btn-save-el').disabled = true;
+    return;
+  }
+
+  el.innerHTML = entries.map((e, i) => {
+    const m  = TYPE_META[e.type] || TYPE_META.Other;
+    const du = e.unit;
+    return `
+    <div class="entry-item">
+      <span class="entry-num">${i + 1}</span>
+      <span class="entry-type">
+        <span class="type-dot ${m.dot}"></span>
+        <span class="${m.col}" style="font-size:.75rem;letter-spacing:.5px;">${e.type}</span>
+      </span>
+      <span class="entry-mark">${e.mark}</span>
+      <span class="entry-dim">${e.lRaw} ${du}</span>
+      <span class="entry-dim" style="color:var(--muted);">×</span>
+      <span class="entry-dim">${e.wRaw} ${du}</span>
+      <span class="entry-dim">× ${e.hRaw} ${du}</span>
+      <span class="entry-vol">${fmt(e.vol)}</span>
+      <span class="entry-unit">m³</span>
+      <button class="entry-del" onclick="delEntry(${e.id})">✕</button>
+    </div>`;
+  }).join('');
+
+  updateTotals();
+  document.getElementById('btn-save-el').disabled = false;
+}
+
+function updateTotals() {
+  const grand = entries.reduce((s, e) => s + e.vol, 0);
+  document.getElementById('grand-total').textContent = fmt(grand);
+
+  // Subtotals per type
+  const byType = {};
+  for (const e of entries) byType[e.type] = (byType[e.type] || 0) + e.vol;
+
+  const chips = Object.entries(byType).map(([type, vol]) => {
+    const m = TYPE_META[type] || TYPE_META.Other;
+    return `<div class="sub-chip">
+      <span class="sub-chip-dot ${m.dot}"></span>
+      <span class="${m.col}" style="font-size:.7rem;">${type}</span>
+      <span class="sub-chip-val">${fmt(vol)}</span>
+      <span class="sub-chip-label">m³</span>
+    </div>`;
+  }).join('');
+  document.getElementById('subtotals').innerHTML = chips;
+}
+
+window.clearAll = function() {
+  if (!entries.length) return;
+  entries = []; entryCounter = 0;
+  document.getElementById('f-mark').value  = '';
+  document.getElementById('f-l').value     = '';
+  document.getElementById('f-w').value     = '';
+  document.getElementById('f-h').value     = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-project').value = '';
+  renderList();
+  setToday();
+  toast('Cleared.');
+};
+
+// ── SAVE REPORT ───────────────────────────────────────────────
+window.saveReport = async function() {
+  if (!entries.length) { toast('Add elements first.', true); return; }
+  const date    = document.getElementById('f-date').value;
+  const project = document.getElementById('f-project').value.trim();
+  const notes   = document.getElementById('f-notes').value.trim();
+  if (!date) { toast('Enter a date.', true); return; }
+
+  const grand = entries.reduce((s, e) => s + e.vol, 0);
+  const payload = {
+    date, project, notes,
+    totalVolume: grand,
+    elementCount: entries.length,
+    entries: entries.map(e => ({
+      type: e.type, mark: e.mark,
+      lRaw: e.lRaw, wRaw: e.wRaw, hRaw: e.hRaw, unit: e.unit,
+      vol: e.vol
+    })),
+    savedAt: new Date().toISOString(),
+  };
+
+  try {
+    const ref = await addDoc(collection(db, 'volumeReports'), payload);
+    savedData.unshift({ id: ref.id, ...payload });
+    renderSaved();
+    document.getElementById('btn-save-el').disabled = true;
+    toast('Report saved!');
+  } catch(e) { toast('Error saving: ' + e.message, true); }
+};
+
+// ── SAVED REPORTS ─────────────────────────────────────────────
+async function loadSaved() {
+  try {
+    const snap = await getDocs(collection(db, 'volumeReports'));
+    savedData  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    savedData.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+    renderSaved();
+  } catch(e) { console.error('loadSaved error:', e); }
+}
+
+window.renderSaved = function() {
+  const q  = (document.getElementById('search-saved')?.value || '').toLowerCase();
+  const tb = document.getElementById('saved-tbody');
+  const data = savedData.filter(d =>
+    (d.project||'').toLowerCase().includes(q) ||
+    (d.notes||'').toLowerCase().includes(q) ||
+    (d.date||'').includes(q)
+  );
+  if (!data.length) {
+    tb.innerHTML = '<tr><td colspan="7"><div class="empty">NO SAVED REPORTS</div></td></tr>';
+    return;
+  }
+  tb.innerHTML = data.map(d => `
+    <tr>
+      <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${d.date||'—'}</td>
+      <td style="font-weight:500;">${d.project||'—'}</td>
+      <td style="font-family:var(--fm);font-size:.78rem;color:var(--muted);">${d.elementCount||0} elements</td>
+      <td style="font-family:var(--fh);font-size:1.1rem;color:var(--accent3);font-weight:700;">
+        ${fmt(d.totalVolume||0)} <span style="font-family:var(--fm);font-size:.7rem;color:var(--muted);">m³</span>
+      </td>
+      <td style="max-width:180px;font-size:.82rem;color:var(--muted);">${d.notes||'—'}</td>
+      <td style="font-family:var(--fm);font-size:.72rem;color:var(--muted);">${fdate(d.savedAt)}</td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-use" onclick="viewReport('${d.id}')">☰ View</button>
+          <button class="btn-use" onclick="useReport('${d.id}')" style="background:rgba(192,132,252,.1);border-color:rgba(192,132,252,.3);color:var(--accent4);">↩ Load</button>
+          <button class="btn-del-row" onclick="delReport('${d.id}')">✕</button>
+        </div>
+      </td>
+    </tr>`).join('');
+};
+
+window.viewReport = function(id) {
+  const d = savedData.find(x => x.id === id); if (!d) return;
+  document.getElementById('detail-title').textContent =
+    (d.project || 'Report') + ' — ' + (d.date || '');
+  const rows = (d.entries || []).map((e, i) => {
+    const m = TYPE_META[e.type] || TYPE_META.Other;
+    return `<div class="modal-row">
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span class="type-dot ${m.dot}" style="width:7px;height:7px;border-radius:50%;flex-shrink:0;"></span>
+        <span class="${m.col}" style="font-size:.72rem;">${e.type}</span>
+        <span style="color:var(--text);margin-left:4px;">${e.mark}</span>
+      </span>
+      <span style="color:var(--muted);font-size:.72rem;">
+        ${e.lRaw} × ${e.wRaw} × ${e.hRaw} ${e.unit}
+      </span>
+      <span style="color:var(--accent3);font-family:var(--fh);font-size:.95rem;font-weight:700;">
+        ${fmt(e.vol)} m³
+      </span>
+    </div>`;
+  }).join('');
+  const grand = fmt(d.totalVolume || 0);
+  document.getElementById('detail-body').innerHTML = rows +
+    `<div style="border-top:2px solid var(--border);margin-top:.5rem;padding-top:.75rem;
+      display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-family:var(--fm);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">Total</span>
+      <span style="font-family:var(--fh);font-size:1.4rem;font-weight:700;color:var(--accent3);">${grand} m³</span>
+    </div>`;
+  document.getElementById('detail-modal').classList.add('show');
+};
+
+window.closeDetail = function() {
+  document.getElementById('detail-modal').classList.remove('show');
+};
+
+window.useReport = function(id) {
+  const d = savedData.find(x => x.id === id); if (!d) return;
+  entries = (d.entries || []).map((e, i) => {
+    const f = UNIT_FACTORS[e.unit] || 1;
+    return {
+      id: ++entryCounter,
+      type: e.type, mark: e.mark,
+      lRaw: e.lRaw, wRaw: e.wRaw, hRaw: e.hRaw, unit: e.unit,
+      l: e.lRaw * f, w: e.wRaw * f, h: e.hRaw * f,
+      vol: e.vol
+    };
+  });
+  document.getElementById('f-date').value    = d.date || '';
+  document.getElementById('f-project').value = d.project || '';
+  document.getElementById('f-notes').value   = d.notes || '';
+  renderList();
+  switchTab(1);
+  toast('Report loaded!');
+};
+
+window.delReport = function(id) {
+  pendingDelId = id;
+  document.getElementById('del-modal').classList.add('show');
+};
+
+document.getElementById('btn-del-confirm-el').addEventListener('click', async () => {
+  if (!pendingDelId) return;
+  try {
+    await deleteDoc(doc(db, 'volumeReports', pendingDelId));
+    savedData = savedData.filter(d => d.id !== pendingDelId);
+    renderSaved();
+    toast('Deleted.');
+  } catch(e) { toast('Error: ' + e.message, true); }
+  document.getElementById('del-modal').classList.remove('show');
+  pendingDelId = null;
+});
+
+document.getElementById('btn-del-cancel-el').addEventListener('click', () => {
+  document.getElementById('del-modal').classList.remove('show');
+  pendingDelId = null;
+});
+
+// Close detail modal on bg click
+document.getElementById('detail-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeDetail();
+});
+
+// Enter key on dimension inputs triggers add
+['f-mark','f-l','f-w','f-h'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.addEntry();
+  });
+});
+</script>
+</body>
+</html>
