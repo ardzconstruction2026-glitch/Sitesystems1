@@ -31,8 +31,9 @@
   .login-err{font-family:var(--fm);font-size:.75rem;color:var(--danger);text-align:center;margin-top:.75rem;min-height:1rem;}
   #app-screen{display:none;}
   header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
-  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;text-decoration:none;cursor:pointer;}
   .logo span{color:var(--muted);font-weight:400;}
+  .logo:hover{opacity:.8;}
   .hright{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;}
   .user-info{font-family:var(--fm);font-size:.72rem;color:var(--muted);}
   .user-info strong{color:var(--accent);}
@@ -64,6 +65,8 @@
   input[readonly]{color:var(--muted);cursor:default;}
   select option{background:var(--surface2);}
   .auto-tag{font-family:var(--fm);font-size:.65rem;color:var(--accent);letter-spacing:1px;margin-top:2px;}
+  /* ctrl preview */
+  .ctrl-preview{font-family:var(--fm);font-size:.72rem;color:var(--accent3);letter-spacing:1px;margin-top:3px;opacity:.85;}
   .fa{display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;}
   .bp{font-family:var(--fh);font-size:.95rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#fff;border:none;padding:10px 28px;border-radius:var(--r);cursor:pointer;transition:all .2s;}
   .bp:hover{opacity:.85;transform:translateY(-1px);}
@@ -84,6 +87,9 @@
   .bal-pos{color:var(--accent3);font-family:var(--fm);font-weight:600;}
   .bal-neg{color:var(--danger);font-family:var(--fm);font-weight:600;}
   .bal-zero{color:var(--muted);font-family:var(--fm);}
+  /* Inventory basis note */
+  .inv-basis-note{font-family:var(--fm);font-size:.7rem;color:var(--muted);margin-top:.5rem;padding:.5rem .75rem;background:rgba(0,194,255,.05);border:1px solid rgba(0,194,255,.15);border-radius:4px;line-height:1.5;}
+  .inv-basis-note.has-inv{color:var(--accent3);border-color:rgba(0,255,157,.2);background:rgba(0,255,157,.04);}
   /* Material list */
   .mat-list{display:flex;flex-direction:column;gap:.5rem;margin-top:1rem;}
   .mat-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;gap:1rem;}
@@ -101,6 +107,23 @@
   .btn-save-mat{font-family:var(--fm);font-size:.68rem;background:rgba(0,255,157,.1);border:1px solid rgba(0,255,157,.3);color:var(--accent3);padding:3px 8px;border-radius:4px;cursor:pointer;text-transform:uppercase;}
   .btn-cancel-mat{font-family:var(--fm);font-size:.68rem;background:rgba(90,97,128,.15);border:1px solid rgba(90,97,128,.3);color:var(--muted);padding:3px 8px;border-radius:4px;cursor:pointer;text-transform:uppercase;}
   .field-err{font-family:var(--fm);font-size:.7rem;color:var(--danger);margin-top:3px;}
+  /* Supplier datalist */
+  .supplier-wrap{position:relative;}
+  /* Confirm modal */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(13,15,20,.85);z-index:300;align-items:center;justify-content:center;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2rem;max-width:420px;width:90%;}
+  .modal-title{font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;}
+  .modal-body{font-family:var(--fm);font-size:.8rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.7;}
+  .modal-body strong{color:var(--text);}
+  .modal-acts{display:flex;gap:.75rem;justify-content:flex-end;}
+  .btn-confirm{font-family:var(--fh);font-size:.9rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--accent);color:#fff;border:none;padding:9px 22px;border-radius:var(--r);cursor:pointer;}
+  .btn-cancel2{font-family:var(--fh);font-size:.9rem;letter-spacing:2px;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--border);padding:9px 22px;border-radius:var(--r);cursor:pointer;}
+  /* Per-material history modal */
+  .hist-modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2rem;max-width:620px;width:90%;max-height:80vh;overflow-y:auto;}
+  .hist-title{font-family:var(--fh);font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1.2rem;display:flex;justify-content:space-between;align-items:center;}
+  .btn-close-hist{font-family:var(--fm);font-size:.72rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 12px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:1px;}
+  .btn-close-hist:hover{border-color:var(--danger);color:var(--danger);}
   #toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent3);color:var(--text);padding:12px 20px;border-radius:var(--r);font-family:var(--fm);font-size:.82rem;opacity:0;transform:translateY(10px);transition:all .3s;z-index:999;pointer-events:none;max-width:320px;}
   #toast.show{opacity:1;transform:translateY(0);}
   #toast.err{border-left-color:var(--danger);}
@@ -108,6 +131,29 @@
 </style>
 </head>
 <body>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-title" id="confirm-title">Confirm Submission</div>
+    <div class="modal-body" id="confirm-body"></div>
+    <div class="modal-acts">
+      <button class="btn-cancel2" id="confirm-cancel">Cancel</button>
+      <button class="btn-confirm" id="confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="modal-bg" id="hist-modal">
+  <div class="hist-modal">
+    <div class="hist-title">
+      <span id="hist-mat-name">Material History</span>
+      <button class="btn-close-hist" id="hist-close">✕ Close</button>
+    </div>
+    <div id="hist-content"></div>
+  </div>
+</div>
 
 <!-- LOGIN -->
 <div id="login-screen">
@@ -125,7 +171,7 @@
 <!-- APP -->
 <div id="app-screen">
   <header>
-    <div class="logo">Mat<span>Track</span></div>
+    <a href="material-index.html" class="logo">Mat<span>Track</span></a>
     <div class="hright">
       <div class="conn"><div class="cdot" id="cdot"></div><span id="ctxt">Online</span></div>
       <div class="badge" id="badge">0 pending</div>
@@ -148,7 +194,12 @@
     <div class="card">
       <div class="ctitle">Log Inventory</div>
       <div class="fg">
-        <div class="fi"><label>Control Number</label><input id="inv-ctrl" readonly/><span class="auto-tag">Auto-generated</span></div>
+        <div class="fi">
+          <label>Control Number</label>
+          <input id="inv-ctrl" readonly/>
+          <span class="auto-tag">Auto-generated</span>
+          <span class="ctrl-preview" id="inv-ctrl-preview"></span>
+        </div>
         <div class="fi">
           <label>Material Name</label>
           <select id="inv-mat" onchange="autoFillUnit('inv-mat','inv-unit')"><option value="">-- Select Material --</option></select>
@@ -176,7 +227,12 @@
     <div class="card">
       <div class="ctitle">Log Delivery</div>
       <div class="fg">
-        <div class="fi"><label>Control Number</label><input id="del-ctrl" readonly/><span class="auto-tag">Auto-generated</span></div>
+        <div class="fi">
+          <label>Control Number</label>
+          <input id="del-ctrl" readonly/>
+          <span class="auto-tag">Auto-generated</span>
+          <span class="ctrl-preview" id="del-ctrl-preview"></span>
+        </div>
         <div class="fi">
           <label>Material Name</label>
           <select id="del-mat" onchange="autoFillUnit('del-mat','del-unit')"><option value="">-- Select Material --</option></select>
@@ -184,7 +240,11 @@
         <div class="fi"><label>Quantity</label><input type="number" id="del-qty" placeholder="0" min="0"/></div>
         <div class="fi"><label>Unit</label><input id="del-unit" readonly/><span class="auto-tag">Auto-filled</span></div>
         <div class="fi"><label>Date Delivered</label><input type="date" id="del-date"/></div>
-        <div class="fi"><label>Supplier <span style="color:var(--muted);font-size:.65rem">(optional)</span></label><input id="del-supplier" placeholder="Supplier name"/></div>
+        <div class="fi supplier-wrap">
+          <label>Supplier <span style="color:var(--muted);font-size:.65rem">(optional)</span></label>
+          <input id="del-supplier" placeholder="Supplier name" list="supplier-list" autocomplete="off"/>
+          <datalist id="supplier-list"></datalist>
+        </div>
       </div>
       <div class="fa">
         <button class="bp" id="btn-del">Submit Delivery</button>
@@ -205,21 +265,30 @@
     <div class="card">
       <div class="ctitle">Log Pull Out / Return</div>
       <div class="fg">
-        <div class="fi"><label>Control Number</label><input id="po-ctrl" readonly/><span class="auto-tag">Auto-generated</span></div>
+        <div class="fi">
+          <label>Control Number</label>
+          <input id="po-ctrl" readonly/>
+          <span class="auto-tag">Auto-generated</span>
+          <span class="ctrl-preview" id="po-ctrl-preview"></span>
+        </div>
         <div class="fi">
           <label>Material Name</label>
-          <select id="po-mat" onchange="autoFillUnit('po-mat','po-unit')"><option value="">-- Select Material --</option></select>
+          <select id="po-mat" onchange="onPoMatChange()"><option value="">-- Select Material --</option></select>
         </div>
-        <div class="fi"><label>Quantity</label><input type="number" id="po-qty" placeholder="0" min="0"/>
+        <div class="fi">
+          <label>Quantity</label>
+          <input type="number" id="po-qty" placeholder="0" min="0"/>
           <span class="field-err" id="po-qty-err"></span>
         </div>
         <div class="fi"><label>Unit</label><input id="po-unit" readonly/><span class="auto-tag">Auto-filled</span></div>
         <div class="fi"><label>Type</label>
-          <select id="po-type"><option value="">-- Select Type --</option><option value="Pull Out">Pull Out</option><option value="Return">Return</option></select>
+          <select id="po-type" onchange="onPoTypeChange()"><option value="">-- Select Type --</option><option value="Pull Out">Pull Out</option><option value="Return">Return</option></select>
         </div>
         <div class="fi"><label>Requestor / Returner</label><input id="po-person" placeholder="Full name"/></div>
         <div class="fi"><label>Date</label><input type="date" id="po-date"/></div>
       </div>
+      <!-- Live balance indicator -->
+      <div id="po-balance-note" class="inv-basis-note" style="display:none"></div>
       <div class="fa">
         <button class="bp" id="btn-po">Submit</button>
         <button class="bs" onclick="saveOffline('po')">💾 Save Offline</button>
@@ -252,8 +321,9 @@
 
   <!-- TAB 5: SUMMARY -->
   <div id="t5" class="tc">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
-      <button class="btn-sync" onclick="renderSummary()" style="border-color:var(--accent3);color:var(--accent3)">↻ Recalculate</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem;">
+      <div id="sum-basis-note" class="inv-basis-note" style="flex:1;min-width:200px;margin-bottom:0;display:none;"></div>
+      <button class="btn-sync" onclick="loadAll().then(renderSummary)" style="border-color:var(--accent3);color:var(--accent3);white-space:nowrap">↻ Refresh & Recalculate</button>
     </div>
     <div class="card">
       <div class="ctitle">Material Summary</div>
@@ -261,7 +331,7 @@
         <thead><tr>
           <th>Material</th><th>Unit</th>
           <th>Latest Inventory</th><th>Inventory Date</th>
-          <th>Delivered After</th><th>Net Pull Out</th><th>Balance</th>
+          <th>Delivered After</th><th>Net Pull Out</th><th>Balance</th><th>History</th>
         </tr></thead>
         <tbody id="sum-tb"></tbody>
       </table></div>
@@ -275,22 +345,9 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs, updateDoc, deleteDoc }
+import { getFirestore, collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-const _apiKey = sessionStorage.getItem('st_api_key');
-if (!_apiKey) {
-  // Redirect to main index to enter API key
-  window.location.href = '../index.html';
-}
-const firebaseConfig = {
-  apiKey: _apiKey,
-  authDomain: "equiptrack-e1011.firebaseapp.com",
-  projectId: "equiptrack-e1011",
-  storageBucket: "equiptrack-e1011.firebasestorage.app",
-  messagingSenderId: "468749948486",
-  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
-};
+import { firebaseConfig } from '../references/firebase-config.js';
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -303,6 +360,9 @@ let pullouts   = [];
 let offlineInv = JSON.parse(localStorage.getItem('offlineInv') || '[]');
 let offlineDel = JSON.parse(localStorage.getItem('offlineDel') || '[]');
 let offlinePo  = JSON.parse(localStorage.getItem('offlinePo')  || '[]');
+
+// pending confirm callback
+let confirmCallback = null;
 
 window.addEventListener('online',  () => { updateConn(); syncAllData(); });
 window.addEventListener('offline', () => updateConn());
@@ -318,6 +378,65 @@ function updateBadge() {
   const b = document.getElementById('badge');
   total > 0 ? (b.classList.add('show'), b.textContent=total+' pending') : b.classList.remove('show');
 }
+
+// ── CONFIRM MODAL ─────────────────────────────────────────────
+function showConfirm(title, bodyHTML, onConfirm) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-body').innerHTML = bodyHTML;
+  confirmCallback = onConfirm;
+  document.getElementById('confirm-modal').classList.add('show');
+}
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.remove('show');
+  confirmCallback = null;
+});
+document.getElementById('confirm-ok').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.remove('show');
+  if (confirmCallback) confirmCallback();
+  confirmCallback = null;
+});
+
+// ── HISTORY MODAL ─────────────────────────────────────────────
+document.getElementById('hist-close').addEventListener('click', () => {
+  document.getElementById('hist-modal').classList.remove('show');
+});
+document.getElementById('hist-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('hist-modal'))
+    document.getElementById('hist-modal').classList.remove('show');
+});
+
+window.showHistory = function(matName) {
+  document.getElementById('hist-mat-name').textContent = matName + ' — Transaction History';
+  const matInv  = inventory.filter(i=>i.material===matName).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const matDel  = deliveries.filter(d=>d.material===matName).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const matPo   = pullouts.filter(p=>p.material===matName).sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  let html = '';
+
+  html += `<div style="font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">Inventory Records (${matInv.length})</div>`;
+  if(matInv.length){
+    html += `<table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:1.2rem"><thead><tr style="background:var(--surface2)"><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Control No.</th><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Qty</th><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Unit</th><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Date</th></tr></thead><tbody>`;
+    html += matInv.map(i=>`<tr style="border-bottom:1px solid rgba(42,47,63,.5)"><td style="padding:8px 12px;font-family:var(--fm);font-size:.75rem;color:var(--accent)">${i.ctrl||'—'}</td><td style="padding:8px 12px">${i.quantity}</td><td style="padding:8px 12px;font-family:var(--fm);font-size:.75rem;color:var(--accent)">${i.unit}</td><td style="padding:8px 12px;font-family:var(--fm);font-size:.75rem">${i.date}</td></tr>`).join('');
+    html += '</tbody></table>';
+  } else html += `<div style="font-family:var(--fm);font-size:.78rem;color:var(--muted);margin-bottom:1rem;padding:.5rem 0">No inventory records.</div>`;
+
+  html += `<div style="font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">Deliveries (${matDel.length})</div>`;
+  if(matDel.length){
+    html += `<table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:1.2rem"><thead><tr style="background:var(--surface2)"><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Control No.</th><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Qty</th><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Supplier</th><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Date</th></tr></thead><tbody>`;
+    html += matDel.map(d=>`<tr style="border-bottom:1px solid rgba(42,47,63,.5)"><td style="padding:8px 12px;font-family:var(--fm);font-size:.75rem;color:var(--accent)">${d.ctrl||'—'}</td><td style="padding:8px 12px">${d.quantity}</td><td style="padding:8px 12px;font-size:.8rem">${d.supplier||'—'}</td><td style="padding:8px 12px;font-family:var(--fm);font-size:.75rem">${d.date}</td></tr>`).join('');
+    html += '</tbody></table>';
+  } else html += `<div style="font-family:var(--fm);font-size:.78rem;color:var(--muted);margin-bottom:1rem;padding:.5rem 0">No delivery records.</div>`;
+
+  html += `<div style="font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">Pull Outs / Returns (${matPo.length})</div>`;
+  if(matPo.length){
+    html += `<table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr style="background:var(--surface2)"><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Control No.</th><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Type</th><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Qty</th><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Person</th><th style="padding:8px 12px;font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left">Date</th></tr></thead><tbody>`;
+    html += matPo.map(p=>`<tr style="border-bottom:1px solid rgba(42,47,63,.5)"><td style="padding:8px 12px;font-family:var(--fm);font-size:.75rem;color:var(--accent)">${p.ctrl||'—'}</td><td style="padding:8px 12px"><span class="tag ${p.type==='Pull Out'?'tag-po':'tag-ret'}">${p.type}</span></td><td style="padding:8px 12px">${p.quantity}</td><td style="padding:8px 12px;font-size:.8rem">${p.person||'—'}</td><td style="padding:8px 12px;font-family:var(--fm);font-size:.75rem">${p.date}</td></tr>`).join('');
+    html += '</tbody></table>';
+  } else html += `<div style="font-family:var(--fm);font-size:.78rem;color:var(--muted);padding:.5rem 0">No pull out / return records.</div>`;
+
+  document.getElementById('hist-content').innerHTML = html;
+  document.getElementById('hist-modal').classList.add('show');
+};
 
 // ── AUTH ──────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
@@ -362,7 +481,7 @@ document.getElementById('login-btn-el').addEventListener('click', async () => {
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
 // ── LOAD ──────────────────────────────────────────────────────
-async function loadAll() {
+window.loadAll = async function() {
   const [mS,dS,iS,pS] = await Promise.all([
     getDocs(collection(db,'materials')),
     getDocs(collection(db,'deliveries')),
@@ -374,7 +493,8 @@ async function loadAll() {
   inventory  = iS.docs.map(d=>({id:d.id,...d.data()}));
   pullouts   = pS.docs.map(d=>({id:d.id,...d.data()}));
   populateDropdowns(); renderMaterialList(); renderSummary();
-}
+  populateSupplierList();
+};
 
 // ── UTILS ─────────────────────────────────────────────────────
 window.switchTab = function(id,btn) {
@@ -382,7 +502,7 @@ window.switchTab = function(id,btn) {
   document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
-  if(id==='t5') renderSummary();
+  if(id==='t5') { loadAll().then(renderSummary); }
 };
 
 function setToday() {
@@ -397,9 +517,13 @@ function genCtrl(prefix) {
 }
 
 function genCtrlNums() {
-  document.getElementById('inv-ctrl').value=genCtrl('INV');
-  document.getElementById('del-ctrl').value=genCtrl('DEL');
-  document.getElementById('po-ctrl').value=genCtrl('PO');
+  const ic=genCtrl('INV'), dc=genCtrl('DEL'), pc=genCtrl('PO');
+  document.getElementById('inv-ctrl').value=ic;
+  document.getElementById('del-ctrl').value=dc;
+  document.getElementById('po-ctrl').value=pc;
+  document.getElementById('inv-ctrl-preview').textContent='→ '+ic;
+  document.getElementById('del-ctrl-preview').textContent='→ '+dc;
+  document.getElementById('po-ctrl-preview').textContent='→ '+pc;
 }
 
 function toast(msg,err=false) {
@@ -416,49 +540,122 @@ function populateDropdowns() {
   ['inv-mat','del-mat','po-mat'].forEach(id=>document.getElementById(id).innerHTML=opts);
 }
 
+// Supplier datalist — unique sorted supplier names from deliveries
+function populateSupplierList() {
+  const suppliers = [...new Set(deliveries.map(d=>d.supplier).filter(Boolean))].sort();
+  document.getElementById('supplier-list').innerHTML = suppliers.map(s=>`<option value="${s}"/>`).join('');
+}
+
 window.autoFillUnit = function(selId,unitId) {
   const sel=document.getElementById(selId);
   const opt=sel.options[sel.selectedIndex];
   document.getElementById(unitId).value=opt?opt.getAttribute('data-unit')||'':'';
 };
 
+// When PO material changes — refresh balance display and autofill unit
+window.onPoMatChange = function() {
+  autoFillUnit('po-mat','po-unit');
+  updatePoBalanceNote();
+};
+
+window.onPoTypeChange = function() { updatePoBalanceNote(); };
+
+function updatePoBalanceNote() {
+  const mat  = v('po-mat');
+  const type = v('po-type');
+  const unit = v('po-unit');
+  const note = document.getElementById('po-balance-note');
+  if(!mat){ note.style.display='none'; return; }
+  // Re-fetch from Firestore for freshness — use in-memory for speed, note it's session data
+  const balance = getBalance(mat);
+  const matInv  = inventory.filter(i=>i.material===mat).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const hasInv  = matInv.length > 0;
+  note.style.display = 'block';
+  note.className = 'inv-basis-note' + (hasInv?' has-inv':'');
+  if(type==='Pull Out'){
+    note.innerHTML = `Available balance: <strong>${balance} ${unit}</strong>${hasInv?' (from inventory on '+matInv[0].date+')':' (no inventory recorded — all transactions counted)'}`;
+  } else if(type==='Return') {
+    note.innerHTML = `Current balance: <strong>${balance} ${unit}</strong>${hasInv?' (from inventory on '+matInv[0].date+')':' (no inventory recorded)'}`;
+  } else {
+    note.innerHTML = `Current balance: <strong>${balance} ${unit}</strong>${hasInv?' · Latest inventory: '+matInv[0].date:' · No inventory recorded yet'}`;
+  }
+}
+
 // ── BALANCE CALC ──────────────────────────────────────────────
-function getBalance(matName, excludeDate=null) {
+function getBalance(matName) {
+  // Always reload from current session data — caller should loadAll() before if freshness matters
   const matInv = inventory.filter(i=>i.material===matName).sort((a,b)=>new Date(b.date)-new Date(a.date));
   const latestInv = matInv[0]||null;
   const latestInvDate = latestInv?latestInv.date:null;
   const latestInvQty  = latestInv?parseFloat(latestInv.quantity):0;
-  const afterDate = excludeDate || latestInvDate;
-  const totalDel = deliveries.filter(d=>d.material===matName&&(!afterDate||d.date>afterDate)).reduce((s,d)=>s+parseFloat(d.quantity||0),0);
-  const totalPo  = pullouts.filter(p=>p.material===matName&&p.type==='Pull Out'&&(!afterDate||p.date>afterDate)).reduce((s,p)=>s+parseFloat(p.quantity||0),0);
-  const totalRet = pullouts.filter(p=>p.material===matName&&p.type==='Return'&&(!afterDate||p.date>afterDate)).reduce((s,p)=>s+parseFloat(p.quantity||0),0);
+  const totalDel = deliveries.filter(d=>d.material===matName&&(!latestInvDate||d.date>latestInvDate)).reduce((s,d)=>s+parseFloat(d.quantity||0),0);
+  const totalPo  = pullouts.filter(p=>p.material===matName&&p.type==='Pull Out'&&(!latestInvDate||p.date>latestInvDate)).reduce((s,p)=>s+parseFloat(p.quantity||0),0);
+  const totalRet = pullouts.filter(p=>p.material===matName&&p.type==='Return'&&(!latestInvDate||p.date>latestInvDate)).reduce((s,p)=>s+parseFloat(p.quantity||0),0);
   return latestInvQty + totalDel - totalPo + totalRet;
+}
+
+// Duplicate delivery check: same ctrl OR (same material + same date + same qty + same supplier)
+function isDuplicateDelivery(ctrl, mat, qty, date, supplier) {
+  return deliveries.some(d =>
+    d.ctrl === ctrl ||
+    (d.material===mat && d.date===date && parseFloat(d.quantity)===parseFloat(qty) && (d.supplier||'').toLowerCase()===(supplier||'').toLowerCase())
+  );
+}
+
+// Duplicate inventory check: same ctrl OR (same material + same date)
+function isDuplicateInventory(ctrl, mat, date) {
+  return inventory.some(i => i.ctrl===ctrl || (i.material===mat && i.date===date));
 }
 
 // ── INVENTORY ─────────────────────────────────────────────────
 document.getElementById('btn-inv').addEventListener('click', async () => {
   const ctrl=v('inv-ctrl'),mat=v('inv-mat'),qty=v('inv-qty'),unit=v('inv-unit'),date=v('inv-date');
   if(!mat||!qty||!date){toast('Fill all required fields.',true);return;}
+
+  // Fetch latest from DB before submitting to get fresh balance
+  await loadAll();
+
+  if(isDuplicateInventory(ctrl, mat, date)){
+    toast('A duplicate inventory entry may already exist for this material and date.',true); return;
+  }
+
   const entry={ctrl,material:mat,quantity:parseFloat(qty),unit,date,createdAt:new Date().toISOString()};
-  if(navigator.onLine){
-    try{
-      await addDoc(collection(db,'inventory'),entry);
-      inventory.push(entry); renderSummary(); toast('Inventory logged!'); resetForm('inv');
-    }catch(e){addOffline('inv',entry);toast('Error — saved offline.');}
-  }else{addOffline('inv',entry);toast('Saved offline.');}
+  showConfirm('Confirm Inventory Entry',
+    `<strong>Material:</strong> ${mat}<br><strong>Quantity:</strong> ${qty} ${unit}<br><strong>Date:</strong> ${date}<br><strong>Control No:</strong> ${ctrl}`,
+    async () => {
+      if(navigator.onLine){
+        try{
+          await addDoc(collection(db,'inventory'),entry);
+          inventory.push(entry); renderSummary(); toast('Inventory logged!'); resetForm('inv');
+        }catch(e){addOffline('inv',entry);toast('Error — saved offline.');}
+      }else{addOffline('inv',entry);toast('Saved offline.');}
+    }
+  );
 });
 
 // ── DELIVERIES ────────────────────────────────────────────────
 document.getElementById('btn-del').addEventListener('click', async () => {
   const ctrl=v('del-ctrl'),mat=v('del-mat'),qty=v('del-qty'),unit=v('del-unit'),date=v('del-date'),supplier=v('del-supplier');
   if(!mat||!qty||!date){toast('Fill all required fields.',true);return;}
+
+  await loadAll();
+
+  if(isDuplicateDelivery(ctrl, mat, qty, date, supplier)){
+    toast('A duplicate delivery entry may already exist.',true); return;
+  }
+
   const entry={ctrl,material:mat,quantity:parseFloat(qty),unit,date,supplier,createdAt:new Date().toISOString()};
-  if(navigator.onLine){
-    try{
-      await addDoc(collection(db,'deliveries'),entry);
-      deliveries.push(entry); renderSummary(); toast('Delivery logged!'); resetForm('del');
-    }catch(e){addOffline('del',entry);toast('Error — saved offline.');}
-  }else{addOffline('del',entry);toast('Saved offline.');}
+  showConfirm('Confirm Delivery Entry',
+    `<strong>Material:</strong> ${mat}<br><strong>Quantity:</strong> ${qty} ${unit}<br><strong>Date:</strong> ${date}<br><strong>Supplier:</strong> ${supplier||'—'}<br><strong>Control No:</strong> ${ctrl}`,
+    async () => {
+      if(navigator.onLine){
+        try{
+          await addDoc(collection(db,'deliveries'),entry);
+          deliveries.push(entry); renderSummary(); populateSupplierList(); toast('Delivery logged!'); resetForm('del');
+        }catch(e){addOffline('del',entry);toast('Error — saved offline.');}
+      }else{addOffline('del',entry);toast('Saved offline.');}
+    }
+  );
 });
 
 // ── PULL OUT / RETURN ─────────────────────────────────────────
@@ -469,22 +666,30 @@ document.getElementById('btn-po').addEventListener('click', async () => {
   errEl.textContent='';
   if(!mat||!qty||!type||!person||!date){toast('Fill all required fields.',true);return;}
 
-  // Check balance before pull out
+  // Fresh load before balance check
+  await loadAll();
+
   if(type==='Pull Out'){
     const balance=getBalance(mat);
     if(parseFloat(qty)>balance){
       errEl.textContent=`Insufficient balance. Available: ${balance} ${unit}`;
-      toast('Quantity exceeds available balance!',true);return;
+      toast('Quantity exceeds available balance!',true); return;
     }
   }
 
   const entry={ctrl,material:mat,quantity:parseFloat(qty),unit,type,person,date,createdAt:new Date().toISOString()};
-  if(navigator.onLine){
-    try{
-      await addDoc(collection(db,'pullouts'),entry);
-      pullouts.push(entry); renderSummary(); toast(type+' logged!'); resetForm('po');
-    }catch(e){addOffline('po',entry);toast('Error — saved offline.');}
-  }else{addOffline('po',entry);toast('Saved offline.');}
+  showConfirm(`Confirm ${type}`,
+    `<strong>Material:</strong> ${mat}<br><strong>Quantity:</strong> ${qty} ${unit}<br><strong>Type:</strong> ${type}<br><strong>Person:</strong> ${person}<br><strong>Date:</strong> ${date}<br><strong>Control No:</strong> ${ctrl}`,
+    async () => {
+      if(navigator.onLine){
+        try{
+          await addDoc(collection(db,'pullouts'),entry);
+          pullouts.push(entry); renderSummary(); toast(type+' logged!'); resetForm('po');
+          updatePoBalanceNote();
+        }catch(e){addOffline('po',entry);toast('Error — saved offline.');}
+      }else{addOffline('po',entry);toast('Saved offline.');}
+    }
+  );
 });
 
 // ── MATERIAL DATABASE ──────────────────────────────────────────
@@ -560,32 +765,49 @@ function renderMaterialList() {
 // ── SUMMARY ───────────────────────────────────────────────────
 window.renderSummary = function() {
   const tb=document.getElementById('sum-tb');
-  if(!materials.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO MATERIALS IN DATABASE</div></td></tr>';return;}
+  const noteEl = document.getElementById('sum-basis-note');
+  if(!materials.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">NO MATERIALS IN DATABASE</div></td></tr>';noteEl.style.display='none';return;}
+
+  let anyNoInv = false;
   const rows=materials.map(m=>{
     const matInv=inventory.filter(i=>i.material===m.name).sort((a,b)=>new Date(b.date)-new Date(a.date));
     const latestInv=matInv[0]||null;
     const latestInvDate=latestInv?latestInv.date:null;
     const latestInvQty=latestInv?parseFloat(latestInv.quantity):0;
+    if(!latestInv) anyNoInv = true;
     const filteredDel=deliveries.filter(d=>d.material===m.name&&(!latestInvDate||d.date>latestInvDate));
     const filteredPo=pullouts.filter(p=>p.material===m.name&&p.type==='Pull Out'&&(!latestInvDate||p.date>latestInvDate));
     const filteredRet=pullouts.filter(p=>p.material===m.name&&p.type==='Return'&&(!latestInvDate||p.date>latestInvDate));
     const totalDel=filteredDel.reduce((s,d)=>s+parseFloat(d.quantity||0),0);
     const totalPo=filteredPo.reduce((s,p)=>s+parseFloat(p.quantity||0),0);
     const totalRet=filteredRet.reduce((s,r)=>s+parseFloat(r.quantity||0),0);
-    const netPo=totalPo-totalRet; // Net pull out = pull outs minus returns
+    const netPo=totalPo-totalRet;
     const balance=latestInvQty+totalDel-netPo;
     return{name:m.name,unit:m.unit,latestInvQty,latestInvDate,totalDel,netPo,balance};
   });
-  tb.innerHTML=rows.map(r=>{
+
+  // Show basis note
+  if(anyNoInv){
+    noteEl.style.display='block';
+    noteEl.className='inv-basis-note';
+    noteEl.textContent='ℹ Some materials have no inventory recorded — their balance counts all transactions from the beginning.';
+  } else {
+    noteEl.style.display='block';
+    noteEl.className='inv-basis-note has-inv';
+    noteEl.textContent='✓ All materials have an inventory baseline. Deliveries and pull outs are counted after each material\'s latest inventory date.';
+  }
+
+  tb.innerHTML = rows.map(r=>{
     const balClass=r.balance>0?'bal-pos':r.balance<0?'bal-neg':'bal-zero';
     return`<tr>
       <td>${r.name}</td>
       <td><span style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${r.unit}</span></td>
       <td>${r.latestInvQty>0||r.latestInvDate?r.latestInvQty:'—'}</td>
-      <td>${r.latestInvDate||'—'}</td>
+      <td style="font-family:var(--fm);font-size:.78rem">${r.latestInvDate||'<span style="color:var(--warn)">No inventory</span>'}</td>
       <td>${r.totalDel}</td>
       <td>${r.netPo}</td>
       <td><span class="${balClass}">${r.balance}</span></td>
+      <td><button style="font-family:var(--fm);font-size:.68rem;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.3);color:var(--accent);padding:4px 10px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px" onclick="showHistory('${r.name.replace(/'/g,"\\'")}')">📋 History</button></td>
     </tr>`;
   }).join('');
 };
@@ -654,9 +876,17 @@ async function syncAllData(){
   if(!navigator.onLine)return;
   const total=offlineInv.length+offlineDel.length+offlinePo.length;
   if(!total)return;
+  // Refresh data first to check duplicates
+  await loadAll();
   let ok=0,failInv=[],failDel=[],failPo=[];
-  for(const e of offlineInv){try{await addDoc(collection(db,'inventory'),e);inventory.push(e);ok++;}catch{failInv.push(e);}}
-  for(const e of offlineDel){try{await addDoc(collection(db,'deliveries'),e);deliveries.push(e);ok++;}catch{failDel.push(e);}}
+  for(const e of offlineInv){
+    if(isDuplicateInventory(e.ctrl,e.material,e.date)){failInv.push(e);continue;}
+    try{await addDoc(collection(db,'inventory'),e);inventory.push(e);ok++;}catch{failInv.push(e);}
+  }
+  for(const e of offlineDel){
+    if(isDuplicateDelivery(e.ctrl,e.material,e.quantity,e.date,e.supplier)){failDel.push(e);continue;}
+    try{await addDoc(collection(db,'deliveries'),e);deliveries.push(e);ok++;}catch{failDel.push(e);}
+  }
   for(const e of offlinePo){try{await addDoc(collection(db,'pullouts'),e);pullouts.push(e);ok++;}catch{failPo.push(e);}}
   offlineInv=failInv;offlineDel=failDel;offlinePo=failPo;
   localStorage.setItem('offlineInv',JSON.stringify(offlineInv));
@@ -669,9 +899,21 @@ async function syncAllData(){
 document.getElementById('btn-sync-all').addEventListener('click', syncAllData);
 
 function resetForm(type){
-  if(type==='inv'){['inv-mat','inv-qty','inv-unit'].forEach(id=>document.getElementById(id).value='');document.getElementById('inv-ctrl').value=genCtrl('INV');document.getElementById('inv-date').value=new Date().toISOString().split('T')[0];}
-  else if(type==='del'){['del-mat','del-qty','del-unit','del-supplier'].forEach(id=>document.getElementById(id).value='');document.getElementById('del-ctrl').value=genCtrl('DEL');document.getElementById('del-date').value=new Date().toISOString().split('T')[0];}
-  else if(type==='po'){['po-mat','po-qty','po-unit','po-type','po-person'].forEach(id=>document.getElementById(id).value='');document.getElementById('po-qty-err').textContent='';document.getElementById('po-ctrl').value=genCtrl('PO');document.getElementById('po-date').value=new Date().toISOString().split('T')[0];}
+  if(type==='inv'){
+    ['inv-mat','inv-qty','inv-unit'].forEach(id=>document.getElementById(id).value='');
+    const c=genCtrl('INV'); document.getElementById('inv-ctrl').value=c; document.getElementById('inv-ctrl-preview').textContent='→ '+c;
+    document.getElementById('inv-date').value=new Date().toISOString().split('T')[0];
+  }else if(type==='del'){
+    ['del-mat','del-qty','del-unit','del-supplier'].forEach(id=>document.getElementById(id).value='');
+    const c=genCtrl('DEL'); document.getElementById('del-ctrl').value=c; document.getElementById('del-ctrl-preview').textContent='→ '+c;
+    document.getElementById('del-date').value=new Date().toISOString().split('T')[0];
+  }else if(type==='po'){
+    ['po-mat','po-qty','po-unit','po-type','po-person'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('po-qty-err').textContent='';
+    document.getElementById('po-balance-note').style.display='none';
+    const c=genCtrl('PO'); document.getElementById('po-ctrl').value=c; document.getElementById('po-ctrl-preview').textContent='→ '+c;
+    document.getElementById('po-date').value=new Date().toISOString().split('T')[0];
+  }
 }
 </script>
 </body>

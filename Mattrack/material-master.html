@@ -25,7 +25,8 @@
   .access-denied{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1rem;text-align:center;padding:2rem;}
   #app-screen{display:none;}
   header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
-  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .logo{font-family:var(--fh);font-size:1.4rem;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;text-decoration:none;cursor:pointer;}
+  .logo:hover{opacity:.8;}
   .logo span{color:var(--muted);font-weight:400;}
   .vtag{font-family:var(--fm);font-size:.68rem;letter-spacing:2px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
   .hright{display:flex;align-items:center;gap:1rem;}
@@ -151,7 +152,7 @@
 <div id="app-screen">
   <header>
     <div style="display:flex;align-items:center;gap:10px;">
-      <div class="logo">Mat<span>Track</span></div>
+      <a href="material-index.html" class="logo">Mat<span>Track</span></a>
       <span class="vtag">MASTER</span>
     </div>
     <div class="hright">
@@ -216,19 +217,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _apiKey = sessionStorage.getItem('st_api_key');
-if (!_apiKey) {
-  // Redirect to main index to enter API key
-  window.location.href = '../index.html';
-}
-const firebaseConfig = {
-  apiKey: _apiKey,
-  authDomain: "equiptrack-e1011.firebaseapp.com",
-  projectId: "equiptrack-e1011",
-  storageBucket: "equiptrack-e1011.firebasestorage.app",
-  messagingSenderId: "468749948486",
-  appId: "1:468749948486:web:8bbcd38e0435e92d86dc47"
-};
+import { firebaseConfig } from '../references/firebase-config.js';
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let materials=[],deliveries=[],inventory=[],pullouts=[],pendingDelete=null;
 
