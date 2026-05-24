@@ -228,6 +228,7 @@
           <th onclick="sort('st',2)">Brand</th>
           <th onclick="sort('st',3)">Status</th>
           <th onclick="sort('st',4)">Last Updated</th>
+          <th>Notes</th>
         </tr></thead>
         <tbody id="st-tb"></tbody>
       </table></div>
@@ -449,7 +450,7 @@ window.renderStatus = function() {
 
   document.getElementById('st-rc').textContent = d.length+' records';
   const tb = document.getElementById('st-tb');
-  if(!d.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  if(!d.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
 
   const cls={'Good':'tg','Damaged':'td2','Under Repair':'tr2','For Disposal':'tf','Missing':'tm'};
   tb.innerHTML = d.map(s=>{
@@ -460,6 +461,7 @@ window.renderStatus = function() {
       <td>${eq.type||'—'}</td><td>${eq.brand||'—'}</td>
       <td><span class="tag ${tagClass}">${s.status}</span></td>
       <td>${fdate(s.date)}</td>
+      <td style="max-width:200px;font-size:.78rem">${s.notes||'—'}</td>
     </tr>`;
   }).join('');
 };
