@@ -148,7 +148,7 @@
 <!-- APP SCREEN -->
 <div id="app-screen">
   <header>
-    <div class="logo">Equip<span>Track</span></div>
+    <a href="equipment-index.html" class="logo" style="text-decoration:none">Equip<span>Track</span></a>
     <div class="hright">
       <div class="user-info">Logged in as <strong id="display-name"></strong></div>
       <button class="btn-logout" onclick="doLogout()">Logout</button>
@@ -173,6 +173,7 @@
         <div class="fi"><label>Type</label><input id="e-type" placeholder="e.g. Power Drill"/></div>
         <div class="fi"><label>Brand</label><input id="e-brand" placeholder="e.g. Bosch"/></div>
         <div class="fi"><label>Date of Log</label><input type="date" id="e-date"/></div>
+        <div class="fi"><label>Date Purchased <span style="color:var(--muted);font-size:.65rem">(optional)</span></label><input type="date" id="e-purchased"/></div>
         <div class="fi">
           <label>Status</label>
           <select id="e-status">
@@ -253,6 +254,10 @@
         <div class="fi">
           <label>Date</label>
           <input type="date" id="s-date"/>
+        </div>
+        <div class="fi" style="grid-column:1/-1">
+          <label>Notes <span style="color:var(--muted);font-size:.65rem">(optional)</span></label>
+          <input id="s-notes" placeholder="e.g. Found cracked casing on left side"/>
         </div>
       </div>
       <div class="fa"><button class="bp" onclick="submitStatus()">Log Status</button></div>
@@ -425,6 +430,7 @@ window.submitEquip = async function() {
   setFieldErr('e-num-err', '');
   const num    = v('e-num'), type = v('e-type'), brand = v('e-brand');
   const dateLog = v('e-date'), status = v('e-status');
+  const datePurchased = v('e-purchased') || null;
   if (!num||!type||!brand||!dateLog||!status) { toast('Fill all fields.',true); return; }
 
   // Uniqueness check — sheet + offline + queue
@@ -436,23 +442,24 @@ window.submitEquip = async function() {
   }
 
   const dateUpload = new Date().toISOString();
+  const equipPayload = { num, type, brand, dateLog, dateUpload, ...(datePurchased && { datePurchased }) };
   try {
     if (navigator.onLine) {
-      const eRef = await addDoc(collection(db,'equipment'), { num, type, brand, dateLog, dateUpload });
+      const eRef = await addDoc(collection(db,'equipment'), equipPayload);
       await setDoc(doc(db,'statusLog', num), { num, status, date: dateUpload });
-      allEquip.push({ id: eRef.id, num, type, brand, dateLog, dateUpload });
+      allEquip.push({ id: eRef.id, ...equipPayload });
       allStatus.push({ num, status, date: dateUpload });
       updateStats();
       toast('Equipment logged!');
     } else {
-      addOfflineEquip({ num, type, brand, dateLog, status, dateUpload });
+      addOfflineEquip({ ...equipPayload, status });
       toast('Saved offline.');
     }
-    ['e-num','e-type','e-brand'].forEach(id => document.getElementById(id).value = '');
+    ['e-num','e-type','e-brand','e-purchased'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('e-status').value = '';
     setToday();
   } catch(e) {
-    addOfflineEquip({ num, type, brand, dateLog, status, dateUpload });
+    addOfflineEquip({ ...equipPayload, status });
     toast('Error — saved offline.');
   }
 };
@@ -628,6 +635,7 @@ window.submitStatus = async function() {
   const num    = v('s-num');
   let   status = v('s-stat');
   const date   = v('s-date') || new Date().toISOString().split('T')[0];
+  const notes  = v('s-notes') || null;
   if (!num||!status) { toast('Fill all fields.',true); return; }
 
   const exists = allEquip.some(e => e.num.toLowerCase() === num.toLowerCase());
@@ -648,13 +656,15 @@ window.submitStatus = async function() {
 
   try {
     const logDate = new Date(date).toISOString();
+    const payload = { num, status, date: logDate, ...(notes && { notes }) };
     // Log as new entry instead of overwriting
-    await addDoc(collection(db,'statusLog'), { num, status, date: logDate });
+    await addDoc(collection(db,'statusLog'), payload);
     allStatus.push({ num, status, date: logDate });
     updateStats();
     toast(`Status logged: ${num} → ${status}`);
     document.getElementById('s-num').value = '';
     document.getElementById('s-stat').value = '';
+    document.getElementById('s-notes').value = '';
     document.getElementById('s-date').value = new Date().toISOString().split('T')[0];
   } catch(e) { toast('Error logging status.',true); console.error(e); }
 };

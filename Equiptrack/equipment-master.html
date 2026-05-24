@@ -170,7 +170,7 @@
 <div id="app-screen">
   <header>
     <div style="display:flex;align-items:center;gap:10px;">
-      <div class="logo">Equip<span>Track</span></div>
+      <a href="equipment-index.html" class="logo" style="text-decoration:none">Equip<span>Track</span></a>
       <span class="vtag">MASTER</span>
     </div>
     <div class="hright">
@@ -199,7 +199,7 @@
       <div class="ctitle">Equipment Records <span class="rcount" id="eq-rc"></span></div>
       <div class="fbar"><input class="si" id="eq-s" placeholder="Search by number, type, brand..." oninput="renderEquip()"/></div>
       <div class="tw"><table>
-        <thead><tr><th>Eq. No.</th><th>Type</th><th>Brand</th><th>Date of Log</th><th>Date Uploaded</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Eq. No.</th><th>Type</th><th>Brand</th><th>Date of Log</th><th>Date Uploaded</th><th>Date Purchased</th><th>Actions</th></tr></thead>
         <tbody id="eq-tb"></tbody>
       </table></div>
     </div>
@@ -223,7 +223,7 @@
       <div class="ctitle">Status Log <span class="rcount" id="st-rc"></span></div>
       <div class="fbar"><input class="si" id="st-s" placeholder="Search by number or status..." oninput="renderStatus()"/></div>
       <div class="tw"><table>
-        <thead><tr><th>Eq. No.</th><th>Status</th><th>Date Updated</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Eq. No.</th><th>Status</th><th>Date Updated</th><th>Notes</th><th>Actions</th></tr></thead>
         <tbody id="st-tb"></tbody>
       </table></div>
     </div>
@@ -351,12 +351,13 @@ window.renderEquip = function() {
   const d=equipData.filter(e=>[e.num,e.type,e.brand].join(' ').toLowerCase().includes(q));
   document.getElementById('eq-rc').textContent=d.length+' records';
   const tb=document.getElementById('eq-tb');
-  if(!d.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  if(!d.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
   tb.innerHTML=d.map((e,i)=>`
     <tr id="eq-row-${i}">
       <td><span class="en">${e.num||'—'}</span></td>
       <td>${e.type||'—'}</td><td>${e.brand||'—'}</td>
       <td>${fdate(e.dateLog)}</td><td>${fdate(e.dateUpload)}</td>
+      <td>${e.datePurchased?fdate(e.datePurchased):'—'}</td>
       <td><div class="acts">
         <button class="btn-edit" onclick="editEquip(${i})">✏ Edit</button>
         <button class="btn-del"  onclick="deleteEquip(${i})">✕ Delete</button>
@@ -373,6 +374,7 @@ window.editEquip = function(i) {
     <td><input class="iedit" id="eq-e-brand-${i}" value="${e.brand||''}"/></td>
     <td><input class="iedit" id="eq-e-dlog-${i}" type="date" value="${e.dateLog||''}"/></td>
     <td>${fdate(e.dateUpload)}</td>
+    <td><input class="iedit" id="eq-e-dpurch-${i}" type="date" value="${e.datePurchased||''}"/></td>
     <td><div class="acts">
       <button class="btn-save" onclick="saveEquip(${i})">✔ Save</button>
       <button class="btn-cancel" onclick="renderEquip()">✕ Cancel</button>
@@ -385,10 +387,12 @@ window.saveEquip = async function(i) {
   const type=document.getElementById('eq-e-type-'+i).value.trim();
   const brand=document.getElementById('eq-e-brand-'+i).value.trim();
   const dlog=document.getElementById('eq-e-dlog-'+i).value;
+  const dpurch=document.getElementById('eq-e-dpurch-'+i).value||null;
   if(!num||!type||!brand||!dlog){toast('All fields required.',true);return;}
+  const payload={num,type,brand,dateLog:dlog,...(dpurch?{datePurchased:dpurch}:{datePurchased:null})};
   try {
-    await updateDoc(doc(db,'equipment',e.id),{num,type,brand,dateLog:dlog});
-    equipData[i]={...e,num,type,brand,dateLog:dlog};
+    await updateDoc(doc(db,'equipment',e.id),payload);
+    equipData[i]={...e,...payload};
     toast('Equipment updated!'); renderEquip();
   } catch(err){toast('Error updating.',true);}
 };
@@ -476,16 +480,17 @@ window.deleteBorrow = function(i) {
 // ── STATUS LOG ────────────────────────────────────────────────
 window.renderStatus = function() {
   const q=document.getElementById('st-s').value.toLowerCase();
-  const d=statusData.filter(s=>[s.num,s.status].join(' ').toLowerCase().includes(q));
+  const d=statusData.filter(s=>[s.num,s.status,s.notes||''].join(' ').toLowerCase().includes(q));
   document.getElementById('st-rc').textContent=d.length+' records';
   const tb=document.getElementById('st-tb');
-  if(!d.length){tb.innerHTML='<tr><td colspan="4"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  if(!d.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
   const cls={'Good':'tg','Damaged':'td2','Under Repair':'tr2','For Disposal':'tf','Missing':'tm'};
   tb.innerHTML=d.map((s,i)=>`
     <tr id="st-row-${i}">
       <td><span class="en">${s.num||'—'}</span></td>
       <td><span class="tag ${cls[s.status]||'tm'}">${s.status||'—'}</span></td>
       <td>${fdate(s.date)}</td>
+      <td style="max-width:200px;font-size:.78rem">${s.notes||'—'}</td>
       <td><div class="acts">
         <button class="btn-edit" onclick="editStatus(${i})">✏ Edit</button>
         <button class="btn-del"  onclick="deleteStatus(${i})">✕ Delete</button>
@@ -502,6 +507,7 @@ window.editStatus = function(i) {
       ${['Good','Damaged','Under Repair','For Disposal','Missing'].map(o=>`<option ${s.status===o?'selected':''}>${o}</option>`).join('')}
     </select></td>
     <td>${fdate(s.date)}</td>
+    <td><input class="iedit" id="st-e-notes-${i}" value="${s.notes||''}" placeholder="Optional notes"/></td>
     <td><div class="acts">
       <button class="btn-save" onclick="saveStatus(${i})">✔ Save</button>
       <button class="btn-cancel" onclick="renderStatus()">✕ Cancel</button>
@@ -512,10 +518,12 @@ window.saveStatus = async function(i) {
   const s=statusData[i];
   const num=document.getElementById('st-e-num-'+i).value.trim();
   const status=document.getElementById('st-e-stat-'+i).value;
+  const notes=document.getElementById('st-e-notes-'+i).value.trim()||null;
   if(!num||!status){toast('All fields required.',true);return;}
+  const payload={num,status,date:new Date().toISOString(),...(notes?{notes}:{notes:null})};
   try {
-    await updateDoc(doc(db,'statusLog',s.id),{num,status,date:new Date().toISOString()});
-    statusData[i]={...s,num,status,date:new Date().toISOString()};
+    await updateDoc(doc(db,'statusLog',s.id),payload);
+    statusData[i]={...s,...payload};
     toast('Status updated!'); renderStatus();
   } catch(err){toast('Error updating.',true);}
 };

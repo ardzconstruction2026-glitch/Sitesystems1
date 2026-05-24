@@ -137,7 +137,7 @@
 <div id="app-screen">
   <header>
     <div style="display:flex;align-items:center;gap:12px;">
-      <div class="logo">Equip<span>Track</span></div>
+      <a href="equipment-index.html" class="logo" style="text-decoration:none">Equip<span>Track</span></a>
       <span class="vtag">VIEWER</span>
     </div>
     <div class="hright">
@@ -174,6 +174,7 @@
           <th onclick="sort('eq',2)">Brand</th>
           <th onclick="sort('eq',3)">Date of Log</th>
           <th onclick="sort('eq',4)">Date Uploaded</th>
+          <th onclick="sort('eq',5)">Date Purchased</th>
         </tr></thead>
         <tbody id="eq-tb"></tbody>
       </table></div>
@@ -373,16 +374,17 @@ window.renderEquip = function() {
   const ft = document.getElementById('eq-ft').value;
   let d = equipData.filter(e => [e.num,e.type,e.brand].join(' ').toLowerCase().includes(q) && (!ft||e.type===ft));
   const s = ss.eq;
-  if(s.c>=0){ const k=['num','type','brand','dateLog','dateUpload'];
+  if(s.c>=0){ const k=['num','type','brand','dateLog','dateUpload','datePurchased'];
     d.sort((a,b)=>{ const av=(String(a[k[s.c]]||'')).toLowerCase(),bv=(String(b[k[s.c]]||'')).toLowerCase();
       return s.a?av.localeCompare(bv):bv.localeCompare(av); }); }
   document.getElementById('eq-rc').textContent = d.length+' records';
   const tb = document.getElementById('eq-tb');
-  if(!d.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  if(!d.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
   tb.innerHTML = d.map(e=>`<tr>
     <td><span class="en">${e.num||'—'}</span></td>
     <td>${e.type||'—'}</td><td>${e.brand||'—'}</td>
     <td>${fdate(e.dateLog)}</td><td>${fdate(e.dateUpload)}</td>
+    <td>${e.datePurchased?fdate(e.datePurchased):'—'}</td>
   </tr>`).join('');
 };
 
@@ -480,11 +482,15 @@ window.showEquipDetail = function(num) {
     <div class="dinfo-row"><span class="dinfo-label">Brand</span><span class="dinfo-val">${eq.brand||'—'}</span></div>
     <div class="dinfo-row"><span class="dinfo-label">Date of Log</span><span class="dinfo-val">${fdate(eq.dateLog)}</span></div>
     <div class="dinfo-row"><span class="dinfo-label">Date Uploaded</span><span class="dinfo-val">${fdate(eq.dateUpload)}</span></div>
+    ${eq.datePurchased?`<div class="dinfo-row"><span class="dinfo-label">Date Purchased</span><span class="dinfo-val">${fdate(eq.datePurchased)}</span></div>`:''}
     <div class="dhistory-title">Status History</div>
     ${history.length ? history.map(h=>`
       <div class="history-item">
         <span class="tag ${getTagClass(h.status)}">${h.status}</span>
-        <span class="history-date">${fdate(h.date)}</span>
+        <div style="text-align:right">
+          <span class="history-date">${fdate(h.date)}</span>
+          ${h.notes?`<div style="font-family:var(--fb);font-size:.75rem;color:var(--muted);margin-top:2px">${h.notes}</div>`:''}
+        </div>
       </div>`).join('') : '<div style="font-family:var(--fm);font-size:.78rem;color:var(--muted);text-align:center;padding:1rem">No status history</div>'}
   `;
   document.getElementById('detail-modal').classList.add('show');
@@ -507,8 +513,8 @@ window.sort = function(key,col){
 window.exportExcel = function(type) {
   let rows = [], headers = [], filename = '';
   if(type==='equipment'){
-    headers = ['Equipment Number','Type','Brand','Date of Log','Date Uploaded'];
-    rows = equipData.map(e=>[e.num,e.type,e.brand,e.dateLog,e.dateUpload]);
+    headers = ['Equipment Number','Type','Brand','Date of Log','Date Uploaded','Date Purchased'];
+    rows = equipData.map(e=>[e.num,e.type,e.brand,e.dateLog,e.dateUpload,e.datePurchased||'']);
     filename = 'Equipment_'+today()+'.csv';
   } else if(type==='borrow'){
     headers = ['Equipment Number','Type','Brand','Borrower','Date Borrowed','Location','Status','Date Returned'];
@@ -519,9 +525,9 @@ window.exportExcel = function(type) {
     });
     filename = 'BorrowLog_'+today()+'.csv';
   } else {
-    headers = ['Equipment Number','Type','Brand','Status','Last Updated'];
+    headers = ['Equipment Number','Type','Brand','Status','Last Updated','Notes'];
     rows = statusData.map(s=>{ const eq=equipMap[s.num]||{};
-      return [s.num,eq.type||'',eq.brand||'',s.status,s.date]; });
+      return [s.num,eq.type||'',eq.brand||'',s.status,s.date,s.notes||'']; });
     filename = 'StatusLog_'+today()+'.csv';
   }
   const csv = [headers, ...rows].map(r => r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
