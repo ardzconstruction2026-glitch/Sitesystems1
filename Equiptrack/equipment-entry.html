@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EquipTrack — Entry</title>
+<title>EquipTrack — Entry v1.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
 <style>
   :root{
@@ -119,6 +119,18 @@
     flex-direction:column;gap:1rem;text-align:center;}
   .access-denied h2{font-family:var(--fh);font-size:1.5rem;color:var(--danger);letter-spacing:2px;}
   .access-denied p{font-family:var(--fm);font-size:.82rem;color:var(--muted);}
+
+  /* AUTOCOMPLETE */
+  .ac-wrap{position:relative;width:100%;}
+  .ac-list{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--accent);border-top:none;border-radius:0 0 var(--r) var(--r);max-height:180px;overflow-y:auto;z-index:50;display:none;}
+  .ac-list.open{display:block;}
+  .ac-item{padding:9px 14px;font-family:var(--fb);font-size:.88rem;cursor:pointer;border-bottom:1px solid rgba(42,47,63,.4);}
+  .ac-item:last-child{border-bottom:none;}
+  .ac-item:hover,.ac-item.focused{background:rgba(0,194,255,.08);color:var(--accent);}
+
+  /* BORROWED INDICATOR */
+  .borrowed-tag{font-family:var(--fm);font-size:.65rem;padding:2px 7px;border-radius:3px;letter-spacing:.5px;background:rgba(255,107,53,.15);color:var(--accent2);border:1px solid rgba(255,107,53,.3);margin-left:6px;vertical-align:middle;}
+
   @media(max-width:600px){
     .fg{grid-template-columns:1fr;} .tb{padding:12px 14px;font-size:.8rem;}
     .tc{padding:1.2rem;} header{padding:0 1rem;}
@@ -149,6 +161,7 @@
 <div id="app-screen">
   <header>
     <a href="equipment-index.html" class="logo" style="text-decoration:none">Equip<span>Track</span></a>
+    <span style="font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:20px;">v1.1</span>
     <div class="hright">
       <div class="user-info">Logged in as <strong id="display-name"></strong></div>
       <button class="btn-logout" onclick="doLogout()">Logout</button>
@@ -167,7 +180,10 @@
       <div class="fg">
         <div class="fi">
           <label>Equipment Number</label>
-          <input id="e-num" placeholder="e.g. EQ-001"/>
+          <div class="ac-wrap">
+            <input id="e-num" placeholder="e.g. EQ-001" autocomplete="off" oninput="acFilter('e-num','ac-equip-new')" onkeydown="acKey(event,'ac-equip-new','e-num')"/>
+            <div class="ac-list" id="ac-equip-new"></div>
+          </div>
           <span class="field-err" id="e-num-err"></span>
         </div>
         <div class="fi"><label>Type</label><input id="e-type" placeholder="e.g. Power Drill"/></div>
@@ -212,12 +228,16 @@
       <div class="fg">
         <div class="fi">
           <label>Equipment Number</label>
-          <input id="b-num" placeholder="e.g. EQ-001"/>
+          <div class="ac-wrap">
+            <input id="b-num" placeholder="e.g. EQ-001" autocomplete="off" oninput="acFilter('b-num','ac-equip-borrow')" onkeydown="acKey(event,'ac-equip-borrow','b-num')"/>
+            <div class="ac-list" id="ac-equip-borrow"></div>
+          </div>
           <span class="field-err" id="b-num-err"></span>
         </div>
         <div class="fi"><label>Date of Borrow</label><input type="date" id="b-date"/></div>
         <div class="fi"><label>Borrower Name</label><input id="b-who" placeholder="Full name"/></div>
         <div class="fi"><label>Location Transferred</label><input id="b-loc" placeholder="e.g. Site B"/></div>
+        <div class="fi" style="grid-column:1/-1"><label>Notes <span style="color:var(--muted);font-size:.65rem">(optional)</span></label><input id="b-notes" placeholder="e.g. Returned with minor scratches"/></div>
       </div>
       <div class="fa"><button class="bp" onclick="submitBorrow()">Log Borrow</button></div>
     </div>
@@ -225,7 +245,7 @@
       <div class="ctitle">Active Borrows</div>
       <div class="tw">
         <table>
-          <thead><tr><th>Eq. No.</th><th>Borrower</th><th>Date</th><th>Location</th><th>Mark Returned</th></tr></thead>
+          <thead><tr><th>Eq. No.</th><th>Borrower</th><th>Date</th><th>Location</th><th>Notes</th><th>Mark Returned</th></tr></thead>
           <tbody id="btbody"></tbody>
         </table>
       </div>
@@ -239,7 +259,10 @@
       <div class="fg">
         <div class="fi">
           <label>Equipment Number</label>
-          <input id="s-num" placeholder="e.g. EQ-001"/>
+          <div class="ac-wrap">
+            <input id="s-num" placeholder="e.g. EQ-001" autocomplete="off" oninput="acFilter('s-num','ac-equip-status')" onkeydown="acKey(event,'ac-equip-status','s-num')"/>
+            <div class="ac-list" id="ac-equip-status"></div>
+          </div>
           <span class="field-err" id="s-num-err"></span>
         </div>
         <div class="fi">
@@ -372,6 +395,7 @@ async function loadAllData() {
     allBorrows = bSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     allStatus  = sSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     updateStats();
+    // Pre-populate autocomplete lists cleared — they filter dynamically on input
   } catch(e) { console.error('loadAllData error:', e); }
 }
 
@@ -404,6 +428,68 @@ function setFieldErr(id, msg) {
 }
 
 function v(id) { return document.getElementById(id).value.trim(); }
+
+// ── AUTOCOMPLETE ──────────────────────────────────────────────
+function acFilter(inputId, listId) {
+  const q = document.getElementById(inputId).value.trim().toLowerCase();
+  const list = document.getElementById(listId);
+  if (!q) { list.classList.remove('open'); return; }
+  const matches = allEquip.map(e => e.num).filter(n => n.toLowerCase().includes(q)).slice(0, 10);
+  if (!matches.length) { list.classList.remove('open'); return; }
+  list.innerHTML = matches.map(n => `<div class="ac-item" onmousedown="acSelect('${inputId}','${listId}','${n}')">${n}</div>`).join('');
+  list.classList.add('open');
+}
+
+window.acFilter = acFilter;
+
+window.acSelect = function(inputId, listId, val) {
+  document.getElementById(inputId).value = val;
+  document.getElementById(listId).classList.remove('open');
+  // Auto-fill type/brand info display when selecting in borrow or status
+  if (inputId === 'b-num') acCheckBorrow(val);
+  if (inputId === 's-num') acCheckStatus(val);
+};
+
+window.acKey = function(e, listId, inputId) {
+  const list = document.getElementById(listId);
+  const items = list.querySelectorAll('.ac-item');
+  const focused = list.querySelector('.focused');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (!focused) { items[0]?.classList.add('focused'); }
+    else { focused.classList.remove('focused'); (focused.nextElementSibling||items[0])?.classList.add('focused'); }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (focused) { focused.classList.remove('focused'); (focused.previousElementSibling||items[items.length-1])?.classList.add('focused'); }
+  } else if (e.key === 'Enter' && focused) {
+    e.preventDefault();
+    acSelect(inputId, listId, focused.textContent.trim());
+  } else if (e.key === 'Escape') {
+    list.classList.remove('open');
+  }
+};
+
+document.addEventListener('click', e => {
+  document.querySelectorAll('.ac-list').forEach(l => { if (!l.parentElement.contains(e.target)) l.classList.remove('open'); });
+});
+
+function acCheckBorrow(num) {
+  setFieldErr('b-num-err','');
+  const eq = allEquip.find(e => e.num.toLowerCase() === num.toLowerCase());
+  if (!eq) return;
+  const status = getLatestStatus(num);
+  const borrowed = isCurrentlyBorrowed(num);
+  if (borrowed) setFieldErr('b-num-err', 'Currently borrowed.');
+  else if (status && status !== 'Good') setFieldErr('b-num-err', `Status: ${status}. Must be Good.`);
+}
+
+function acCheckStatus(num) {
+  setFieldErr('s-num-err','');
+  const eq = allEquip.find(e => e.num.toLowerCase() === num.toLowerCase());
+  if (!eq) { setFieldErr('s-num-err','Equipment not found.'); return; }
+  const borrowed = isCurrentlyBorrowed(num);
+  if (borrowed) setFieldErr('s-num-err','Equipment is currently borrowed.');
+}
 
 function getLatestStatus(num) {
   const matches = allStatus.filter(s => s.num === num);
@@ -572,14 +658,14 @@ window.submitBorrow = async function() {
   if (dupOffline) { toast('This borrow entry is already pending sync.',true); return; }
 
   const entry = { num, date, borrower: who, location: loc, returned: false, returnDate: null,
-    createdAt: new Date().toISOString() };
+    createdAt: new Date().toISOString(), ...(v('b-notes') && { notes: v('b-notes') }) };
 
   if (navigator.onLine) {
     try {
       const ref = await addDoc(collection(db,'borrowLog'), entry);
       allBorrows.push({ id: ref.id, ...entry });
       updateStats(); renderBorrows();
-      ['b-num','b-who','b-loc'].forEach(id => document.getElementById(id).value = '');
+      ['b-num','b-who','b-loc','b-notes'].forEach(id => document.getElementById(id).value = '');
       setToday();
       toast('Borrow logged!');
     } catch(e) {
@@ -593,7 +679,7 @@ window.submitBorrow = async function() {
     localStorage.setItem('offlineBorrows', JSON.stringify(offlineBorrows));
     allBorrows.push({ id: 'offline_'+entry.createdAt, ...entry });
     updateStats(); renderBorrows();
-    ['b-num','b-who','b-loc'].forEach(id => document.getElementById(id).value = '');
+    ['b-num','b-who','b-loc','b-notes'].forEach(id => document.getElementById(id).value = '');
     setToday();
     toast('Saved offline. Will sync when online.');
   }
@@ -606,7 +692,7 @@ window.markReturn = async function(id, checked) {
     await updateDoc(doc(db,'borrowLog',id), { returned: checked, returnDate });
     b.returned = checked; b.returnDate = returnDate;
     updateStats(); renderBorrows();
-    if (checked) toast(b.num + ' marked as returned.');
+    if (checked) toast(`${b.num} marked as returned — ${returnDate}`);
     await loadAllData();
   } catch(e) { toast('Error updating borrow.',true); }
 };
@@ -615,13 +701,14 @@ function renderBorrows() {
   const tb = document.getElementById('btbody');
   const active = allBorrows.filter(b => b.returned !== true && b.returned !== 'Yes');
   if (!active.length) {
-    tb.innerHTML = '<tr><td colspan="5"><div class="empty">NO ACTIVE BORROWS</div></td></tr>';
+    tb.innerHTML = '<tr><td colspan="6"><div class="empty">NO ACTIVE BORROWS</div></td></tr>';
     return;
   }
   tb.innerHTML = active.map(b => `
     <tr>
       <td><span style="font-family:var(--fm);color:var(--accent)">${b.num}</span></td>
       <td>${b.borrower}</td><td>${b.date}</td><td>${b.location}</td>
+      <td style="max-width:160px;font-size:.78rem">${b.notes||'—'}</td>
       <td><div class="rcell">
         <input type="checkbox" class="rc" onchange="markReturn('${b.id}',this.checked)"/>
         <span style="font-family:var(--fm);font-size:.72rem;color:var(--muted)">Mark returned</span>

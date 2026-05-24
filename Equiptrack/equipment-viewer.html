@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EquipTrack — Viewer</title>
+<title>EquipTrack — Viewer v1.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
 <style>
   :root{
@@ -117,6 +117,12 @@
   .history-date{font-family:var(--fm);font-size:.72rem;color:var(--muted);}
   tr.clickable{cursor:pointer;}
   tr.clickable:hover td{background:rgba(0,255,157,.04);}
+  .tborrowed{background:rgba(255,107,53,.12);color:var(--accent2);border:1px solid rgba(255,107,53,.2);}
+  /* UTILIZATION TAB */
+  .util-bar-wrap{background:var(--surface2);border-radius:4px;height:8px;overflow:hidden;width:100%;min-width:80px;}
+  .util-bar{height:100%;border-radius:4px;background:var(--accent3);transition:width .3s;}
+  .util-bar.med{background:var(--warn);}
+  .util-bar.high{background:var(--accent2);}
 </style>
 </head>
 <body>
@@ -139,6 +145,7 @@
     <div style="display:flex;align-items:center;gap:12px;">
       <a href="equipment-index.html" class="logo" style="text-decoration:none">Equip<span>Track</span></a>
       <span class="vtag">VIEWER</span>
+      <span class="vtag">v1.1</span>
     </div>
     <div class="hright">
       <div class="user-info">Logged in as <strong id="display-name"></strong></div>
@@ -150,6 +157,7 @@
     <button class="tb active" onclick="switchTab('t1',this)">Equipment Database</button>
     <button class="tb" onclick="switchTab('t2',this)">Borrow Status</button>
     <button class="tb" onclick="switchTab('t3',this)">Equipment Status</button>
+    <button class="tb" onclick="switchTab('t4',this)">Utilization</button>
   </nav>
 
   <!-- TAB 1 -->
@@ -211,11 +219,16 @@
   <!-- TAB 3 -->
   <div id="t3" class="tc">
     <div class="fbar">
-      <input class="si" id="st-s" placeholder="Search by number or status..." oninput="renderStatus()"/>
+      <input class="si" id="st-s" placeholder="Search by number, status, or notes..." oninput="renderStatus()"/>
       <select class="sf" id="st-f" onchange="renderStatus()">
         <option value="">All Statuses</option>
         <option>Good</option><option>Damaged</option>
         <option>Under Repair</option><option>For Disposal</option><option>Missing</option>
+      </select>
+      <select class="sf" id="st-borrow-f" onchange="renderStatus()">
+        <option value="">All</option>
+        <option value="borrowed">Currently Borrowed</option>
+        <option value="available">Available</option>
       </select>
       <button class="btn-export" onclick="exportExcel('status')">📥 Export Excel</button>
     </div>
@@ -229,8 +242,32 @@
           <th onclick="sort('st',3)">Status</th>
           <th onclick="sort('st',4)">Last Updated</th>
           <th>Notes</th>
+          <th>Borrow</th>
         </tr></thead>
         <tbody id="st-tb"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: UTILIZATION -->
+  <div id="t4" class="tc">
+    <div class="fbar">
+      <input class="si" id="util-s" placeholder="Search by number or type..." oninput="renderUtil()"/>
+      <button class="btn-export" onclick="exportExcel('utilization')">📥 Export Excel</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Equipment Utilization <span class="rc" id="util-rc"></span></div>
+      <div class="tw"><table id="util-tbl">
+        <thead><tr>
+          <th onclick="sortUtil(0)">Eq. No.</th>
+          <th onclick="sortUtil(1)">Type</th>
+          <th onclick="sortUtil(2)">Brand</th>
+          <th onclick="sortUtil(3)">Times Borrowed</th>
+          <th onclick="sortUtil(4)">Last Borrowed</th>
+          <th onclick="sortUtil(5)">Last Returned</th>
+          <th>Utilization</th>
+        </tr></thead>
+        <tbody id="util-tb"></tbody>
       </table></div>
     </div>
   </div>
@@ -355,6 +392,7 @@ window.switchTab = function(id,btn) {
   document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
+  if(id==='t4') renderUtil();
 };
 
 function toast(msg,err=false) {
@@ -426,6 +464,7 @@ window.renderBorrow = function() {
 window.renderStatus = function() {
   const q = document.getElementById('st-s').value.toLowerCase();
   const f = document.getElementById('st-f').value;
+  const bf = document.getElementById('st-borrow-f').value;
 
   // Build latest status per equipment — compare dates properly
   const latestMap = {};
@@ -434,9 +473,16 @@ window.renderStatus = function() {
       latestMap[s.num] = s;
     }
   });
+
+  const borrowedNums = new Set(borrowData.filter(b => b.returned!==true && b.returned!=='Yes').map(b=>b.num));
+
   let d = Object.values(latestMap).filter(s => {
     const eq = equipMap[s.num]||{};
-    return [s.num,eq.type,s.status].join(' ').toLowerCase().includes(q) && (!f||s.status.includes(f));
+    const matchQ = [s.num,eq.type,s.status,s.notes||''].join(' ').toLowerCase().includes(q);
+    const matchF = !f||s.status.includes(f);
+    const isBorrowed = borrowedNums.has(s.num);
+    const matchBF = !bf||(bf==='borrowed'&&isBorrowed)||(bf==='available'&&!isBorrowed);
+    return matchQ && matchF && matchBF;
   });
 
   const st=ss.st;
@@ -450,18 +496,20 @@ window.renderStatus = function() {
 
   document.getElementById('st-rc').textContent = d.length+' records';
   const tb = document.getElementById('st-tb');
-  if(!d.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  if(!d.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
 
   const cls={'Good':'tg','Damaged':'td2','Under Repair':'tr2','For Disposal':'tf','Missing':'tm'};
   tb.innerHTML = d.map(s=>{
     const eq=equipMap[s.num]||{};
     const tagClass = Object.keys(cls).find(k => s.status.includes(k)) ? cls[Object.keys(cls).find(k=>s.status.includes(k))] : 'tm';
+    const borrowed = borrowedNums.has(s.num);
     return `<tr class="clickable" onclick="showEquipDetail('${s.num}')">
       <td><span class="en">${s.num||'—'}</span></td>
       <td>${eq.type||'—'}</td><td>${eq.brand||'—'}</td>
       <td><span class="tag ${tagClass}">${s.status}</span></td>
       <td>${fdate(s.date)}</td>
       <td style="max-width:200px;font-size:.78rem">${s.notes||'—'}</td>
+      <td>${borrowed?'<span class="tag tborrowed">BORROWED</span>':'<span style="font-family:var(--fm);font-size:.68rem;color:var(--muted)">—</span>'}</td>
     </tr>`;
   }).join('');
 };
@@ -498,6 +546,61 @@ window.showEquipDetail = function(num) {
   document.getElementById('detail-modal').classList.add('show');
 };
 
+// ── UTILIZATION ───────────────────────────────────────────────
+let utilSort = { c: 3, a: false }; // default: most borrowed first
+
+window.renderUtil = function() {
+  const q = document.getElementById('util-s').value.toLowerCase();
+  const maxBorrows = Math.max(1, ...equipData.map(e => borrowData.filter(b => b.num === e.num).length));
+
+  let rows = equipData.map(e => {
+    const borrows    = borrowData.filter(b => b.num === e.num);
+    const count      = borrows.length;
+    const lastBorrow = borrows.reduce((latest, b) => (!latest||b.date>latest.date)?b:latest, null);
+    const lastReturn = borrows.filter(b=>b.returnDate).reduce((latest,b)=>(!latest||b.returnDate>latest.returnDate)?b:latest, null);
+    return { num: e.num, type: e.type||'—', brand: e.brand||'—', count,
+      lastBorrowDate: lastBorrow?.date||null, lastReturnDate: lastReturn?.returnDate||null,
+      pct: Math.round((count/maxBorrows)*100) };
+  }).filter(r => [r.num,r.type,r.brand].join(' ').toLowerCase().includes(q));
+
+  const s = utilSort;
+  const keys = ['num','type','brand','count','lastBorrowDate','lastReturnDate'];
+  rows.sort((a,b) => {
+    const av = String(a[keys[s.c]]||''), bv = String(b[keys[s.c]]||'');
+    return s.a ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
+  document.getElementById('util-rc').textContent = rows.length+' records';
+  const tb = document.getElementById('util-tb');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO RECORDS</div></td></tr>';return;}
+
+  tb.innerHTML = rows.map(r => {
+    const barClass = r.pct >= 70 ? 'high' : r.pct >= 35 ? 'med' : '';
+    return `<tr>
+      <td><span class="en">${r.num}</span></td>
+      <td>${r.type}</td><td>${r.brand}</td>
+      <td style="font-family:var(--fm);color:var(--accent);font-weight:700">${r.count}</td>
+      <td>${r.lastBorrowDate ? fdate(r.lastBorrowDate) : '—'}</td>
+      <td>${r.lastReturnDate ? fdate(r.lastReturnDate) : '—'}</td>
+      <td style="min-width:120px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="util-bar-wrap"><div class="util-bar ${barClass}" style="width:${r.pct}%"></div></div>
+          <span style="font-family:var(--fm);font-size:.72rem;color:var(--muted);min-width:32px">${r.pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+};
+
+window.sortUtil = function(col) {
+  if(utilSort.c===col) utilSort.a=!utilSort.a; else{utilSort.c=col;utilSort.a=true;}
+  document.getElementById('util-tbl').querySelectorAll('th').forEach((th,i)=>{
+    th.classList.remove('sa','sd');
+    if(i===col) th.classList.add(utilSort.a?'sa':'sd');
+  });
+  renderUtil();
+};
+
 window.sort = function(key,col){
   const s=ss[key];
   if(s.c===col) s.a=!s.a; else{s.c=col;s.a=true;}
@@ -519,18 +622,27 @@ window.exportExcel = function(type) {
     rows = equipData.map(e=>[e.num,e.type,e.brand,e.dateLog,e.dateUpload,e.datePurchased||'']);
     filename = 'Equipment_'+today()+'.csv';
   } else if(type==='borrow'){
-    headers = ['Equipment Number','Type','Brand','Borrower','Date Borrowed','Location','Status','Date Returned'];
+    headers = ['Equipment Number','Type','Brand','Borrower','Date Borrowed','Location','Status','Date Returned','Notes'];
     rows = borrowData.map(b=>{
       const eq=equipMap[b.num]||{};
       const ret=b.returned===true||b.returned==='Yes';
-      return [b.num,eq.type||'',eq.brand||'',b.borrower,b.date,b.location,ret?'Returned':'Out',b.returnDate||''];
+      return [b.num,eq.type||'',eq.brand||'',b.borrower,b.date,b.location,ret?'Returned':'Out',b.returnDate||'',b.notes||''];
     });
     filename = 'BorrowLog_'+today()+'.csv';
-  } else {
+  } else if(type==='status'){
     headers = ['Equipment Number','Type','Brand','Status','Last Updated','Notes'];
     rows = statusData.map(s=>{ const eq=equipMap[s.num]||{};
       return [s.num,eq.type||'',eq.brand||'',s.status,s.date,s.notes||'']; });
     filename = 'StatusLog_'+today()+'.csv';
+  } else if(type==='utilization'){
+    headers = ['Equipment Number','Type','Brand','Times Borrowed','Last Borrowed','Last Returned'];
+    rows = equipData.map(e=>{
+      const borrows = borrowData.filter(b=>b.num===e.num);
+      const lb = borrows.reduce((l,b)=>(!l||b.date>l.date)?b:l,null);
+      const lr = borrows.filter(b=>b.returnDate).reduce((l,b)=>(!l||b.returnDate>l.returnDate)?b:l,null);
+      return [e.num,e.type||'',e.brand||'',borrows.length,lb?.date||'',lr?.returnDate||''];
+    });
+    filename = 'Utilization_'+today()+'.csv';
   }
   const csv = [headers, ...rows].map(r => r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob = new Blob([csv], {type:'text/csv'});

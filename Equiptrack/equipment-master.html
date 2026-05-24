@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EquipTrack — Master</title>
+<title>EquipTrack — Master v1.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
 <style>
   :root{
@@ -120,6 +120,10 @@
     color:var(--text);padding:10px 14px;font-family:var(--fm);font-size:.9rem;outline:none;
     width:100%;margin-bottom:1rem;text-align:center;letter-spacing:2px;}
   .purge-confirm-input:focus{border-color:var(--danger);}
+  .purge-date-row{display:flex;gap:.75rem;margin-bottom:1rem;align-items:center;}
+  .purge-date-row input[type="date"]{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--fb);font-size:.85rem;outline:none;flex:1;}
+  .purge-date-row input[type="date"]:focus{border-color:var(--danger);}
+  .purge-sep{font-family:var(--fm);font-size:.72rem;color:var(--muted);flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -142,14 +146,35 @@
 <div class="modal-bg" id="purge-modal">
   <div class="purge-modal">
     <div class="modal-icon">🗑️</div>
-    <div class="modal-title" style="color:var(--danger);font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:.75rem;">Purge All Data</div>
-    <div style="font-family:var(--fb);font-size:.88rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.6;">
+    <div class="modal-title" style="color:var(--danger);font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:.75rem;">Purge Data</div>
+
+    <!-- Purge mode toggle -->
+    <div style="display:flex;gap:.5rem;margin-bottom:1.2rem;">
+      <button id="purge-mode-all" onclick="setPurgeMode('all')" style="flex:1;font-family:var(--fh);font-size:.85rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px;border-radius:var(--r);cursor:pointer;background:var(--danger);color:#fff;border:none;">All Data</button>
+      <button id="purge-mode-range" onclick="setPurgeMode('range')" style="flex:1;font-family:var(--fh);font-size:.85rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:8px;border-radius:var(--r);cursor:pointer;background:transparent;color:var(--muted);border:1px solid var(--border);">Date Range</button>
+    </div>
+
+    <!-- All data description -->
+    <div id="purge-all-desc" style="font-family:var(--fb);font-size:.88rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.6;">
       This will permanently delete <strong style="color:var(--danger)">ALL</strong> records from Equipment, Borrow Log, and Status Log. This action <strong style="color:var(--danger)">cannot be undone</strong>.
     </div>
+
+    <!-- Date range description -->
+    <div id="purge-range-desc" style="display:none;font-family:var(--fb);font-size:.88rem;color:var(--muted);margin-bottom:1rem;line-height:1.6;">
+      Delete <strong style="color:var(--warn)">Borrow Log and Status Log</strong> records within the date range below. Equipment records are not affected.
+    </div>
+    <div id="purge-range-inputs" style="display:none;">
+      <div class="purge-date-row">
+        <input type="date" id="purge-from" placeholder="From"/>
+        <span class="purge-sep">to</span>
+        <input type="date" id="purge-to" placeholder="To"/>
+      </div>
+    </div>
+
     <div style="font-family:var(--fm);font-size:.75rem;color:var(--muted);margin-bottom:.5rem;letter-spacing:1px;">Type <strong style="color:var(--danger)">PURGE</strong> to confirm</div>
     <input class="purge-confirm-input" id="purge-input" placeholder="PURGE" autocomplete="off"/>
     <div class="modal-actions">
-      <button class="btn-confirm" id="btn-purge-confirm">Purge All</button>
+      <button class="btn-confirm" id="btn-purge-confirm">Purge</button>
       <button class="btn-cancel2" id="btn-purge-cancel">Cancel</button>
     </div>
     <div id="purge-progress" style="font-family:var(--fm);font-size:.75rem;color:var(--warn);margin-top:1rem;min-height:1rem;letter-spacing:1px;"></div>
@@ -172,6 +197,7 @@
     <div style="display:flex;align-items:center;gap:10px;">
       <a href="equipment-index.html" class="logo" style="text-decoration:none">Equip<span>Track</span></a>
       <span class="vtag">MASTER</span>
+      <span class="vtag">v1.1</span>
     </div>
     <div class="hright">
       <div class="user-info">Logged in as <strong id="display-name"></strong></div>
@@ -211,7 +237,7 @@
       <div class="ctitle">Borrow Log <span class="rcount" id="br-rc"></span></div>
       <div class="fbar"><input class="si" id="br-s" placeholder="Search by number, borrower..." oninput="renderBorrow()"/></div>
       <div class="tw"><table>
-        <thead><tr><th>Eq. No.</th><th>Borrower</th><th>Date Borrowed</th><th>Location</th><th>Returned</th><th>Date Returned</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Eq. No.</th><th>Borrower</th><th>Date Borrowed</th><th>Location</th><th>Returned</th><th>Date Returned</th><th>Notes</th><th>Actions</th></tr></thead>
         <tbody id="br-tb"></tbody>
       </table></div>
     </div>
@@ -411,10 +437,10 @@ window.deleteEquip = function(i) {
 // ── BORROW LOG ────────────────────────────────────────────────
 window.renderBorrow = function() {
   const q=document.getElementById('br-s').value.toLowerCase();
-  const d=borrowData.filter(b=>[b.num,b.borrower,b.location].join(' ').toLowerCase().includes(q));
+  const d=borrowData.filter(b=>[b.num,b.borrower,b.location,b.notes||''].join(' ').toLowerCase().includes(q));
   document.getElementById('br-rc').textContent=d.length+' records';
   const tb=document.getElementById('br-tb');
-  if(!d.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
+  if(!d.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
   tb.innerHTML=d.map((b,i)=>{
     const ret=b.returned===true||b.returned==='Yes';
     return `<tr id="br-row-${i}">
@@ -422,6 +448,7 @@ window.renderBorrow = function() {
       <td>${b.borrower||'—'}</td><td>${fdate(b.date)}</td><td>${b.location||'—'}</td>
       <td><span class="tag ${ret?'tret':'tout'}">${ret?'RETURNED':'OUT'}</span></td>
       <td>${b.returnDate?`<span style="font-family:var(--fm);font-size:.8rem;color:var(--accent3)">${b.returnDate}</span>`:'—'}</td>
+      <td style="max-width:160px;font-size:.78rem">${b.notes||'—'}</td>
       <td><div class="acts">
         <button class="btn-edit" onclick="editBorrow(${i})">✏ Edit</button>
         <button class="btn-del"  onclick="deleteBorrow(${i})">✕ Delete</button>
@@ -444,6 +471,7 @@ window.editBorrow = function(i) {
       <option value="true"  ${ret?'selected':''}>Returned</option>
     </select></td>
     <td><input class="iedit" id="br-e-rdate-${i}" value="${b.returnDate||''}"/></td>
+    <td><input class="iedit" id="br-e-notes-${i}" value="${b.notes||''}" placeholder="Optional notes"/></td>
     <td><div class="acts">
       <button class="btn-save" onclick="saveBorrow(${i})">✔ Save</button>
       <button class="btn-cancel" onclick="renderBorrow()">✕ Cancel</button>
@@ -458,10 +486,11 @@ window.saveBorrow = async function(i) {
   const location=document.getElementById('br-e-loc-'+i).value.trim();
   const returned=document.getElementById('br-e-ret-'+i).value==='true';
   const returnDate=document.getElementById('br-e-rdate-'+i).value.trim();
+  const notes=document.getElementById('br-e-notes-'+i).value.trim()||null;
   if(!num||!borrower||!date||!location){toast('All fields required.',true);return;}
   try {
-    await updateDoc(doc(db,'borrowLog',b.id),{num,borrower,date,location,returned,returnDate:returnDate||null});
-    borrowData[i]={...b,num,borrower,date,location,returned,returnDate:returnDate||null};
+    await updateDoc(doc(db,'borrowLog',b.id),{num,borrower,date,location,returned,returnDate:returnDate||null,...(notes?{notes}:{notes:null})});
+    borrowData[i]={...b,num,borrower,date,location,returned,returnDate:returnDate||null,notes};
     toast('Borrow record updated!'); renderBorrow();
   } catch(err){toast('Error updating.',true);}
 };
@@ -552,9 +581,28 @@ document.getElementById('btn-cancel-modal').addEventListener('click', () => {
 });
 
 // ── PURGE ─────────────────────────────────────────────────────
+let purgeMode = 'all';
+
+window.setPurgeMode = function(mode) {
+  purgeMode = mode;
+  const isRange = mode === 'range';
+  document.getElementById('purge-all-desc').style.display   = isRange ? 'none'  : 'block';
+  document.getElementById('purge-range-desc').style.display = isRange ? 'block' : 'none';
+  document.getElementById('purge-range-inputs').style.display = isRange ? 'block' : 'none';
+  document.getElementById('purge-mode-all').style.background   = isRange ? 'transparent' : 'var(--danger)';
+  document.getElementById('purge-mode-all').style.color        = isRange ? 'var(--muted)'  : '#fff';
+  document.getElementById('purge-mode-all').style.border       = isRange ? '1px solid var(--border)' : 'none';
+  document.getElementById('purge-mode-range').style.background = isRange ? 'var(--warn)'   : 'transparent';
+  document.getElementById('purge-mode-range').style.color      = isRange ? '#000'          : 'var(--muted)';
+  document.getElementById('purge-mode-range').style.border     = isRange ? 'none'          : '1px solid var(--border)';
+};
+
 document.getElementById('btn-open-purge').addEventListener('click', () => {
   document.getElementById('purge-input').value = '';
   document.getElementById('purge-progress').textContent = '';
+  document.getElementById('purge-from').value = '';
+  document.getElementById('purge-to').value = '';
+  setPurgeMode('all');
   document.getElementById('purge-modal').classList.add('show');
 });
 
@@ -563,39 +611,67 @@ document.getElementById('btn-purge-cancel').addEventListener('click', () => {
 });
 
 document.getElementById('btn-purge-confirm').addEventListener('click', async () => {
-  const input = document.getElementById('purge-input').value.trim();
-  if (input !== 'PURGE') {
+  if (document.getElementById('purge-input').value.trim() !== 'PURGE') {
     document.getElementById('purge-progress').textContent = 'Please type PURGE to confirm.';
     return;
   }
   const progress = document.getElementById('purge-progress');
   const btn      = document.getElementById('btn-purge-confirm');
-  btn.disabled   = true;
-  btn.textContent = 'Purging...';
-
-  const collections = ['equipment','borrowLog','statusLog'];
+  btn.disabled   = true; btn.textContent = 'Purging...';
   let total = 0;
 
-  for (const col of collections) {
+  if (purgeMode === 'all') {
+    const collections = ['equipment','borrowLog','statusLog'];
+    for (const col of collections) {
+      try {
+        progress.textContent = `Purging ${col}...`;
+        const snap = await getDocs(collection(db, col));
+        for (const d of snap.docs) { await deleteDoc(doc(db, col, d.id)); total++; }
+      } catch(e) {
+        progress.textContent = `Error purging ${col}: ${e.message}`;
+        btn.disabled = false; btn.textContent = 'Purge'; return;
+      }
+    }
+    equipData=[]; borrowData=[]; statusData=[];
+    renderEquip(); renderBorrow(); renderStatus();
+  } else {
+    // Date range purge — borrow log and status log only
+    const from = document.getElementById('purge-from').value;
+    const to   = document.getElementById('purge-to').value;
+    if (!from || !to) {
+      document.getElementById('purge-progress').textContent = 'Please select both From and To dates.';
+      btn.disabled = false; btn.textContent = 'Purge'; return;
+    }
+    if (from > to) {
+      document.getElementById('purge-progress').textContent = 'From date must be before To date.';
+      btn.disabled = false; btn.textContent = 'Purge'; return;
+    }
+    const inRange = (dateStr) => {
+      if (!dateStr) return false;
+      const d = dateStr.split('T')[0];
+      return d >= from && d <= to;
+    };
     try {
-      progress.textContent = `Purging ${col}...`;
-      const snap = await getDocs(collection(db, col));
-      for (const d of snap.docs) {
-        await deleteDoc(doc(db, col, d.id));
-        total++;
+      progress.textContent = 'Purging borrow log...';
+      const bSnap = await getDocs(collection(db,'borrowLog'));
+      for (const d of bSnap.docs) {
+        if (inRange(d.data().date)) { await deleteDoc(doc(db,'borrowLog',d.id)); total++; }
+      }
+      progress.textContent = 'Purging status log...';
+      const sSnap = await getDocs(collection(db,'statusLog'));
+      for (const d of sSnap.docs) {
+        if (inRange(d.data().date)) { await deleteDoc(doc(db,'statusLog',d.id)); total++; }
       }
     } catch(e) {
-      progress.textContent = `Error purging ${col}: ${e.message}`;
-      btn.disabled = false; btn.textContent = 'Purge All';
-      return;
+      progress.textContent = `Error: ${e.message}`;
+      btn.disabled = false; btn.textContent = 'Purge'; return;
     }
+    await loadAll();
   }
 
   document.getElementById('purge-modal').classList.remove('show');
-  equipData=[]; borrowData=[]; statusData=[];
-  renderEquip(); renderBorrow(); renderStatus();
   toast(`Purge complete — ${total} records deleted.`);
-  btn.disabled = false; btn.textContent = 'Purge All';
+  btn.disabled = false; btn.textContent = 'Purge';
 });
 </script>
 </body>
