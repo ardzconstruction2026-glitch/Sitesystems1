@@ -293,7 +293,7 @@ document.getElementById('login-btn-el').addEventListener('click',async()=>{
 });
 
 document.getElementById('btn-logout').addEventListener('click',()=>signOut(auth));
-document.getElementById('rbtn').addEventListener('click',refreshAll);
+document.getElementById('rbtn').addEventListener('click',()=>refreshAll());
 
 // History modal
 document.getElementById('hist-close').addEventListener('click',()=>document.getElementById('hist-modal').classList.remove('show'));
@@ -320,7 +320,7 @@ window.showHistory=function(matName){
   document.getElementById('hist-modal').classList.add('show');
 };
 
-window.refreshAll=async function(){
+async function refreshAll(){
   const btn=document.getElementById('rbtn'),ov=document.getElementById('overlay');
   btn.classList.add('loading');ov.classList.add('show');
   try{
@@ -332,7 +332,8 @@ window.refreshAll=async function(){
     updateStats();populateFilters();renderInv();renderDel();renderPo();renderSummary();
   }catch(e){toast('Failed to load data.',true);}
   finally{btn.classList.remove('loading');ov.classList.remove('show');}
-};
+}
+window.refreshAll=refreshAll;
 
 function updateStats(){
   document.getElementById('s-del').textContent=deliveries.length;
@@ -347,13 +348,14 @@ function populateFilters(){
   document.getElementById('del-sup-f').innerHTML='<option value="">All Suppliers</option>'+suppliers.map(s=>`<option value="${s}">${s}</option>`).join('');
 }
 
-window.switchTab=function(id,btn){
+function switchTab(id,btn){
   document.querySelectorAll('.tc').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
   if(id==='t4')renderSummary();
-};
+}
+window.switchTab=switchTab;
 
 function toast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='show'+(err?' err':'');setTimeout(()=>t.className='',3500);}
 function fdate(d){if(!d)return'—';try{const dt=new Date(d);if(isNaN(dt))return d;return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}catch{return d;}}
@@ -366,7 +368,7 @@ function inDateRange(dateStr, fromId, toId){
   return true;
 }
 
-window.renderInv=function(){
+function renderInv(){
   const q=document.getElementById('inv-s').value.toLowerCase();
   const matF=document.getElementById('inv-mat-f').value;
   let d=inventory.filter(i=>
@@ -380,9 +382,10 @@ window.renderInv=function(){
   const tb=document.getElementById('inv-tb');
   if(!d.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
   tb.innerHTML=d.map(i=>`<tr><td><span class="ctrl">${i.ctrl||'—'}</span></td><td>${i.material||'—'}</td><td>${i.quantity||'—'}</td><td>${i.unit||'—'}</td><td>${fdate(i.date)}</td></tr>`).join('');
-};
+}
+window.renderInv=renderInv;
 
-window.renderDel=function(){
+function renderDel(){
   const q=document.getElementById('del-s').value.toLowerCase();
   const matF=document.getElementById('del-mat-f').value;
   const supF=document.getElementById('del-sup-f').value;
@@ -398,9 +401,10 @@ window.renderDel=function(){
   const tb=document.getElementById('del-tb');
   if(!d.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
   tb.innerHTML=d.map(i=>`<tr><td><span class="ctrl">${i.ctrl||'—'}</span></td><td>${i.material||'—'}</td><td>${i.quantity||'—'}</td><td>${i.unit||'—'}</td><td>${fdate(i.date)}</td><td>${i.supplier||'—'}</td></tr>`).join('');
-};
+}
+window.renderDel=renderDel;
 
-window.renderPo=function(){
+function renderPo(){
   const q=document.getElementById('po-s').value.toLowerCase();
   const f=document.getElementById('po-f').value;
   const matF=document.getElementById('po-mat-f').value;
@@ -416,9 +420,10 @@ window.renderPo=function(){
   const tb=document.getElementById('po-tb');
   if(!d.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">NO RECORDS FOUND</div></td></tr>';return;}
   tb.innerHTML=d.map(i=>`<tr><td><span class="ctrl">${i.ctrl||'—'}</span></td><td>${i.material||'—'}</td><td>${i.quantity||'—'}</td><td>${i.unit||'—'}</td><td><span class="tag ${i.type==='Pull Out'?'tag-po':'tag-ret'}">${i.type}</span></td><td>${i.person||'—'}</td><td>${fdate(i.date)}</td></tr>`).join('');
-};
+}
+window.renderPo=renderPo;
 
-window.renderSummary=function(){
+function renderSummary(){
   const tb=document.getElementById('sum-tb');
   const noteEl=document.getElementById('sum-basis-note');
   if(!materials.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">NO MATERIALS IN DATABASE</div></td></tr>';noteEl.style.display='none';return;}
@@ -454,17 +459,19 @@ window.renderSummary=function(){
       <td><button style="font-family:var(--fm);font-size:.68rem;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.3);color:var(--accent);padding:4px 10px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px" onclick="showHistory('${r.name.replace(/'/g,"\\'")}')">📋 History</button></td>
     </tr>`;
   }).join('');
-};
+}
+window.renderSummary=renderSummary;
 
-window.sort=function(key,col){
+function sort(key,col){
   const s=ss[key];
   if(s.c===col)s.a=!s.a;else{s.c=col;s.a=true;}
   const tids={inv:'inv-tbl',del:'del-tbl',po:'po-tbl'};
   document.getElementById(tids[key]).querySelectorAll('th').forEach((th,i)=>{th.classList.remove('sa','sd');if(i===col)th.classList.add(s.a?'sa':'sd');});
   if(key==='inv')renderInv();else if(key==='del')renderDel();else renderPo();
-};
+}
+window.sort=sort;
 
-window.exportCSV=function(type){
+function exportCSV(type){
   let headers=[],rows=[],filename='';
   const today=new Date().toISOString().split('T')[0];
   if(type==='inventory'){headers=['Control No','Material','Quantity','Unit','Date'];rows=inventory.map(i=>[i.ctrl,i.material,i.quantity,i.unit,i.date]);filename='Inventory_'+today+'.csv';}
@@ -487,7 +494,8 @@ window.exportCSV=function(type){
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
   toast('Exported successfully!');
-};
+}
+window.exportCSV=exportCSV;
 </script>
 </body>
 </html>
