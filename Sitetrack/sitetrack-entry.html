@@ -328,6 +328,8 @@
         <div class="tbar-right">
           <button class="btn-sm btn-upload-all" id="btn-upload-all">⬆ Upload All Pending</button>
           <button class="btn-sm btn-export-sm" onclick="exportJSON()">⬇ Export JSON</button>
+          <button class="btn-sm btn-export-sm" onclick="document.getElementById('import-json-input').click()">📂 Import JSON</button>
+          <input type="file" id="import-json-input" accept=".json" style="display:none"/>
           <button class="btn-sm btn-clear" onclick="clearUploaded()">✕ Clear Uploaded</button>
         </div>
       </div>
@@ -939,6 +941,38 @@ window.exportJSON = function() {
   a.click();
   showToast('Exported ✓');
 };
+
+// ── IMPORT JSON ───────────────────────────────────────────────
+document.getElementById('import-json-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let parsed;
+    try { parsed = JSON.parse(e.target.result); } catch {
+      showToast('Invalid JSON file.','error'); return;
+    }
+    if (!Array.isArray(parsed)) {
+      showToast('File must contain a JSON array.','error'); return;
+    }
+    const existingIds = new Set(entries.map(x=>x.id));
+    let added = 0;
+    for (const item of parsed) {
+      if (!item.id || existingIds.has(item.id)) continue;
+      // Ensure status is set
+      if (!item.status) item.status = 'pending';
+      entries.push(item);
+      existingIds.add(item.id);
+      added++;
+    }
+    saveEntries();
+    renderTable();
+    showToast(added > 0 ? `${added} entr${added===1?'y':'ies'} imported ✓` : 'No new entries found.', added > 0 ? 'success' : 'info');
+  };
+  reader.readAsText(file);
+  // Reset input so same file can be re-imported if needed
+  this.value = '';
+});
 
 // ── MANAGE LISTS ──────────────────────────────────────────────
 window.switchMgr = function(key, btn) {
