@@ -671,6 +671,16 @@ async function loadSaved() {
   } catch(e) { console.error('loadSaved error:', e); }
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
 window.renderSaved = function() {
   const q  = document.getElementById('search-saved')?.value?.toLowerCase() || '';
   const tb = document.getElementById('saved-tbody');
@@ -678,9 +688,9 @@ window.renderSaved = function() {
   if (!data.length) { tb.innerHTML = '<tr><td colspan="5"><div class="empty">NO SAVED AREAS</div></td></tr>'; return; }
   tb.innerHTML = data.map(d => `
     <tr>
-      <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${d.date||'—'}</td>
+      <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${escapeHtml(d.date)||'—'}</td>
       <td style="font-family:var(--fh);font-size:1.1rem;color:var(--accent3);font-weight:700">${(d.area||0).toFixed(4)} <span style="font-family:var(--fm);font-size:.7rem;color:var(--muted)">m²</span></td>
-      <td style="max-width:200px;">${d.notes||'—'}</td>
+      <td style="max-width:200px;">${escapeHtml(d.notes)||'—'}</td>
       <td style="font-family:var(--fm);font-size:.72rem;color:var(--muted);">${fdate(d.savedAt)}</td>
       <td>
         <div style="display:flex;gap:6px;">
@@ -994,12 +1004,19 @@ function findExcess(pool, needW, needH, fn) {
 }
 
 // Rotate edge labels: 0=0°, 1=90°, 2=180°, 3=270°
+// Rotate edge labels for physical tile rotation (CW steps).
+// 0=0°, 1=90°CW, 2=180°, 3=270°CW
+// After 90°CW: T→R, R→B, B→L, L→T
 function rotEdges(e, rot) {
-  const sides = ['L','B','R','T'];
-  const result = {};
-  const vals   = [e.L, e.B, e.R, e.T];
-  for (let i=0;i<4;i++) result[sides[i]] = vals[(i+rot)%4];
-  return result;
+  // Order: L, T, R, B — rotating CW means each side shifts one position
+  // Original: { L, T, R, B }
+  // After 1×90°CW: new L = old B, new T = old L, new R = old T, new B = old R
+  let L=e.L, T=e.T, R=e.R, B=e.B;
+  for (let i=0;i<rot;i++) {
+    const nL=B, nT=L, nR=T, nB=R;
+    L=nL; T=nT; R=nR; B=nB;
+  }
+  return { L, T, R, B };
 }
 
 // Draw tile canvas
