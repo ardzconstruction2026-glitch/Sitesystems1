@@ -816,9 +816,9 @@ function fdatetime(d) {
 
 function fmt(n, dp=4) { return Number(n).toFixed(dp); }
 
-function closeModal(id) {
+window.closeModal = function(id) {
   document.getElementById(id).classList.remove('show');
-}
+};
 
 // ── TABS ─────────────────────────────────────────────────────
 window.switchTab = function(n) {
