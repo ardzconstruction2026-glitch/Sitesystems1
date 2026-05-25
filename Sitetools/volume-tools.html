@@ -681,7 +681,8 @@ Beam,B-3,0,4.5,6,4.5,0.3,0.45</div>
             <option value="10">10 m</option>
           </select>
         </div>
-        <button class="bp bp-sm" onclick="resetPlanView()" style="width:100%;">⊙ Reset View</button>
+        <button class="bp bp-sm" onclick="resetPlanView()" style="width:100%;margin-bottom:.5rem;">⊙ Reset View</button>
+        <button class="bp bp-green bp-sm" onclick="zoomExtents()" style="width:100%;">⤢ Zoom Extents</button>
       </div>
     </div>
 
@@ -2237,6 +2238,46 @@ function renderPlanVisToggles() {
 
 window.togglePlanVis = function(type, on) { planVisible[type]=on; redrawPlan(); };
 window.resetPlanView = function() { planOffsetX=40; planOffsetY=40; planScale=60; redrawPlan(); };
+
+window.zoomExtents = function() {
+  if (!planElements.length) return;
+
+  // Collect all world coordinates from placed elements
+  const xs = [], ys = [];
+  for (let i = 0; i < planElements.length; i++) {
+    const el = planElements[i];
+    if (!planVisible[el.type]) continue;
+    const c = planCoords[i];
+    if (!c) continue;
+    if (el.type === 'Beam') {
+      if (c.x1!=null) { xs.push(c.x1); ys.push(c.y1); }
+      if (c.x2!=null) { xs.push(c.x2); ys.push(c.y2); }
+    } else {
+      if (c.x!=null) { xs.push(c.x); ys.push(c.y); }
+    }
+  }
+
+  if (!xs.length) { toast('No placed elements to zoom to.', true); return; }
+
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const W = planCanvas.width, H = planCanvas.height;
+  const PAD = 60;
+
+  const rangeX = maxX - minX || 1;
+  const rangeY = maxY - minY || 1;
+  const scaleX = (W - PAD * 2) / rangeX;
+  const scaleY = (H - PAD * 2) / rangeY;
+  planScale = Math.min(scaleX, scaleY, 300);
+
+  // Center the extents in the canvas
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  planOffsetX = W / 2 - cx * planScale;
+  planOffsetY = H / 2 - cy * planScale;
+
+  redrawPlan();
+};
 
 // ── PLAN: POPULATE REPORT SELECTS ────────────────────────────
 function renderPlanReportSel() {
