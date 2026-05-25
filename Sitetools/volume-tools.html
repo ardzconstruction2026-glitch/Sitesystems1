@@ -294,24 +294,25 @@
 
   /* PLAN VIEW */
   .coord-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
-    padding:.75rem 1rem;margin-bottom:.5rem;}
-  .coord-row-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;}
-  .coord-mark{font-weight:600;color:var(--text);font-size:.88rem;}
-  .coord-type-label{font-family:var(--fm);font-size:.68rem;letter-spacing:.5px;}
-  .coord-inputs{display:grid;gap:.5rem;}
-  .coord-inputs.two-point{grid-template-columns:1fr 1fr 1fr 1fr;}
+    padding:.5rem .75rem;margin-bottom:.4rem;}
+  .coord-row-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;}
+  .coord-mark{font-weight:600;color:var(--text);font-size:.82rem;}
+  .coord-type-label{font-family:var(--fm);font-size:.65rem;letter-spacing:.5px;}
+  .coord-inputs{display:grid;gap:.4rem;}
+  .coord-inputs.two-point{grid-template-columns:repeat(4,1fr);}
   .coord-inputs.one-point{grid-template-columns:1fr 1fr;}
   .coord-inputs.wall-point{grid-template-columns:1fr 1fr 1fr;}
-  .coord-fi{display:flex;flex-direction:column;gap:3px;}
-  .coord-fi label{font-family:var(--fm);font-size:.62rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+  .coord-fi{display:flex;flex-direction:column;gap:2px;}
+  .coord-fi label{font-family:var(--fm);font-size:.6rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
   .coord-fi input{background:var(--bg);border:1px solid var(--border);border-radius:4px;
-    color:var(--text);padding:6px 10px;font-family:var(--fm);font-size:.8rem;
+    color:var(--text);padding:4px 7px;font-family:var(--fm);font-size:.78rem;
     outline:none;transition:border-color .2s;width:100%;}
   .coord-fi input:focus{border-color:var(--accent);}
   .vis-toggle-row{display:flex;align-items:center;justify-content:space-between;
-    padding:5px 0;font-family:var(--fm);font-size:.75rem;}
+    padding:5px 0;font-family:var(--fm);font-size:.75rem;gap:.5rem;}
   .vis-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-  #plan-canvas-wrap{height:560px;}
+  .vis-label{display:flex;align-items:center;gap:.5rem;flex:1;}
+  #plan-canvas-wrap{height:580px;}
 
   @media(max-width:900px){
     #tab-5>div{grid-template-columns:1fr !important;}
@@ -359,7 +360,8 @@
     <button class="tb" id="tab-btn-2" onclick="switchTab(2)">Saved Reports</button>
     <button class="tb" id="tab-btn-3" onclick="switchTab(3)">Element Status</button>
     <button class="tb" id="tab-btn-4" onclick="switchTab(4)">Pour Log</button>
-    <button class="tb" id="tab-btn-5" onclick="switchTab(5)">Plan View</button>
+    <button class="tb" id="tab-btn-5" onclick="switchTab(5)">Coordinates</button>
+    <button class="tb" id="tab-btn-6" onclick="switchTab(6)">Plan View</button>
   </nav>
 
   <!-- ─────────────────────────────────────────────────────────── -->
@@ -382,7 +384,7 @@
       <div class="fg-4" style="margin-bottom:.75rem;">
         <div class="fi">
           <label>Structure Type</label>
-          <select id="f-type">
+          <select id="f-type" onchange="onTypeChange()">
             <option value="Beam">Beam</option>
             <option value="Column">Column</option>
             <option value="Footing">Footing</option>
@@ -395,7 +397,7 @@
           <label>Mark / Label</label>
           <input type="text" id="f-mark" placeholder="e.g. B-1"/>
         </div>
-        <div class="fi">
+        <div class="fi" id="f-l-wrap">
           <label>Length (L)</label>
           <input type="number" id="f-l" placeholder="0.00" min="0" step="any"/>
         </div>
@@ -408,6 +410,28 @@
           <input type="number" id="f-h" placeholder="0.00" min="0" step="any"/>
         </div>
       </div>
+
+      <!-- BEAM COORD OPTION -->
+      <div id="beam-coord-section" style="display:none;margin-bottom:.75rem;">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+          <label style="margin:0;font-family:var(--fm);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">Use Coordinates for Length</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="beam-coord-toggle" onchange="onBeamCoordToggle()"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="beam-coord-inputs" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.75rem;align-items:end;">
+            <div class="fi"><label>X1 (m)</label><input type="number" id="f-bx1" placeholder="0" step="any" oninput="calcBeamLength()"/></div>
+            <div class="fi"><label>Y1 (m)</label><input type="number" id="f-by1" placeholder="0" step="any" oninput="calcBeamLength()"/></div>
+            <div class="fi"><label>X2 (m)</label><input type="number" id="f-bx2" placeholder="0" step="any" oninput="calcBeamLength()"/></div>
+            <div class="fi"><label>Y2 (m)</label><input type="number" id="f-by2" placeholder="0" step="any" oninput="calcBeamLength()"/></div>
+            <div style="font-family:var(--fm);font-size:.72rem;color:var(--accent3);white-space:nowrap;padding-bottom:10px;" id="beam-len-preview">L = —</div>
+          </div>
+          <div class="dim-hint">Length is computed as the straight-line distance between the two points (in meters).</div>
+        </div>
+      </div>
+
       <div class="dim-hint" id="dim-hint">Volume = L × W × H (all values in meters → result in m³)</div>
       <div class="btn-row" style="margin-top:1rem;">
         <button class="bp" onclick="addEntry()">+ Add Element</button>
@@ -440,22 +464,27 @@
         <summary style="font-family:var(--fm);font-size:.75rem;letter-spacing:1px;text-transform:uppercase;
           color:var(--accent);cursor:pointer;user-select:none;">📋 CSV Format Guide</summary>
         <div class="guide-block">
-          <strong style="color:var(--text);">Required columns (in order):</strong><br/>
+          <strong style="color:var(--text);">Standard columns (all element types):</strong><br/>
           <code>type</code> · <code>mark</code> · <code>length</code> · <code>width</code> · <code>height</code> · <code>unit</code><br/><br/>
+          <strong style="color:var(--text);">Beam with coordinates (length auto-computed):</strong><br/>
+          <code>type</code> · <code>mark</code> · <code>x1</code> · <code>y1</code> · <code>x2</code> · <code>y2</code> · <code>width</code> · <code>height</code><br/>
+          <span style="color:var(--muted);font-size:.7rem;">Coordinates always in meters. Length = √((x2-x1)²+(y2-y1)²)</span><br/><br/>
           <strong style="color:var(--text);">Rules:</strong><br/>
-          • First row must be the header row (column names)<br/>
+          • First row must be the header row<br/>
           • <code>type</code> must be one of: <code>Beam</code>, <code>Column</code>, <code>Footing</code>, <code>Slab</code>, <code>Wall</code>, <code>Other</code><br/>
+          • <code>unit</code> applies to <code>width</code> and <code>height</code> only when using coords (length is always meters)<br/>
           • <code>unit</code> must be one of: <code>m</code>, <code>cm</code>, <code>mm</code><br/>
-          • Dimensions must be positive numbers<br/>
-          • <code>mark</code> must not be empty<br/><br/>
-          <strong style="color:var(--text);">Example CSV:</strong>
+          • Dimensions must be positive numbers · <code>mark</code> must not be empty<br/><br/>
+          <strong style="color:var(--text);">Example — standard:</strong>
           <div class="guide-example">type,mark,length,width,height,unit
 Beam,B-1,6,0.3,0.45,m
-Beam,B-2,5.5,0.3,0.45,m
 Column,C-1,3,0.4,0.4,m
-Column,C-2,3,0.4,0.4,m
-Footing,F-1,1.5,1.5,0.45,m
-Slab,S-1,600,500,12,cm</div>
+Footing,F-1,1.5,1.5,0.45,m</div>
+          <strong style="color:var(--text);">Example — beam with coordinates:</strong>
+          <div class="guide-example">type,mark,x1,y1,x2,y2,width,height
+Beam,B-1,0,0,6,0,0.3,0.45
+Beam,B-2,6,0,6,4.5,0.3,0.45
+Beam,B-3,0,4.5,6,4.5,0.3,0.45</div>
         </div>
       </details>
     </div>
@@ -593,68 +622,82 @@ Slab,S-1,600,500,12,cm</div>
   </div>
 </div>
 
-<!-- ── TAB 5: PLAN VIEW ─────────────────────────────────────── -->
-<div id="tab-5" class="tc" style="max-width:100%;padding:1.5rem 2rem;">
-  <div style="display:grid;grid-template-columns:340px 1fr;gap:1.5rem;align-items:start;">
+<!-- ── TAB 5: COORDINATES ────────────────────────────────────── -->
+<div id="tab-5" class="tc">
+  <div class="card">
+    <div class="ctitle">Element Coordinates</div>
+    <div class="fbar">
+      <div class="fi" style="min-width:260px;flex:1;">
+        <label style="margin-bottom:4px;">Select Report</label>
+        <select id="plan-report-sel" onchange="loadPlanReport()">
+          <option value="">— Select a saved report —</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button class="bp bp-green" onclick="saveCoords()" id="plan-save-btn" disabled>💾 Save Coordinates</button>
+      </div>
+    </div>
+    <div style="font-family:var(--fm);font-size:.7rem;color:var(--muted);margin-bottom:1rem;letter-spacing:.5px;">
+      All coordinates in meters. Origin (0,0) = bottom-left. Beam coords always in meters regardless of element unit.
+    </div>
+    <div id="plan-coord-list">
+      <div class="empty-list">Select a saved report to enter coordinates.</div>
+    </div>
+  </div>
+</div>
 
-    <!-- LEFT: COORD FORM -->
+<!-- ── TAB 6: PLAN VIEW ──────────────────────────────────────── -->
+<div id="tab-6" class="tc" style="max-width:100%;">
+  <div style="display:grid;grid-template-columns:220px 1fr;gap:1.5rem;align-items:start;">
+
+    <!-- LEFT: CONTROLS -->
     <div>
       <div class="card" style="margin-bottom:1rem;">
         <div class="ctitle">Report</div>
         <div class="fi">
           <label>Select Report</label>
-          <select id="plan-report-sel" onchange="loadPlanReport()">
-            <option value="">— Select a saved report —</option>
+          <select id="plan-view-report-sel" onchange="loadPlanView()">
+            <option value="">— Select —</option>
           </select>
         </div>
-      </div>
-
-      <div class="card" id="plan-coord-card" style="display:none;">
-        <div class="ctitle" style="justify-content:space-between;">
-          <span>Element Coordinates</span>
-          <button class="bp bp-green bp-sm" onclick="saveCoords()" id="plan-save-btn">💾 Save</button>
-        </div>
-        <div style="font-family:var(--fm);font-size:.7rem;color:var(--muted);margin-bottom:1rem;letter-spacing:.5px;">
-          All coordinates in meters. Origin (0,0) = bottom-left.
-        </div>
-        <div id="plan-coord-list"></div>
       </div>
 
       <!-- VISIBILITY TOGGLES -->
       <div class="card" id="plan-vis-card" style="display:none;">
         <div class="ctitle">Visibility</div>
-        <div id="plan-vis-toggles" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+        <div id="plan-vis-toggles"></div>
       </div>
-    </div>
 
-    <!-- RIGHT: CANVAS -->
-    <div class="card" style="padding:1rem;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
-        <div class="ctitle" style="margin:0;border:none;padding:0;">Plan View</div>
-        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
-          <span style="font-family:var(--fm);font-size:.7rem;color:var(--muted);">Scale: 1 grid =</span>
-          <select id="plan-scale-sel" onchange="redrawPlan()" style="width:80px;padding:5px 8px;font-size:.78rem;">
+      <!-- SCALE -->
+      <div class="card">
+        <div class="ctitle">Display</div>
+        <div class="fi" style="margin-bottom:.75rem;">
+          <label>Grid Size</label>
+          <select id="plan-scale-sel" onchange="redrawPlan()" style="font-size:.85rem;">
             <option value="0.5">0.5 m</option>
             <option value="1" selected>1 m</option>
             <option value="2">2 m</option>
             <option value="5">5 m</option>
             <option value="10">10 m</option>
           </select>
-          <button class="bp bp-sm" onclick="resetPlanView()" style="padding:6px 12px;font-size:.75rem;">⊙ Reset</button>
         </div>
+        <button class="bp bp-sm" onclick="resetPlanView()" style="width:100%;">⊙ Reset View</button>
       </div>
+    </div>
+
+    <!-- RIGHT: CANVAS -->
+    <div class="card" style="padding:1rem;">
+      <div class="ctitle" style="margin-bottom:.75rem;">Plan</div>
       <div id="plan-canvas-wrap" style="background:var(--surface2);border:1px solid var(--border);
-        border-radius:8px;overflow:hidden;position:relative;cursor:grab;user-select:none;">
+        border-radius:8px;overflow:hidden;position:relative;cursor:grab;user-select:none;height:580px;">
         <canvas id="plan-canvas" style="display:block;"></canvas>
         <div id="plan-empty-msg" style="position:absolute;inset:0;display:flex;align-items:center;
-          justify-content:center;font-family:var(--fm);font-size:.78rem;color:var(--muted);pointer-events:none;">
-          Select a report and enter coordinates to view the plan.
+          justify-content:center;font-family:var(--fm);font-size:.78rem;color:var(--muted);pointer-events:none;text-align:center;padding:1rem;">
+          Select a report and save coordinates in the Coordinates tab to view the plan.
         </div>
       </div>
-      <!-- Legend -->
       <div id="plan-legend" style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.75rem;"></div>
-      <!-- Hover info -->
-      <div id="plan-hover-info" style="min-height:28px;margin-top:.5rem;font-family:var(--fm);font-size:.75rem;color:var(--muted);"></div>
+      <div id="plan-hover-info" style="min-height:24px;margin-top:.4rem;font-family:var(--fm);font-size:.75rem;color:var(--muted);"></div>
     </div>
   </div>
 </div>
@@ -921,14 +964,15 @@ window.closeModal = function(id) {
 
 // ── TABS ─────────────────────────────────────────────────────
 window.switchTab = function(n) {
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 6; i++) {
     document.getElementById('tab-' + i).classList.toggle('active', i === n);
     document.getElementById('tab-btn-' + i).classList.toggle('active', i === n);
   }
   if (n === 2) renderSaved();
   if (n === 3) renderStatusReportSel();
   if (n === 4) renderLogTab();
-  if (n === 5) { renderPlanReportSel(); resizePlanCanvas(); }
+  if (n === 5) { renderPlanReportSel(); }
+  if (n === 6) { renderPlanViewReportSel(); resizePlanCanvas(); }
 };
 
 // ── UNIT TOGGLE ──────────────────────────────────────────────
@@ -938,6 +982,43 @@ window.setUnit = function(u) {
   document.getElementById('unit-hint').textContent  = UNIT_LABELS[u];
   document.getElementById('dim-hint').textContent   =
     `Volume = L × W × H (all values in ${u} → result converted to m³)`;
+};
+
+// ── BEAM COORD TOGGLE ────────────────────────────────────────
+window.onTypeChange = function() {
+  const type = document.getElementById('f-type').value;
+  const beamSec = document.getElementById('beam-coord-section');
+  beamSec.style.display = type === 'Beam' ? 'block' : 'none';
+  if (type !== 'Beam') {
+    document.getElementById('beam-coord-toggle').checked = false;
+    onBeamCoordToggle();
+  }
+};
+
+window.onBeamCoordToggle = function() {
+  const on = document.getElementById('beam-coord-toggle').checked;
+  document.getElementById('beam-coord-inputs').style.display = on ? 'block' : 'none';
+  document.getElementById('f-l-wrap').style.opacity = on ? '.4' : '1';
+  document.getElementById('f-l').disabled = on;
+  if (!on) {
+    document.getElementById('f-l').value = '';
+    document.getElementById('beam-len-preview').textContent = 'L = —';
+  }
+};
+
+window.calcBeamLength = function() {
+  const x1 = parseFloat(document.getElementById('f-bx1').value);
+  const y1 = parseFloat(document.getElementById('f-by1').value);
+  const x2 = parseFloat(document.getElementById('f-bx2').value);
+  const y2 = parseFloat(document.getElementById('f-by2').value);
+  if (!isNaN(x1) && !isNaN(y1) && !isNaN(x2) && !isNaN(y2)) {
+    const len = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+    document.getElementById('f-l').value = len.toFixed(4);
+    document.getElementById('beam-len-preview').textContent = 'L = ' + len.toFixed(3) + ' m';
+  } else {
+    document.getElementById('f-l').value = '';
+    document.getElementById('beam-len-preview').textContent = 'L = —';
+  }
 };
 
 // ── ADD ENTRY ────────────────────────────────────────────────
@@ -954,13 +1035,33 @@ window.addEntry = function() {
   if (!hRaw || hRaw<=0) { toast('Enter a valid Height.', true);  return; }
   const f   = UNIT_FACTORS[inputUnit];
   const vol = lRaw*f * wRaw*f * hRaw*f;
+
+  // Capture beam coords if toggle is on
+  let beamCoords = null;
+  if (type === 'Beam' && document.getElementById('beam-coord-toggle').checked) {
+    const x1 = parseFloat(document.getElementById('f-bx1').value);
+    const y1 = parseFloat(document.getElementById('f-by1').value);
+    const x2 = parseFloat(document.getElementById('f-bx2').value);
+    const y2 = parseFloat(document.getElementById('f-by2').value);
+    if (!isNaN(x1) && !isNaN(y1) && !isNaN(x2) && !isNaN(y2)) {
+      beamCoords = { x1, y1, x2, y2 };
+    }
+  }
+
   entryCounter++;
   entries.push({ id:entryCounter, type, mark, lRaw, wRaw, hRaw, unit:inputUnit,
-    l:lRaw*f, w:wRaw*f, h:hRaw*f, vol });
+    l:lRaw*f, w:wRaw*f, h:hRaw*f, vol, beamCoords });
+
   document.getElementById('f-mark').value = '';
   document.getElementById('f-l').value    = '';
   document.getElementById('f-w').value    = '';
   document.getElementById('f-h').value    = '';
+  document.getElementById('f-bx1').value  = '';
+  document.getElementById('f-by1').value  = '';
+  document.getElementById('f-bx2').value  = '';
+  document.getElementById('f-by2').value  = '';
+  document.getElementById('beam-len-preview').textContent = 'L = —';
+
   renderList();
   toast(`${type} "${mark}" added — ${fmt(vol)} m³`);
 };
@@ -1055,29 +1156,51 @@ function parseCSV(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) { showCSVFeedback('CSV must have a header row and at least one data row.', true); return; }
   const header = lines[0].split(',').map(h => h.trim().toLowerCase());
-  const req = ['type','mark','length','width','height','unit'];
-  const missing = req.filter(r => !header.includes(r));
-  if (missing.length) { showCSVFeedback(`Missing columns: ${missing.join(', ')}`, true); return; }
-  const idxOf = k => header.indexOf(k);
+  const idxOf  = k => header.indexOf(k);
+
+  // Detect mode: standard or beam-coords
+  const hasCoords = ['x1','y1','x2','y2'].every(k => header.includes(k));
+  const hasStd    = ['length','unit'].every(k => header.includes(k));
+
+  if (!hasCoords && !hasStd) {
+    showCSVFeedback('Missing required columns. Need either (type,mark,length,width,height,unit) or (type,mark,x1,y1,x2,y2,width,height).', true);
+    return;
+  }
 
   const parsed = []; const errors = [];
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(c => c.trim());
-    const type  = cols[idxOf('type')]   || '';
-    const mark  = cols[idxOf('mark')]   || '';
-    const lRaw  = parseFloat(cols[idxOf('length')]);
+    const cols  = lines[i].split(',').map(c => c.trim());
+    const type  = cols[idxOf('type')]  || '';
+    const mark  = cols[idxOf('mark')]  || '';
     const wRaw  = parseFloat(cols[idxOf('width')]);
     const hRaw  = parseFloat(cols[idxOf('height')]);
-    const unit  = cols[idxOf('unit')]   || '';
-    if (!VALID_TYPES.includes(type))    { errors.push(`Row ${i+1}: Invalid type "${type}"`); continue; }
-    if (!mark)                          { errors.push(`Row ${i+1}: Mark is empty`); continue; }
-    if (isNaN(lRaw)||lRaw<=0)           { errors.push(`Row ${i+1}: Invalid length`); continue; }
-    if (isNaN(wRaw)||wRaw<=0)           { errors.push(`Row ${i+1}: Invalid width`); continue; }
-    if (isNaN(hRaw)||hRaw<=0)           { errors.push(`Row ${i+1}: Invalid height`); continue; }
-    if (!UNIT_FACTORS[unit])            { errors.push(`Row ${i+1}: Invalid unit "${unit}"`); continue; }
-    const f = UNIT_FACTORS[unit];
+
+    if (!VALID_TYPES.includes(type))   { errors.push(`Row ${i+1}: Invalid type "${type}"`); continue; }
+    if (!mark)                         { errors.push(`Row ${i+1}: Mark is empty`); continue; }
+    if (isNaN(wRaw)||wRaw<=0)          { errors.push(`Row ${i+1}: Invalid width`); continue; }
+    if (isNaN(hRaw)||hRaw<=0)          { errors.push(`Row ${i+1}: Invalid height`); continue; }
+
+    let lRaw, unit, beamCoords = null;
+
+    if (hasCoords && type === 'Beam') {
+      const x1 = parseFloat(cols[idxOf('x1')]);
+      const y1 = parseFloat(cols[idxOf('y1')]);
+      const x2 = parseFloat(cols[idxOf('x2')]);
+      const y2 = parseFloat(cols[idxOf('y2')]);
+      if ([x1,y1,x2,y2].some(isNaN)) { errors.push(`Row ${i+1}: Invalid coordinates`); continue; }
+      lRaw = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+      unit = 'm'; // coords always in meters
+      beamCoords = { x1, y1, x2, y2 };
+    } else {
+      lRaw = parseFloat(cols[idxOf('length')]);
+      unit = cols[idxOf('unit')] || '';
+      if (isNaN(lRaw)||lRaw<=0)        { errors.push(`Row ${i+1}: Invalid length`); continue; }
+      if (!UNIT_FACTORS[unit])         { errors.push(`Row ${i+1}: Invalid unit "${unit}"`); continue; }
+    }
+
+    const f   = UNIT_FACTORS[unit] || 1;
     const vol = lRaw*f * wRaw*f * hRaw*f;
-    parsed.push({ type, mark, lRaw, wRaw, hRaw, unit, vol });
+    parsed.push({ type, mark, lRaw, wRaw, hRaw, unit, vol, beamCoords });
   }
 
   csvParsed = parsed;
@@ -1087,19 +1210,21 @@ function parseCSV(text) {
   fb += `<div class="csv-ok">✓ ${parsed.length} valid row(s) ready to import.</div>`;
   document.getElementById('csv-feedback').innerHTML = fb;
 
-  // Preview
   document.getElementById('csv-preview-count').textContent = `Preview — ${parsed.length} elements`;
   const previewRows = parsed.slice(0,20).map(e => {
     const m = TYPE_META[e.type] || TYPE_META.Other;
+    const dimStr = e.beamCoords
+      ? `(${e.beamCoords.x1},${e.beamCoords.y1})→(${e.beamCoords.x2},${e.beamCoords.y2})`
+      : `${e.lRaw} × ${e.wRaw} × ${e.hRaw} ${e.unit}`;
     return `<div class="csv-preview-row">
       <span class="${m.col}">${e.type}</span>
       <span style="color:var(--text);">${e.mark}</span>
-      <span style="color:var(--muted);">${e.lRaw} × ${e.wRaw} × ${e.hRaw} ${e.unit}</span>
+      <span style="color:var(--muted);">${dimStr}</span>
       <span style="color:var(--accent3);">${fmt(e.vol)} m³</span>
     </div>`;
   }).join('') + (parsed.length > 20 ? `<div class="csv-preview-row"><span style="color:var(--muted);grid-column:1/-1;">… and ${parsed.length-20} more</span></div>` : '');
   document.getElementById('csv-preview-rows').innerHTML =
-    `<div class="csv-preview-row header"><span>Type</span><span>Mark</span><span>Dimensions</span><span>Volume</span></div>` + previewRows;
+    `<div class="csv-preview-row header"><span>Type</span><span>Mark</span><span>Dimensions / Coords</span><span>Volume</span></div>` + previewRows;
   document.getElementById('csv-preview').style.display = 'block';
 }
 
@@ -1112,15 +1237,15 @@ function showCSVFeedback(msg, err=false) {
 window.importCSV = function() {
   if (!csvParsed.length) return;
   for (const e of csvParsed) {
-    const f = UNIT_FACTORS[e.unit];
+    const f = UNIT_FACTORS[e.unit] || 1;
     entryCounter++;
     entries.push({ id:entryCounter, type:e.type, mark:e.mark,
       lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit,
-      l:e.lRaw*f, w:e.wRaw*f, h:e.hRaw*f, vol:e.vol });
+      l:e.lRaw*f, w:e.wRaw*f, h:e.hRaw*f, vol:e.vol,
+      beamCoords: e.beamCoords || null });
   }
   toast(`${csvParsed.length} elements imported from CSV.`);
-  clearCSV();
-  renderList();
+  clearCSV(); renderList();
 };
 
 window.clearCSV = function() {
@@ -1144,7 +1269,8 @@ window.saveReport = async function() {
     elementCount: entries.length,
     entries: entries.map(e => ({
       type:e.type, mark:e.mark,
-      lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit, vol:e.vol
+      lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit, vol:e.vol,
+      beamCoords: e.beamCoords || null
     })),
     savedAt:   new Date().toISOString(),
     savedBy:   currentUName,
@@ -1238,7 +1364,8 @@ window.useReport = function(id) {
     const f = UNIT_FACTORS[e.unit]||1;
     return { id:++entryCounter, type:e.type, mark:e.mark,
       lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit,
-      l:e.lRaw*f, w:e.wRaw*f, h:e.hRaw*f, vol:e.vol };
+      l:e.lRaw*f, w:e.wRaw*f, h:e.hRaw*f, vol:e.vol,
+      beamCoords: e.beamCoords || null };
   });
   document.getElementById('f-date').value    = d.date || '';
   document.getElementById('f-project').value = d.project || '';
@@ -1957,91 +2084,67 @@ function drawScaleBar(ctx, W, H, scale, gridM) {
   ctx.fillText(`${barM}m`, x + barPx + 4, y + h2);
 }
 
-// ── PLAN: LOAD REPORT ─────────────────────────────────────────
+// ── PLAN: LOAD REPORT (Coordinates tab) ──────────────────────
 window.loadPlanReport = async function() {
   planReportId = document.getElementById('plan-report-sel').value;
-  const coordCard = document.getElementById('plan-coord-card');
-  const visCard   = document.getElementById('plan-vis-card');
-  document.getElementById('plan-empty-msg').style.display = 'flex';
-
+  const saveBtn = document.getElementById('plan-save-btn');
   if (!planReportId) {
-    coordCard.style.display = 'none'; visCard.style.display = 'none';
-    planElements = []; planCoords = {}; planStatus = {};
-    redrawPlan(); return;
+    planElements = []; planCoords = {};
+    document.getElementById('plan-coord-list').innerHTML =
+      '<div class="empty-list">Select a saved report to enter coordinates.</div>';
+    saveBtn.disabled = true; return;
   }
   const report = savedData.find(d => d.id === planReportId);
   if (!report) return;
-
   planElements = report.entries || [];
   planCoords   = {};
-  planStatus   = {};
 
-  // Init visibility
-  VALID_TYPES.forEach(t => { if (!(t in planVisible)) planVisible[t] = true; });
-
-  // Load saved coords — single doc keyed by reportId
   try {
     const coordDoc = await getDoc(doc(db, 'elementCoords', planReportId));
     if (coordDoc.exists()) {
-      const data = coordDoc.data();
-      // coords is { "0": {...}, "1": {...}, ... }
-      const stored = data.coords || {};
-      Object.entries(stored).forEach(([idx, c]) => {
-        planCoords[parseInt(idx)] = c;
-      });
+      const stored = coordDoc.data().coords || {};
+      Object.entries(stored).forEach(([idx, c]) => { planCoords[parseInt(idx)] = c; });
     }
   } catch(e) { console.error('loadCoords error:', e); }
 
-  // Load current statuses
-  try {
-    const snap = await getDocs(query(collection(db,'elementStatus'), where('reportId','==',planReportId)));
-    snap.docs.forEach(d => { planStatus[d.data().elementIdx] = d.data().status; });
-  } catch(e) {}
+  // Pre-fill beam coords from entry data if not saved yet
+  planElements.forEach((e, i) => {
+    if (!planCoords[i] && e.beamCoords) planCoords[i] = { ...e.beamCoords };
+  });
 
   renderPlanCoordForm();
-  renderPlanVisToggles();
-  coordCard.style.display = 'block';
-  visCard.style.display   = 'block';
-  resizePlanCanvas();
-
-  const hasAny = Object.keys(planCoords).length > 0;
-  document.getElementById('plan-empty-msg').style.display = hasAny ? 'none' : 'flex';
+  saveBtn.disabled = false;
 };
 
-// ── PLAN: COORD FORM ─────────────────────────────────────────
 function renderPlanCoordForm() {
   const wrap = document.getElementById('plan-coord-list');
   if (!planElements.length) { wrap.innerHTML = '<div class="empty-list">No elements in this report.</div>'; return; }
-
   wrap.innerHTML = planElements.map((e, i) => {
-    const m  = TYPE_META[e.type] || TYPE_META.Other;
     const tc = TYPE_COLORS[e.type] || TYPE_COLORS.Other;
     const c  = planCoords[i] || {};
-
     let inputs = '';
     if (e.type === 'Beam') {
       inputs = `<div class="coord-inputs two-point">
-        <div class="coord-fi"><label>X1 (m)</label><input type="number" step="any" placeholder="0" value="${c.x1??''}" oninput="updateCoord(${i},'x1',this.value)"/></div>
-        <div class="coord-fi"><label>Y1 (m)</label><input type="number" step="any" placeholder="0" value="${c.y1??''}" oninput="updateCoord(${i},'y1',this.value)"/></div>
-        <div class="coord-fi"><label>X2 (m)</label><input type="number" step="any" placeholder="0" value="${c.x2??''}" oninput="updateCoord(${i},'x2',this.value)"/></div>
-        <div class="coord-fi"><label>Y2 (m)</label><input type="number" step="any" placeholder="0" value="${c.y2??''}" oninput="updateCoord(${i},'y2',this.value)"/></div>
+        <div class="coord-fi"><label>X1</label><input type="number" step="any" placeholder="0" value="${c.x1??''}" oninput="updateCoord(${i},'x1',this.value)"/></div>
+        <div class="coord-fi"><label>Y1</label><input type="number" step="any" placeholder="0" value="${c.y1??''}" oninput="updateCoord(${i},'y1',this.value)"/></div>
+        <div class="coord-fi"><label>X2</label><input type="number" step="any" placeholder="0" value="${c.x2??''}" oninput="updateCoord(${i},'x2',this.value)"/></div>
+        <div class="coord-fi"><label>Y2</label><input type="number" step="any" placeholder="0" value="${c.y2??''}" oninput="updateCoord(${i},'y2',this.value)"/></div>
       </div>`;
     } else if (e.type === 'Wall') {
       inputs = `<div class="coord-inputs wall-point">
-        <div class="coord-fi"><label>X (m)</label><input type="number" step="any" placeholder="0" value="${c.x??''}" oninput="updateCoord(${i},'x',this.value)"/></div>
-        <div class="coord-fi"><label>Y (m)</label><input type="number" step="any" placeholder="0" value="${c.y??''}" oninput="updateCoord(${i},'y',this.value)"/></div>
-        <div class="coord-fi"><label>Angle (°)</label><input type="number" step="any" placeholder="0" value="${c.angle??''}" oninput="updateCoord(${i},'angle',this.value)"/></div>
+        <div class="coord-fi"><label>X</label><input type="number" step="any" placeholder="0" value="${c.x??''}" oninput="updateCoord(${i},'x',this.value)"/></div>
+        <div class="coord-fi"><label>Y</label><input type="number" step="any" placeholder="0" value="${c.y??''}" oninput="updateCoord(${i},'y',this.value)"/></div>
+        <div class="coord-fi"><label>Angle°</label><input type="number" step="any" placeholder="0" value="${c.angle??''}" oninput="updateCoord(${i},'angle',this.value)"/></div>
       </div>`;
     } else {
       inputs = `<div class="coord-inputs one-point">
-        <div class="coord-fi"><label>X (m)</label><input type="number" step="any" placeholder="0" value="${c.x??''}" oninput="updateCoord(${i},'x',this.value)"/></div>
-        <div class="coord-fi"><label>Y (m)</label><input type="number" step="any" placeholder="0" value="${c.y??''}" oninput="updateCoord(${i},'y',this.value)"/></div>
+        <div class="coord-fi"><label>X</label><input type="number" step="any" placeholder="0" value="${c.x??''}" oninput="updateCoord(${i},'x',this.value)"/></div>
+        <div class="coord-fi"><label>Y</label><input type="number" step="any" placeholder="0" value="${c.y??''}" oninput="updateCoord(${i},'y',this.value)"/></div>
       </div>`;
     }
-
     return `<div class="coord-row">
       <div class="coord-row-header">
-        <span class="type-dot" style="background:${tc.hex};width:8px;height:8px;border-radius:50%;flex-shrink:0;"></span>
+        <span style="background:${tc.hex};width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;"></span>
         <span class="coord-type-label" style="color:${tc.hex};">${e.type}</span>
         <span class="coord-mark">${e.mark}</span>
       </div>
@@ -2053,32 +2156,59 @@ function renderPlanCoordForm() {
 window.updateCoord = function(idx, key, val) {
   if (!planCoords[idx]) planCoords[idx] = {};
   planCoords[idx][key] = val === '' ? null : parseFloat(val);
-  const hasAny = Object.values(planCoords).some(c =>
-    c && Object.values(c).some(v => v !== null && v !== undefined));
-  document.getElementById('plan-empty-msg').style.display = hasAny ? 'none' : 'flex';
-  redrawPlan();
 };
 
 window.saveCoords = async function() {
   if (!planReportId) { toast('Select a report first.', true); return; }
-  // Firestore map keys must be strings
   const coordsToSave = {};
-  Object.entries(planCoords).forEach(([idx, c]) => {
-    coordsToSave[String(idx)] = c;
-  });
-  const payload = {
-    reportId: planReportId,
-    coords:   coordsToSave,
-    savedAt:  new Date().toISOString(),
-    savedBy:  currentUName,
-  };
+  Object.entries(planCoords).forEach(([idx, c]) => { coordsToSave[String(idx)] = c; });
+  const payload = { reportId:planReportId, coords:coordsToSave,
+    savedAt:new Date().toISOString(), savedBy:currentUName };
   try {
     await setDoc(doc(db, 'elementCoords', planReportId), payload);
     toast('Coordinates saved!');
   } catch(e) { toast('Error saving coords: ' + e.message, true); }
 };
 
-// ── PLAN: VISIBILITY TOGGLES ──────────────────────────────────
+// ── PLAN: LOAD VIEW (Plan View tab) ──────────────────────────
+window.loadPlanView = async function() {
+  const selId = document.getElementById('plan-view-report-sel').value;
+  planReportId = selId;
+  document.getElementById('plan-vis-card').style.display   = 'none';
+  document.getElementById('plan-empty-msg').style.display  = 'flex';
+  if (!selId) { planElements=[]; planCoords={}; planStatus={}; redrawPlan(); return; }
+  const report = savedData.find(d => d.id === selId);
+  if (!report) return;
+  planElements = report.entries || [];
+  planCoords   = {};
+  planStatus   = {};
+  VALID_TYPES.forEach(t => { if (!(t in planVisible)) planVisible[t] = true; });
+
+  try {
+    const coordDoc = await getDoc(doc(db, 'elementCoords', selId));
+    if (coordDoc.exists()) {
+      const stored = coordDoc.data().coords || {};
+      Object.entries(stored).forEach(([idx, c]) => { planCoords[parseInt(idx)] = c; });
+    }
+  } catch(e) {}
+
+  planElements.forEach((e, i) => {
+    if (!planCoords[i] && e.beamCoords) planCoords[i] = { ...e.beamCoords };
+  });
+
+  try {
+    const snap = await getDocs(query(collection(db,'elementStatus'), where('reportId','==',selId)));
+    snap.docs.forEach(d => { planStatus[d.data().elementIdx] = d.data().status; });
+  } catch(e) {}
+
+  renderPlanVisToggles();
+  document.getElementById('plan-vis-card').style.display = 'block';
+  resizePlanCanvas();
+  const hasAny = Object.values(planCoords).some(c => c && Object.values(c).some(v => v!=null));
+  document.getElementById('plan-empty-msg').style.display = hasAny ? 'none' : 'flex';
+};
+
+// ── PLAN: VISIBILITY TOGGLES ─────────────────────────────────
 function renderPlanVisToggles() {
   const types = [...new Set(planElements.map(e => e.type))];
   const wrap  = document.getElementById('plan-vis-toggles');
@@ -2086,45 +2216,41 @@ function renderPlanVisToggles() {
     const tc = TYPE_COLORS[t] || TYPE_COLORS.Other;
     const on = planVisible[t] !== false;
     return `<div class="vis-toggle-row">
-      <div style="display:flex;align-items:center;gap:.5rem;">
+      <div class="vis-label">
         <span class="vis-dot" style="background:${tc.hex};"></span>
         <span>${t}</span>
       </div>
-      <label class="toggle-switch" style="width:36px;height:20px;">
+      <label class="toggle-switch">
         <input type="checkbox" ${on?'checked':''} onchange="togglePlanVis('${t}',this.checked)"/>
         <span class="toggle-slider"></span>
       </label>
     </div>`;
   }).join('');
 
-  // Legend on canvas
   document.getElementById('plan-legend').innerHTML = types.map(t => {
     const tc = TYPE_COLORS[t] || TYPE_COLORS.Other;
     return `<div style="display:flex;align-items:center;gap:5px;font-family:var(--fm);font-size:.7rem;color:var(--muted);">
-      <span style="width:12px;height:12px;border-radius:2px;background:${tc.fill}0.5);border:1px solid ${tc.stroke};flex-shrink:0;"></span>
-      ${t}
+      <span style="width:12px;height:12px;border-radius:2px;background:${tc.fill}0.5);border:1px solid ${tc.stroke};flex-shrink:0;"></span>${t}
     </div>`;
   }).join('');
 }
 
-window.togglePlanVis = function(type, on) {
-  planVisible[type] = on; redrawPlan();
-};
+window.togglePlanVis = function(type, on) { planVisible[type]=on; redrawPlan(); };
+window.resetPlanView = function() { planOffsetX=40; planOffsetY=40; planScale=60; redrawPlan(); };
 
-window.resetPlanView = function() {
-  planOffsetX = 40; planOffsetY = 40;
-  planScale   = 60;
-  redrawPlan();
-};
-
-// ── PLAN: POPULATE REPORT SELECT ─────────────────────────────
+// ── PLAN: POPULATE REPORT SELECTS ────────────────────────────
 function renderPlanReportSel() {
   const sel = document.getElementById('plan-report-sel');
   const cur = sel.value;
   sel.innerHTML = '<option value="">— Select a saved report —</option>' +
-    savedData.map(d =>
-      `<option value="${d.id}" ${d.id===cur?'selected':''}>${d.project||d.date||d.id} (${d.elementCount||0} elements)</option>`
-    ).join('');
+    savedData.map(d => `<option value="${d.id}" ${d.id===cur?'selected':''}>${d.project||d.date||d.id} (${d.elementCount||0} elements)</option>`).join('');
+}
+
+function renderPlanViewReportSel() {
+  const sel = document.getElementById('plan-view-report-sel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select —</option>' +
+    savedData.map(d => `<option value="${d.id}" ${d.id===cur?'selected':''}>${d.project||d.date||d.id}</option>`).join('');
 }
 </script>
 </body>
