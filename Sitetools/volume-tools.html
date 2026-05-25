@@ -469,10 +469,13 @@
           <strong style="color:var(--text);">Beam with coordinates (length auto-computed):</strong><br/>
           <code>type</code> · <code>mark</code> · <code>x1</code> · <code>y1</code> · <code>x2</code> · <code>y2</code> · <code>width</code> · <code>height</code><br/>
           <span style="color:var(--muted);font-size:.7rem;">Coordinates always in meters. Length = √((x2-x1)²+(y2-y1)²)</span><br/><br/>
+          <strong style="color:var(--text);">Non-beam with coordinates (Column, Footing, Slab, Wall, Other):</strong><br/>
+          <code>type</code> · <code>mark</code> · <code>x</code> · <code>y</code> · <code>length</code> · <code>width</code> · <code>height</code> · <code>unit</code><br/>
+          <span style="color:var(--muted);font-size:.7rem;">x,y coordinates always in meters. Coordinates saved automatically to Plan View.</span><br/><br/>
           <strong style="color:var(--text);">Rules:</strong><br/>
           • First row must be the header row<br/>
           • <code>type</code> must be one of: <code>Beam</code>, <code>Column</code>, <code>Footing</code>, <code>Slab</code>, <code>Wall</code>, <code>Other</code><br/>
-          • <code>unit</code> applies to <code>width</code> and <code>height</code> only when using coords (length is always meters)<br/>
+          • <code>unit</code> applies to dimensions only; coordinates always in meters<br/>
           • <code>unit</code> must be one of: <code>m</code>, <code>cm</code>, <code>mm</code><br/>
           • Dimensions must be positive numbers · <code>mark</code> must not be empty<br/><br/>
           <strong style="color:var(--text);">Example — standard:</strong>
@@ -485,6 +488,12 @@ Footing,F-1,1.5,1.5,0.45,m</div>
 Beam,B-1,0,0,6,0,0.3,0.45
 Beam,B-2,6,0,6,4.5,0.3,0.45
 Beam,B-3,0,4.5,6,4.5,0.3,0.45</div>
+          <strong style="color:var(--text);">Example — non-beam with coordinates:</strong>
+          <div class="guide-example">type,mark,x,y,length,width,height,unit
+Column,C-1,0,0,3,0.4,0.4,m
+Column,C-2,6,0,3,0.4,0.4,m
+Footing,F-1,0,0,1.5,1.5,0.45,m
+Slab,S-1,3,2.25,6,4.5,0.12,m</div>
         </div>
       </details>
     </div>
@@ -561,7 +570,7 @@ Beam,B-3,0,4.5,6,4.5,0.3,0.45</div>
           <label style="margin-bottom:4px;">Filter Status</label>
           <select id="status-filter" onchange="renderStatusList()">
             <option value="">All</option>
-            <option value="Not Yet">Not Yet</option>
+            <option value="Not Yet Started">Not Yet Started</option>
             <option value="Partial">Partial</option>
             <option value="Full">Full</option>
           </select>
@@ -571,7 +580,7 @@ Beam,B-3,0,4.5,6,4.5,0.3,0.45</div>
       <!-- Summary pills -->
       <div class="stat-row" id="status-summary" style="display:none;">
         <div class="stat-pill"><div class="stat-pill-label">Total Elements</div><div class="stat-pill-val" id="ss-total" style="color:var(--text);">0</div></div>
-        <div class="stat-pill"><div class="stat-pill-label">Not Yet</div><div class="stat-pill-val" id="ss-notyet" style="color:var(--muted);">0</div></div>
+        <div class="stat-pill"><div class="stat-pill-label">Not Yet Started</div><div class="stat-pill-val" id="ss-notyet" style="color:var(--muted);">0</div></div>
         <div class="stat-pill"><div class="stat-pill-label">Partial</div><div class="stat-pill-val" id="ss-partial" style="color:var(--warn);">0</div></div>
         <div class="stat-pill"><div class="stat-pill-label">Full</div><div class="stat-pill-val" id="ss-full" style="color:var(--accent3);">0</div></div>
         <div class="stat-pill" style="flex:2;">
@@ -611,7 +620,7 @@ Beam,B-3,0,4.5,6,4.5,0.3,0.45</div>
             <option value="">All</option>
             <option value="Full">Full</option>
             <option value="Partial">Partial</option>
-            <option value="Not Yet">Not Yet</option>
+            <option value="Not Yet Started">Not Yet Started</option>
           </select>
         </div>
       </div>
@@ -721,7 +730,7 @@ Beam,B-3,0,4.5,6,4.5,0.3,0.45</div>
     <div class="fi" style="margin-bottom:1rem;">
       <label>Status</label>
       <select id="pour-status-sel" onchange="onPourStatusChange()">
-        <option value="Not Yet">Not Yet</option>
+        <option value="Not Yet Started">Not Yet Started</option>
         <option value="Partial">Partial</option>
         <option value="Full">Full</option>
       </select>
@@ -779,6 +788,69 @@ Beam,B-3,0,4.5,6,4.5,0.3,0.45</div>
     <div id="log-modal-info" style="font-family:var(--fm);font-size:.75rem;color:var(--muted);margin-bottom:1rem;"></div>
     <div class="modal-scroll" id="log-modal-body" style="max-height:420px;"></div>
     <div class="modal-acts"><button class="btn-cancel2" onclick="closeModal('log-modal')">Close</button></div>
+  </div>
+</div>
+
+<!-- Edit Report Modal -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal modal-lg" style="max-height:90vh;overflow-y:auto;">
+    <div class="modal-title">✏️ Edit Report</div>
+    <div id="edit-warn" style="display:none;background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.3);
+      border-radius:var(--r);padding:.75rem 1rem;font-family:var(--fm);font-size:.75rem;
+      color:var(--warn);margin-bottom:1rem;"></div>
+
+    <!-- Metadata -->
+    <div class="fg" style="margin-bottom:1.2rem;">
+      <div class="fi"><label>Report Date</label><input type="date" id="edit-date"/></div>
+      <div class="fi"><label>Project / Location</label><input type="text" id="edit-project" placeholder="Project name"/></div>
+      <div class="fi full"><label>Notes</label><textarea id="edit-notes" style="min-height:55px;"></textarea></div>
+    </div>
+
+    <!-- Elements -->
+    <div style="font-family:var(--fh);font-size:.9rem;font-weight:700;letter-spacing:2px;
+      text-transform:uppercase;color:var(--accent);margin-bottom:.75rem;padding-bottom:.5rem;
+      border-bottom:1px solid var(--border);">Elements</div>
+    <div id="edit-elements-list" style="max-height:340px;overflow-y:auto;margin-bottom:1rem;"></div>
+
+    <!-- Add element row -->
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;margin-bottom:1rem;">
+      <div style="font-family:var(--fm);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;
+        color:var(--muted);margin-bottom:.6rem;">Add Element</div>
+      <div style="display:grid;grid-template-columns:130px 1fr 80px 80px 80px 70px auto;gap:.5rem;align-items:end;">
+        <div class="fi"><label>Type</label>
+          <select id="edit-add-type" style="padding:7px 8px;font-size:.82rem;">
+            <option>Beam</option><option>Column</option><option>Footing</option>
+            <option>Slab</option><option>Wall</option><option>Other</option>
+          </select>
+        </div>
+        <div class="fi"><label>Mark</label><input type="text" id="edit-add-mark" placeholder="e.g. B-5" style="padding:7px 10px;font-size:.82rem;"/></div>
+        <div class="fi"><label>L</label><input type="number" id="edit-add-l" placeholder="0" step="any" style="padding:7px 8px;font-size:.82rem;"/></div>
+        <div class="fi"><label>W</label><input type="number" id="edit-add-w" placeholder="0" step="any" style="padding:7px 8px;font-size:.82rem;"/></div>
+        <div class="fi"><label>H</label><input type="number" id="edit-add-h" placeholder="0" step="any" style="padding:7px 8px;font-size:.82rem;"/></div>
+        <div class="fi"><label>Unit</label>
+          <select id="edit-add-unit" style="padding:7px 8px;font-size:.82rem;">
+            <option value="m">m</option><option value="cm">cm</option><option value="mm">mm</option>
+          </select>
+        </div>
+        <button class="bp bp-green bp-sm" onclick="editAddElement()" style="white-space:nowrap;">+ Add</button>
+      </div>
+    </div>
+
+    <div class="modal-acts">
+      <button class="bp bp-purple" onclick="saveEditReport()">💾 Save Changes</button>
+      <button class="btn-cancel2"  onclick="closeModal('edit-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Plan Element Info Modal -->
+<div class="modal-bg" id="plan-info-modal">
+  <div class="modal modal-sm">
+    <div class="modal-title" id="plan-info-title"></div>
+    <div id="plan-info-body" style="font-family:var(--fm);font-size:.8rem;"></div>
+    <div class="modal-acts">
+      <button class="btn-cancel2" onclick="closeModal('plan-info-modal')">Close</button>
+    </div>
   </div>
 </div>
 
@@ -1159,12 +1231,13 @@ function parseCSV(text) {
   const header = lines[0].split(',').map(h => h.trim().toLowerCase());
   const idxOf  = k => header.indexOf(k);
 
-  // Detect mode: standard or beam-coords
-  const hasCoords = ['x1','y1','x2','y2'].every(k => header.includes(k));
-  const hasStd    = ['length','unit'].every(k => header.includes(k));
+  // Detect mode
+  const hasBeamCoords  = ['x1','y1','x2','y2'].every(k => header.includes(k));
+  const hasPointCoords = ['x','y'].every(k => header.includes(k)) && !hasBeamCoords;
+  const hasStd         = ['length','unit'].every(k => header.includes(k));
 
-  if (!hasCoords && !hasStd) {
-    showCSVFeedback('Missing required columns. Need either (type,mark,length,width,height,unit) or (type,mark,x1,y1,x2,y2,width,height).', true);
+  if (!hasBeamCoords && !hasPointCoords && !hasStd) {
+    showCSVFeedback('Missing required columns. See format guide above.', true);
     return;
   }
 
@@ -1181,17 +1254,26 @@ function parseCSV(text) {
     if (isNaN(wRaw)||wRaw<=0)          { errors.push(`Row ${i+1}: Invalid width`); continue; }
     if (isNaN(hRaw)||hRaw<=0)          { errors.push(`Row ${i+1}: Invalid height`); continue; }
 
-    let lRaw, unit, beamCoords = null;
+    let lRaw, unit, beamCoords = null, pointCoords = null;
 
-    if (hasCoords && type === 'Beam') {
+    if (hasBeamCoords && type === 'Beam') {
       const x1 = parseFloat(cols[idxOf('x1')]);
       const y1 = parseFloat(cols[idxOf('y1')]);
       const x2 = parseFloat(cols[idxOf('x2')]);
       const y2 = parseFloat(cols[idxOf('y2')]);
       if ([x1,y1,x2,y2].some(isNaN)) { errors.push(`Row ${i+1}: Invalid coordinates`); continue; }
       lRaw = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-      unit = 'm'; // coords always in meters
+      unit = 'm';
       beamCoords = { x1, y1, x2, y2 };
+    } else if (hasPointCoords && type !== 'Beam') {
+      const px = parseFloat(cols[idxOf('x')]);
+      const py = parseFloat(cols[idxOf('y')]);
+      lRaw = parseFloat(cols[idxOf('length')]);
+      unit = cols[idxOf('unit')] || '';
+      if ([px,py].some(isNaN))         { errors.push(`Row ${i+1}: Invalid x,y coordinates`); continue; }
+      if (isNaN(lRaw)||lRaw<=0)        { errors.push(`Row ${i+1}: Invalid length`); continue; }
+      if (!UNIT_FACTORS[unit])         { errors.push(`Row ${i+1}: Invalid unit "${unit}"`); continue; }
+      pointCoords = { x: px, y: py };
     } else {
       lRaw = parseFloat(cols[idxOf('length')]);
       unit = cols[idxOf('unit')] || '';
@@ -1201,7 +1283,7 @@ function parseCSV(text) {
 
     const f   = UNIT_FACTORS[unit] || 1;
     const vol = lRaw*f * wRaw*f * hRaw*f;
-    parsed.push({ type, mark, lRaw, wRaw, hRaw, unit, vol, beamCoords });
+    parsed.push({ type, mark, lRaw, wRaw, hRaw, unit, vol, beamCoords, pointCoords });
   }
 
   csvParsed = parsed;
@@ -1243,7 +1325,8 @@ window.importCSV = function() {
     entries.push({ id:entryCounter, type:e.type, mark:e.mark,
       lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit,
       l:e.lRaw*f, w:e.wRaw*f, h:e.hRaw*f, vol:e.vol,
-      beamCoords: e.beamCoords || null });
+      beamCoords: e.beamCoords || null,
+      pointCoords: e.pointCoords || null });
   }
   toast(`${csvParsed.length} elements imported from CSV.`);
   clearCSV(); renderList();
@@ -1271,7 +1354,8 @@ window.saveReport = async function() {
     entries: entries.map(e => ({
       type:e.type, mark:e.mark,
       lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit, vol:e.vol,
-      beamCoords: e.beamCoords || null
+      beamCoords: e.beamCoords || null,
+      pointCoords: e.pointCoords || null
     })),
     savedAt:   new Date().toISOString(),
     savedBy:   currentUName,
@@ -1322,6 +1406,7 @@ window.renderSaved = function() {
           <button class="btn-use" onclick="viewReport('${d.id}')">☰ View</button>
           <button class="btn-use" onclick="useReport('${d.id}')" style="background:rgba(192,132,252,.1);border-color:rgba(192,132,252,.3);color:var(--accent4);">↩ Load</button>
           <button class="btn-use" onclick="goCheckStatus('${d.id}')" style="background:rgba(255,184,0,.1);border-color:rgba(255,184,0,.3);color:var(--warn);">⬡ Status</button>
+          ${canDelete() ? `<button class="btn-use" onclick="openEditModal('${d.id}')" style="background:rgba(0,255,157,.08);border-color:rgba(0,255,157,.25);color:var(--accent3);">✏️ Edit</button>` : ''}
           ${canDelete() ? `<button class="btn-del-row" onclick="delReport('${d.id}')">✕</button>` : ''}
         </div>
       </td>
@@ -1366,7 +1451,8 @@ window.useReport = function(id) {
     return { id:++entryCounter, type:e.type, mark:e.mark,
       lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit,
       l:e.lRaw*f, w:e.wRaw*f, h:e.hRaw*f, vol:e.vol,
-      beamCoords: e.beamCoords || null };
+      beamCoords: e.beamCoords || null,
+      pointCoords: e.pointCoords || null };
   });
   document.getElementById('f-date').value    = d.date || '';
   document.getElementById('f-project').value = d.project || '';
@@ -1432,7 +1518,7 @@ window.loadStatusForReport = async function() {
     statusElements = (report.entries||[]).map((e, idx) => ({
       ...e, idx,
       statusDoc: statusMap[idx] || null,
-      status:    statusMap[idx]?.status    || 'Not Yet',
+      status:    statusMap[idx]?.status    || 'Not Yet Started',
       pouredVol: statusMap[idx]?.pouredVol || 0,
     }));
     renderStatusList();
@@ -1446,7 +1532,7 @@ window.renderStatusList = function() {
 
   // Summary
   const total   = statusElements.length;
-  const notyet  = statusElements.filter(e => e.status === 'Not Yet').length;
+  const notyet  = statusElements.filter(e => e.status === 'Not Yet Started').length;
   const partial = statusElements.filter(e => e.status === 'Partial').length;
   const full    = statusElements.filter(e => e.status === 'Full').length;
   const totalVol  = statusElements.reduce((s,e) => s + e.vol, 0);
@@ -1483,11 +1569,12 @@ window.renderStatusList = function() {
         <span class="${m.col}" style="font-size:.73rem;">${e.type}</span>
       </span>
       <span style="font-weight:500;color:var(--text);min-width:60px;">${e.mark}</span>
+      <span style="font-family:var(--fm);font-size:.68rem;color:var(--muted);min-width:130px;">${e.lRaw} × ${e.wRaw} × ${e.hRaw} ${e.unit}</span>
       <span style="flex:1;min-width:80px;">
         <div class="prog-wrap"><div class="prog-bar ${pbcls}" style="width:${pct.toFixed(1)}%"></div></div>
         <span style="font-family:var(--fm);font-size:.65rem;color:var(--muted);">${fmt(e.pouredVol)} / ${fmt(e.vol)} m³</span>
       </span>
-      <span style="min-width:95px;"><span class="status-badge ${cls}">${e.status}</span></span>
+      <span style="min-width:130px;"><span class="status-badge ${cls}">${e.status}</span></span>
       <span style="display:flex;gap:5px;flex-shrink:0;">
         ${canUpd ? `<button class="btn-use" style="background:rgba(192,132,252,.1);border-color:rgba(192,132,252,.3);color:var(--accent4);" onclick="openPourModal(${e.idx})">⬡ Update</button>` : ''}
         <button class="btn-use" onclick="openLogModal('${statusReportId}',${e.idx},'${e.mark}','${e.type}')">📋 Log</button>
@@ -1587,7 +1674,7 @@ window.submitPour = async function() {
     pourVol = element.vol - element.pouredVol; // remaining
   }
 
-  const newPouredVol = status === 'Not Yet' ? 0 :
+  const newPouredVol = status === 'Not Yet Started' ? 0 :
     status === 'Full'    ? element.vol :
     Math.min(element.vol, element.pouredVol + pourVol);
 
@@ -1608,7 +1695,7 @@ window.submitPour = async function() {
     reportId, elementIdx:idx,
     mark: element.mark, type: element.type,
     status,
-    pourVol: status === 'Not Yet' ? 0 : pourVol,
+    pourVol: status === 'Not Yet Started' ? 0 : pourVol,
     totalPouredAfter: newPouredVol,
     totalVol: element.vol,
     remarks,
@@ -1657,8 +1744,8 @@ window.openLogModal = function(reportId, idx, mark, type) {
           <span class="log-entry-time">${fdatetime(l.loggedAt)}</span>
         </div>
         <div class="log-entry-body" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-          ${l.status !== 'Not Yet' ? `<span>Pour volume: <span class="log-entry-vol">${fmt(l.pourVol)} m³</span></span>
-          <span style="color:var(--muted);font-size:.72rem;">Total poured after: ${fmt(l.totalPouredAfter)} / ${fmt(l.totalVol)} m³</span>` : '<span style="color:var(--muted);">Marked as Not Yet concreted.</span>'}
+          ${l.status !== 'Not Yet Started' ? `<span>Pour volume: <span class="log-entry-vol">${fmt(l.pourVol)} m³</span></span>
+          <span style="color:var(--muted);font-size:.72rem;">Total poured after: ${fmt(l.totalPouredAfter)} / ${fmt(l.totalVol)} m³</span>` : '<span style="color:var(--muted);">Marked as Not Yet Started.</span>'}
           ${l.remarks ? `<span style="font-style:italic;color:var(--muted);font-size:.8rem;width:100%;">"${l.remarks}"</span>` : ''}
         </div>
       </div>`;
@@ -1716,8 +1803,8 @@ window.renderLogTab = function() {
         <span style="font-family:var(--fm);font-size:.7rem;color:var(--muted);">
           Report: ${rep?.project||rep?.date||l.reportId||'—'}
         </span>
-        ${l.status !== 'Not Yet' ? `<span>Poured: <span class="log-entry-vol">${fmt(l.pourVol)} m³</span></span>
-        <span style="color:var(--muted);font-size:.72rem;">Total: ${fmt(l.totalPouredAfter)} / ${fmt(l.totalVol)} m³</span>` : '<span style="color:var(--muted);">Marked as Not Yet.</span>'}
+        ${l.status !== 'Not Yet Started' ? `<span>Poured: <span class="log-entry-vol">${fmt(l.pourVol)} m³</span></span>
+        <span style="color:var(--muted);font-size:.72rem;">Total: ${fmt(l.totalPouredAfter)} / ${fmt(l.totalVol)} m³</span>` : '<span style="color:var(--muted);">Marked as Not Yet Started.</span>'}
         ${l.remarks ? `<span style="font-style:italic;color:var(--muted);font-size:.8rem;width:100%;">"${l.remarks}"</span>` : ''}
       </div>
     </div>`;
@@ -1798,7 +1885,7 @@ planCanvas.addEventListener('mousemove', e => {
   const info  = document.getElementById('plan-hover-info');
   if (found !== null) {
     const el  = planElements[found];
-    const st  = planStatus[found] || 'Not Yet';
+    const st  = planStatus[found] || 'Not Yet Started';
     const col = st==='Full'?'var(--accent3)':st==='Partial'?'var(--warn)':'var(--muted)';
     info.innerHTML = `<span style="color:var(--text);font-weight:600;">${el.mark}</span>
       &nbsp;<span style="color:var(--muted);">${el.type}</span>
@@ -1811,6 +1898,55 @@ planCanvas.addEventListener('mousemove', e => {
 });
 planCanvas.addEventListener('mouseup',   () => { planIsDragging=false; planCanvas.style.cursor = planHovered?'pointer':'grab'; });
 planCanvas.addEventListener('mouseleave',() => { planIsDragging=false; });
+
+// Tap/click to open info popup
+planCanvas.addEventListener('click', e => {
+  if (Math.abs(e.clientX - (planDragStart.x + planOffsetX)) > 4) return; // was a drag
+  const rect = planCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const found = hitTest(mx, my);
+  if (found === null) return;
+  const el  = planElements[found];
+  const st  = planStatus[found] || 'Not Yet Started';
+  const m   = TYPE_META[el.type] || TYPE_META.Other;
+  const tc  = TYPE_COLORS[el.type] || TYPE_COLORS.Other;
+  const cls = st==='Full'?'status-full':st==='Partial'?'status-partial':'status-notyet';
+  const c   = planCoords[found] || {};
+  let coordStr = '';
+  if (el.type === 'Beam' && c.x1!=null)
+    coordStr = `(${c.x1}, ${c.y1}) → (${c.x2}, ${c.y2})`;
+  else if (c.x!=null)
+    coordStr = `(${c.x}, ${c.y})`;
+
+  document.getElementById('plan-info-title').innerHTML =
+    `<span class="type-dot" style="background:${tc.hex};width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;"></span>
+    <span style="color:${tc.hex};">${el.type}</span> — ${el.mark}`;
+
+  document.getElementById('plan-info-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:.6rem;">
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--muted);">Dimensions</span>
+        <span style="color:var(--text);">${el.lRaw} × ${el.wRaw} × ${el.hRaw} ${el.unit}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--muted);">Volume</span>
+        <span style="color:var(--accent3);font-family:var(--fh);font-size:1rem;font-weight:700;">${fmt(el.vol)} m³</span>
+      </div>
+      ${coordStr ? `<div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--muted);">Coordinates</span>
+        <span style="color:var(--accent);">${coordStr}</span>
+      </div>` : ''}
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:var(--muted);">Pour Status</span>
+        <span class="status-badge ${cls}">${st}</span>
+      </div>
+      ${st!=='Not Yet Started'?`<div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--muted);">Volume Poured</span>
+        <span style="color:var(--accent4);">${fmt(planStatus['poured_'+found]||0)} m³</span>
+      </div>`:''}
+    </div>`;
+  document.getElementById('plan-info-modal').classList.add('show');
+});
 
 // Zoom
 planCanvas.addEventListener('wheel', e => {
@@ -1867,24 +2003,13 @@ window.redrawPlan = function() {
   const W = planCanvas.width, H = planCanvas.height;
   planCtx.clearRect(0, 0, W, H);
 
+  // Axis labels only (no grid lines)
   const gridM = parseFloat(document.getElementById('plan-scale-sel').value) || 1;
   const gridPx = gridM * planScale;
-
-  // Grid
-  planCtx.strokeStyle = 'rgba(42,47,63,.6)';
-  planCtx.lineWidth   = 0.5;
+  planCtx.fillStyle = 'rgba(90,97,128,.5)';
+  planCtx.font      = '9px Share Tech Mono';
   const startX = planOffsetX % gridPx;
   const startY = (H - planOffsetY) % gridPx;
-  for (let x = startX; x < W; x += gridPx) {
-    planCtx.beginPath(); planCtx.moveTo(x,0); planCtx.lineTo(x,H); planCtx.stroke();
-  }
-  for (let y = startY; y < H; y += gridPx) {
-    planCtx.beginPath(); planCtx.moveTo(0,y); planCtx.lineTo(W,y); planCtx.stroke();
-  }
-
-  // Axis labels (world coords at grid lines)
-  planCtx.fillStyle = 'rgba(90,97,128,.7)';
-  planCtx.font      = '9px Share Tech Mono';
   planCtx.textAlign = 'center';
   for (let x = startX; x < W; x += gridPx) {
     const wx = Math.round(cToW(x, 0).x / gridM) * gridM;
@@ -1912,7 +2037,7 @@ window.redrawPlan = function() {
     const c   = planCoords[i];
     if (!c) continue;
     const tc  = TYPE_COLORS[el.type] || TYPE_COLORS.Other;
-    const st  = planStatus[i] || 'Not Yet';
+    const st  = planStatus[i] || 'Not Yet Started';
     const isHov = planHovered === i;
 
     // Status-based alpha
@@ -1941,7 +2066,7 @@ window.redrawPlan = function() {
 
       // Label
       const mx2=(p1.x+p2.x)/2, my2=(p1.y+p2.y)/2;
-      drawLabel(planCtx, el.mark, mx2, my2, tc.stroke, isHov);
+      drawLabel(planCtx, el.mark, mx2, my2, tc.stroke, isHov, st==='Full');
 
       // Endpoints
       drawEndPoint(planCtx, p1, tc.stroke);
@@ -1966,7 +2091,7 @@ window.redrawPlan = function() {
       planCtx.lineWidth   = isHov ? 2 : 1;
       planCtx.fill(); planCtx.stroke();
       if (st==='Partial') drawHatch(planCtx, p1, p2, ww, tc.stroke);
-      drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov);
+      drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov, st==='Full');
       drawCenterMark(planCtx, cp, tc.stroke);
 
     } else if (el.type === 'Column') {
@@ -1985,7 +2110,7 @@ window.redrawPlan = function() {
       planCtx.beginPath(); planCtx.moveTo(cp.x+sw/2,cp.y-sh/2); planCtx.lineTo(cp.x-sw/2,cp.y+sh/2); planCtx.stroke();
       planCtx.globalAlpha = 1;
       if (st==='Partial') drawBoxHatch(planCtx, cp.x-sw/2, cp.y-sh/2, sw, sh, tc.stroke);
-      drawLabel(planCtx, el.mark, cp.x, cp.y+sh/2+10, tc.stroke, isHov);
+      drawLabel(planCtx, el.mark, cp.x, cp.y+sh/2+10, tc.stroke, isHov, st==='Full');
       drawCenterMark(planCtx, cp, tc.stroke);
 
     } else if (el.type === 'Footing') {
@@ -2001,7 +2126,7 @@ window.redrawPlan = function() {
       planCtx.strokeRect(cp.x-fw/2, cp.y-fh2/2, fw, fh2);
       planCtx.setLineDash([]);
       if (st==='Partial') drawBoxHatch(planCtx, cp.x-fw/2, cp.y-fh2/2, fw, fh2, tc.stroke);
-      drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov);
+      drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov, st==='Full');
       drawCenterMark(planCtx, cp, tc.stroke);
 
     } else {
@@ -2014,7 +2139,7 @@ window.redrawPlan = function() {
       planCtx.strokeStyle = tc.stroke;
       planCtx.lineWidth   = isHov ? 2 : 1;
       planCtx.fill(); planCtx.stroke();
-      drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov);
+      drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov, st==='Full');
       drawCenterMark(planCtx, cp, tc.stroke);
     }
   }
@@ -2023,14 +2148,20 @@ window.redrawPlan = function() {
   drawScaleBar(planCtx, W, H, planScale, gridM);
 };
 
-function drawLabel(ctx, text, x, y, color, bold) {
-  ctx.font      = (bold ? 'bold ' : '') + '10px Rajdhani';
-  ctx.fillStyle = color;
+function drawLabel(ctx, text, x, y, color, bold, isFull) {
+  const label = isFull ? '✓ ' + text : text;
+  ctx.font      = (bold || isFull ? 'bold ' : '') + (isFull ? '11px' : '10px') + ' Rajdhani';
+  ctx.fillStyle = isFull ? '#00ff9d' : color;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.shadowColor  = '#0d0f14'; ctx.shadowBlur = 3;
-  ctx.fillText(text, x, y);
-  ctx.shadowBlur = 0;
+  ctx.shadowColor  = '#0d0f14'; ctx.shadowBlur = isFull ? 6 : 3;
+  if (isFull) {
+    // Glow ring for full elements
+    ctx.shadowColor = '#00ff9d';
+    ctx.shadowBlur  = 8;
+  }
+  ctx.fillText(label, x, y);
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
 }
 
 function drawEndPoint(ctx, p, color) {
@@ -2111,6 +2242,7 @@ window.loadPlanReport = async function() {
   // Pre-fill beam coords from entry data if not saved yet
   planElements.forEach((e, i) => {
     if (!planCoords[i] && e.beamCoords) planCoords[i] = { ...e.beamCoords };
+    if (!planCoords[i] && e.pointCoords) planCoords[i] = { ...e.pointCoords };
   });
 
   renderPlanCoordForm();
@@ -2195,6 +2327,7 @@ window.loadPlanView = async function() {
 
   planElements.forEach((e, i) => {
     if (!planCoords[i] && e.beamCoords) planCoords[i] = { ...e.beamCoords };
+    if (!planCoords[i] && e.pointCoords) planCoords[i] = { ...e.pointCoords };
   });
 
   try {
@@ -2279,7 +2412,129 @@ window.zoomExtents = function() {
   redrawPlan();
 };
 
-// ── PLAN: POPULATE REPORT SELECTS ────────────────────────────
+// ── EDIT REPORT ───────────────────────────────────────────────
+let editReportId   = null;
+let editElements   = []; // working copy of entries
+
+window.openEditModal = function(id) {
+  if (!canDelete()) { toast('Only admins can edit reports.', true); return; }
+  const d = savedData.find(x => x.id === id); if (!d) return;
+  editReportId = id;
+  editElements = (d.entries||[]).map((e,i) => ({ ...e, _idx:i }));
+
+  document.getElementById('edit-date').value    = d.date || '';
+  document.getElementById('edit-project').value = d.project || '';
+  document.getElementById('edit-notes').value   = d.notes || '';
+  document.getElementById('edit-warn').style.display = 'none';
+
+  renderEditElements();
+  document.getElementById('edit-modal').classList.add('show');
+};
+
+function renderEditElements() {
+  const wrap = document.getElementById('edit-elements-list');
+  if (!editElements.length) {
+    wrap.innerHTML = '<div class="empty-list" style="padding:.75rem 0;">No elements. Add some below.</div>';
+    return;
+  }
+  wrap.innerHTML = editElements.map((e, i) => {
+    const tc = TYPE_COLORS[e.type] || TYPE_COLORS.Other;
+    return `<div style="display:grid;grid-template-columns:110px 1fr 70px 70px 70px 60px auto;
+      gap:.4rem;align-items:center;background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--r);padding:6px 10px;margin-bottom:.35rem;font-size:.82rem;">
+      <span style="display:flex;align-items:center;gap:5px;">
+        <span style="width:7px;height:7px;border-radius:50%;background:${tc.hex};flex-shrink:0;"></span>
+        <span style="color:${tc.hex};font-family:var(--fm);font-size:.7rem;">${e.type}</span>
+      </span>
+      <span style="font-weight:500;color:var(--text);">${e.mark}</span>
+      <span style="font-family:var(--fm);font-size:.72rem;color:var(--muted);">${e.lRaw}</span>
+      <span style="font-family:var(--fm);font-size:.72rem;color:var(--muted);">${e.wRaw}</span>
+      <span style="font-family:var(--fm);font-size:.72rem;color:var(--muted);">${e.hRaw}</span>
+      <span style="font-family:var(--fm);font-size:.72rem;color:var(--muted);">${e.unit}</span>
+      <button class="entry-del" onclick="editRemoveElement(${i})" style="color:var(--danger);">✕</button>
+    </div>`;
+  }).join('');
+}
+
+window.editRemoveElement = function(i) {
+  const removed = editElements[i];
+  editElements.splice(i, 1);
+  renderEditElements();
+  // Show warning if element had existing status
+  document.getElementById('edit-warn').style.display = 'block';
+  document.getElementById('edit-warn').textContent =
+    `⚠ Element "${removed.mark}" removed. Any existing pour logs for this element will remain but may reference a removed element. Indices of subsequent elements will shift.`;
+};
+
+window.editAddElement = function() {
+  const type = document.getElementById('edit-add-type').value;
+  const mark = document.getElementById('edit-add-mark').value.trim();
+  const lRaw = parseFloat(document.getElementById('edit-add-l').value);
+  const wRaw = parseFloat(document.getElementById('edit-add-w').value);
+  const hRaw = parseFloat(document.getElementById('edit-add-h').value);
+  const unit = document.getElementById('edit-add-unit').value;
+  if (!mark)             { toast('Enter a mark.', true); return; }
+  if (!lRaw||lRaw<=0)   { toast('Enter a valid Length.', true); return; }
+  if (!wRaw||wRaw<=0)   { toast('Enter a valid Width.', true); return; }
+  if (!hRaw||hRaw<=0)   { toast('Enter a valid Height.', true); return; }
+  const f   = UNIT_FACTORS[unit] || 1;
+  const vol = lRaw*f * wRaw*f * hRaw*f;
+  editElements.push({ type, mark, lRaw, wRaw, hRaw, unit, vol, beamCoords:null, pointCoords:null });
+  document.getElementById('edit-add-mark').value = '';
+  document.getElementById('edit-add-l').value    = '';
+  document.getElementById('edit-add-w').value    = '';
+  document.getElementById('edit-add-h').value    = '';
+  renderEditElements();
+};
+
+window.saveEditReport = async function() {
+  if (!editReportId) return;
+  const date    = document.getElementById('edit-date').value;
+  const project = document.getElementById('edit-project').value.trim();
+  const notes   = document.getElementById('edit-notes').value.trim();
+  if (!date) { toast('Enter a date.', true); return; }
+
+  const grand = editElements.reduce((s,e) => s + e.vol, 0);
+  const payload = {
+    date, project, notes,
+    totalVolume:  grand,
+    elementCount: editElements.length,
+    entries: editElements.map(e => ({
+      type:e.type, mark:e.mark,
+      lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit, vol:e.vol,
+      beamCoords:  e.beamCoords  || null,
+      pointCoords: e.pointCoords || null,
+    })),
+    editedAt: new Date().toISOString(),
+    editedBy: currentUName,
+  };
+
+  try {
+    await updateDoc(doc(db, 'volumeReports', editReportId), payload);
+    const idx = savedData.findIndex(d => d.id === editReportId);
+    if (idx >= 0) savedData[idx] = { ...savedData[idx], ...payload };
+    renderSaved();
+    closeModal('edit-modal');
+    toast('Report updated!');
+  } catch(e) { toast('Error updating: ' + e.message, true); }
+};
+
+// ── FIX PLAN INFO POURED VOL ──────────────────────────────────
+// Store poured vols in planStatus with a prefix key when statuses load
+const _origLoadPlanView = window.loadPlanView;
+window.loadPlanView = async function() {
+  await _origLoadPlanView();
+  // planStatus already loaded in loadPlanView — extend with poured vols
+  try {
+    const selId = document.getElementById('plan-view-report-sel').value;
+    if (!selId) return;
+    const snap = await getDocs(query(collection(db,'elementStatus'), where('reportId','==',selId)));
+    snap.docs.forEach(d => {
+      planStatus['poured_' + d.data().elementIdx] = d.data().pouredVol || 0;
+    });
+  } catch(e) {}
+};
+
 function renderPlanReportSel() {
   const sel = document.getElementById('plan-report-sel');
   const cur = sel.value;
