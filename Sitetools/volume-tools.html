@@ -284,6 +284,32 @@
   #toast.show{opacity:1;transform:translateY(0);}
   #toast.err{border-left-color:var(--danger);}
 
+  /* PLAN VIEW */
+  .coord-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+    padding:.75rem 1rem;margin-bottom:.5rem;}
+  .coord-row-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;}
+  .coord-mark{font-weight:600;color:var(--text);font-size:.88rem;}
+  .coord-type-label{font-family:var(--fm);font-size:.68rem;letter-spacing:.5px;}
+  .coord-inputs{display:grid;gap:.5rem;}
+  .coord-inputs.two-point{grid-template-columns:1fr 1fr 1fr 1fr;}
+  .coord-inputs.one-point{grid-template-columns:1fr 1fr;}
+  .coord-inputs.wall-point{grid-template-columns:1fr 1fr 1fr;}
+  .coord-fi{display:flex;flex-direction:column;gap:3px;}
+  .coord-fi label{font-family:var(--fm);font-size:.62rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+  .coord-fi input{background:var(--bg);border:1px solid var(--border);border-radius:4px;
+    color:var(--text);padding:6px 10px;font-family:var(--fm);font-size:.8rem;
+    outline:none;transition:border-color .2s;width:100%;}
+  .coord-fi input:focus{border-color:var(--accent);}
+  .vis-toggle-row{display:flex;align-items:center;justify-content:space-between;
+    padding:5px 0;font-family:var(--fm);font-size:.75rem;}
+  .vis-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  #plan-canvas-wrap{height:560px;}
+
+  @media(max-width:900px){
+    #tab-5>div{grid-template-columns:1fr !important;}
+    .coord-inputs.two-point{grid-template-columns:1fr 1fr;}
+  }
+
   @media(max-width:700px){
     header{padding:0 1rem;} .tc{padding:1rem;} .tb{padding:12px 12px;font-size:.78rem;}
     .fg{grid-template-columns:1fr;} .fg-3{grid-template-columns:1fr 1fr;}
@@ -325,6 +351,7 @@
     <button class="tb" id="tab-btn-2" onclick="switchTab(2)">Saved Reports</button>
     <button class="tb" id="tab-btn-3" onclick="switchTab(3)">Element Status</button>
     <button class="tb" id="tab-btn-4" onclick="switchTab(4)">Pour Log</button>
+    <button class="tb" id="tab-btn-5" onclick="switchTab(5)">Plan View</button>
   </nav>
 
   <!-- ─────────────────────────────────────────────────────────── -->
@@ -558,7 +585,71 @@ Slab,S-1,600,500,12,cm</div>
   </div>
 </div>
 
-<!-- ── MODALS ──────────────────────────────────────────────────── -->
+<!-- ── TAB 5: PLAN VIEW ─────────────────────────────────────── -->
+<div id="tab-5" class="tc" style="max-width:100%;padding:1.5rem 2rem;">
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:1.5rem;align-items:start;">
+
+    <!-- LEFT: COORD FORM -->
+    <div>
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="ctitle">Report</div>
+        <div class="fi">
+          <label>Select Report</label>
+          <select id="plan-report-sel" onchange="loadPlanReport()">
+            <option value="">— Select a saved report —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card" id="plan-coord-card" style="display:none;">
+        <div class="ctitle" style="justify-content:space-between;">
+          <span>Element Coordinates</span>
+          <button class="bp bp-green bp-sm" onclick="saveCoords()" id="plan-save-btn">💾 Save</button>
+        </div>
+        <div style="font-family:var(--fm);font-size:.7rem;color:var(--muted);margin-bottom:1rem;letter-spacing:.5px;">
+          All coordinates in meters. Origin (0,0) = bottom-left.
+        </div>
+        <div id="plan-coord-list"></div>
+      </div>
+
+      <!-- VISIBILITY TOGGLES -->
+      <div class="card" id="plan-vis-card" style="display:none;">
+        <div class="ctitle">Visibility</div>
+        <div id="plan-vis-toggles" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: CANVAS -->
+    <div class="card" style="padding:1rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
+        <div class="ctitle" style="margin:0;border:none;padding:0;">Plan View</div>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <span style="font-family:var(--fm);font-size:.7rem;color:var(--muted);">Scale: 1 grid =</span>
+          <select id="plan-scale-sel" onchange="redrawPlan()" style="width:80px;padding:5px 8px;font-size:.78rem;">
+            <option value="0.5">0.5 m</option>
+            <option value="1" selected>1 m</option>
+            <option value="2">2 m</option>
+            <option value="5">5 m</option>
+            <option value="10">10 m</option>
+          </select>
+          <button class="bp bp-sm" onclick="resetPlanView()" style="padding:6px 12px;font-size:.75rem;">⊙ Reset</button>
+        </div>
+      </div>
+      <div id="plan-canvas-wrap" style="background:var(--surface2);border:1px solid var(--border);
+        border-radius:8px;overflow:hidden;position:relative;cursor:grab;user-select:none;">
+        <canvas id="plan-canvas" style="display:block;"></canvas>
+        <div id="plan-empty-msg" style="position:absolute;inset:0;display:flex;align-items:center;
+          justify-content:center;font-family:var(--fm);font-size:.78rem;color:var(--muted);pointer-events:none;">
+          Select a report and enter coordinates to view the plan.
+        </div>
+      </div>
+      <!-- Legend -->
+      <div id="plan-legend" style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.75rem;"></div>
+      <!-- Hover info -->
+      <div id="plan-hover-info" style="min-height:28px;margin-top:.5rem;font-family:var(--fm);font-size:.75rem;color:var(--muted);"></div>
+    </div>
+  </div>
+</div>
 
 <!-- Detail / View Report Modal -->
 <div class="modal-bg" id="detail-modal">
@@ -822,13 +913,14 @@ window.closeModal = function(id) {
 
 // ── TABS ─────────────────────────────────────────────────────
 window.switchTab = function(n) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     document.getElementById('tab-' + i).classList.toggle('active', i === n);
     document.getElementById('tab-btn-' + i).classList.toggle('active', i === n);
   }
   if (n === 2) renderSaved();
   if (n === 3) renderStatusReportSel();
   if (n === 4) renderLogTab();
+  if (n === 5) { renderPlanReportSel(); resizePlanCanvas(); }
 };
 
 // ── UNIT TOGGLE ──────────────────────────────────────────────
@@ -1509,6 +1601,516 @@ window.renderLogTab = function() {
     if (e.key === 'Enter') window.addEntry();
   });
 });
+
+// ── PLAN VIEW ─────────────────────────────────────────────────
+const TYPE_COLORS = {
+  Beam:    { stroke:'#00c2ff', fill:'rgba(0,194,255,',    hex:'#00c2ff' },
+  Column:  { stroke:'#c084fc', fill:'rgba(192,132,252,',  hex:'#c084fc' },
+  Footing: { stroke:'#ffb800', fill:'rgba(255,184,0,',    hex:'#ffb800' },
+  Slab:    { stroke:'#00ff9d', fill:'rgba(0,255,157,',    hex:'#00ff9d' },
+  Wall:    { stroke:'#ff6b35', fill:'rgba(255,107,53,',   hex:'#ff6b35' },
+  Other:   { stroke:'#5a6180', fill:'rgba(90,97,128,',    hex:'#5a6180' },
+};
+
+let planReportId  = null;
+let planElements  = [];   // entries from report
+let planCoords    = {};   // { idx: { x1,y1,x2,y2 | x,y | x,y,angle } }
+let planStatus    = {};   // { idx: status string }
+let planVisible   = {};   // { type: bool }
+let planDocId     = null; // Firestore doc id for coords
+
+// Pan/zoom state
+let planScale     = 60;   // px per meter
+let planOffsetX   = 40;
+let planOffsetY   = 40;
+let planIsDragging= false;
+let planDragStart = { x:0, y:0 };
+let planHovered   = null;
+
+const planCanvas = document.getElementById('plan-canvas');
+const planCtx    = planCanvas.getContext('2d');
+const planWrap   = document.getElementById('plan-canvas-wrap');
+
+// Resize canvas to fill wrap
+function resizePlanCanvas() {
+  planCanvas.width  = planWrap.clientWidth  || 800;
+  planCanvas.height = planWrap.clientHeight || 560;
+  redrawPlan();
+}
+
+window.addEventListener('resize', resizePlanCanvas);
+
+// Pan
+planCanvas.addEventListener('mousedown', e => {
+  planIsDragging = true;
+  planDragStart  = { x: e.clientX - planOffsetX, y: e.clientY - planOffsetY };
+  planCanvas.style.cursor = 'grabbing';
+});
+planCanvas.addEventListener('mousemove', e => {
+  if (planIsDragging) {
+    planOffsetX = e.clientX - planDragStart.x;
+    planOffsetY = e.clientY - planDragStart.y;
+    redrawPlan(); return;
+  }
+  // Hover detect
+  const rect  = planCanvas.getBoundingClientRect();
+  const mx    = e.clientX - rect.left;
+  const my    = e.clientY - rect.top;
+  const found = hitTest(mx, my);
+  planHovered = found;
+  planCanvas.style.cursor = found ? 'pointer' : 'grab';
+  const info  = document.getElementById('plan-hover-info');
+  if (found !== null) {
+    const el  = planElements[found];
+    const st  = planStatus[found] || 'Not Yet';
+    const col = st==='Full'?'var(--accent3)':st==='Partial'?'var(--warn)':'var(--muted)';
+    info.innerHTML = `<span style="color:var(--text);font-weight:600;">${el.mark}</span>
+      &nbsp;<span style="color:var(--muted);">${el.type}</span>
+      &nbsp;·&nbsp; ${fmt(el.vol)} m³
+      &nbsp;·&nbsp; <span style="color:${col};">${st}</span>`;
+  } else {
+    info.innerHTML = '';
+  }
+  redrawPlan();
+});
+planCanvas.addEventListener('mouseup',   () => { planIsDragging=false; planCanvas.style.cursor = planHovered?'pointer':'grab'; });
+planCanvas.addEventListener('mouseleave',() => { planIsDragging=false; });
+
+// Zoom
+planCanvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect  = planCanvas.getBoundingClientRect();
+  const mx    = e.clientX - rect.left;
+  const my    = e.clientY - rect.top;
+  const delta = e.deltaY > 0 ? 0.85 : 1.18;
+  // Zoom toward cursor
+  planOffsetX = mx - (mx - planOffsetX) * delta;
+  planOffsetY = my - (my - planOffsetY) * delta;
+  planScale  *= delta;
+  planScale   = Math.max(6, Math.min(300, planScale));
+  redrawPlan();
+}, { passive: false });
+
+// World → canvas
+function wToC(wx, wy) {
+  return { x: planOffsetX + wx * planScale, y: planCanvas.height - planOffsetY - wy * planScale };
+}
+
+// Canvas → world
+function cToW(cx, cy) {
+  return { x: (cx - planOffsetX) / planScale, y: (planCanvas.height - planOffsetY - cy) / planScale };
+}
+
+function hitTest(mx, my) {
+  for (let i = planElements.length-1; i >= 0; i--) {
+    const el = planElements[i];
+    if (!planVisible[el.type]) continue;
+    const c = planCoords[i];
+    if (!c) continue;
+    if (el.type === 'Beam') {
+      if (c.x1==null||c.y1==null||c.x2==null||c.y2==null) continue;
+      const p1 = wToC(c.x1, c.y1), p2 = wToC(c.x2, c.y2);
+      if (distToSegment(mx, my, p1.x, p1.y, p2.x, p2.y) < 8) return i;
+    } else {
+      if (c.x==null||c.y==null) continue;
+      const p = wToC(c.x, c.y);
+      if (Math.hypot(mx-p.x, my-p.y) < 12) return i;
+    }
+  }
+  return null;
+}
+
+function distToSegment(px,py,ax,ay,bx,by) {
+  const dx=bx-ax, dy=by-ay, lenSq=dx*dx+dy*dy;
+  if (lenSq===0) return Math.hypot(px-ax,py-ay);
+  const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/lenSq));
+  return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
+}
+
+window.redrawPlan = function() {
+  const W = planCanvas.width, H = planCanvas.height;
+  planCtx.clearRect(0, 0, W, H);
+
+  const gridM = parseFloat(document.getElementById('plan-scale-sel').value) || 1;
+  const gridPx = gridM * planScale;
+
+  // Grid
+  planCtx.strokeStyle = 'rgba(42,47,63,.6)';
+  planCtx.lineWidth   = 0.5;
+  const startX = planOffsetX % gridPx;
+  const startY = (H - planOffsetY) % gridPx;
+  for (let x = startX; x < W; x += gridPx) {
+    planCtx.beginPath(); planCtx.moveTo(x,0); planCtx.lineTo(x,H); planCtx.stroke();
+  }
+  for (let y = startY; y < H; y += gridPx) {
+    planCtx.beginPath(); planCtx.moveTo(0,y); planCtx.lineTo(W,y); planCtx.stroke();
+  }
+
+  // Axis labels (world coords at grid lines)
+  planCtx.fillStyle = 'rgba(90,97,128,.7)';
+  planCtx.font      = '9px Share Tech Mono';
+  planCtx.textAlign = 'center';
+  for (let x = startX; x < W; x += gridPx) {
+    const wx = Math.round(cToW(x, 0).x / gridM) * gridM;
+    planCtx.fillText(wx + 'm', x, H - 4);
+  }
+  planCtx.textAlign = 'right';
+  for (let y = startY; y < H; y += gridPx) {
+    const wy = Math.round(cToW(0, y).y / gridM) * gridM;
+    planCtx.fillText(wy + 'm', planOffsetX - 4, y + 3);
+  }
+
+  // Origin cross
+  const org = wToC(0, 0);
+  planCtx.strokeStyle = 'rgba(0,255,157,.4)';
+  planCtx.lineWidth   = 1;
+  planCtx.beginPath(); planCtx.moveTo(org.x-10,org.y); planCtx.lineTo(org.x+10,org.y); planCtx.stroke();
+  planCtx.beginPath(); planCtx.moveTo(org.x,org.y-10); planCtx.lineTo(org.x,org.y+10); planCtx.stroke();
+
+  if (!planElements.length) return;
+
+  // Draw elements
+  for (let i = 0; i < planElements.length; i++) {
+    const el  = planElements[i];
+    if (!planVisible[el.type]) continue;
+    const c   = planCoords[i];
+    if (!c) continue;
+    const tc  = TYPE_COLORS[el.type] || TYPE_COLORS.Other;
+    const st  = planStatus[i] || 'Not Yet';
+    const isHov = planHovered === i;
+
+    // Status-based alpha
+    const alpha = st==='Full' ? 0.85 : st==='Partial' ? 0.5 : 0.22;
+    const strokeA = isHov ? 1 : (st==='Full'?0.95:st==='Partial'?0.7:0.4);
+
+    if (el.type === 'Beam') {
+      if (c.x1==null||c.y1==null||c.x2==null||c.y2==null) continue;
+      const p1 = wToC(c.x1, c.y1), p2 = wToC(c.x2, c.y2);
+      const beamW = Math.max(3, (el.wRaw||0.3) * planScale * (el.unit==='m'?1:el.unit==='cm'?0.01:0.001));
+
+      // Draw beam as thick line with width
+      const angle = Math.atan2(p2.y-p1.y, p2.x-p1.x);
+      const nx = Math.sin(angle)*beamW/2, ny = -Math.cos(angle)*beamW/2;
+      planCtx.beginPath();
+      planCtx.moveTo(p1.x+nx, p1.y+ny); planCtx.lineTo(p2.x+nx, p2.y+ny);
+      planCtx.lineTo(p2.x-nx, p2.y-ny); planCtx.lineTo(p1.x-nx, p1.y-ny);
+      planCtx.closePath();
+      planCtx.fillStyle   = tc.fill + alpha + ')';
+      planCtx.strokeStyle = tc.stroke;
+      planCtx.lineWidth   = isHov ? 2 : 1;
+      planCtx.fill(); planCtx.stroke();
+
+      // Hatch if partial
+      if (st==='Partial') drawHatch(planCtx, p1, p2, beamW, tc.stroke);
+
+      // Label
+      const mx2=(p1.x+p2.x)/2, my2=(p1.y+p2.y)/2;
+      drawLabel(planCtx, el.mark, mx2, my2, tc.stroke, isHov);
+
+      // Endpoints
+      drawEndPoint(planCtx, p1, tc.stroke);
+      drawEndPoint(planCtx, p2, tc.stroke);
+
+    } else if (el.type === 'Wall') {
+      if (c.x==null||c.y==null) continue;
+      const cp   = wToC(c.x, c.y);
+      const ang  = ((c.angle||0) * Math.PI) / 180;
+      const len  = Math.max(10, (el.lRaw||3) * planScale * (el.unit==='m'?1:el.unit==='cm'?0.01:0.001));
+      const ww   = Math.max(2, (el.wRaw||0.2) * planScale * (el.unit==='m'?1:el.unit==='cm'?0.01:0.001));
+      const cos  = Math.cos(ang), sin2 = Math.sin(ang);
+      const p1   = { x: cp.x - cos*len/2, y: cp.y - sin2*len/2 };
+      const p2   = { x: cp.x + cos*len/2, y: cp.y + sin2*len/2 };
+      const nx   = sin2*ww/2, ny = -cos*ww/2;
+      planCtx.beginPath();
+      planCtx.moveTo(p1.x+nx,p1.y+ny); planCtx.lineTo(p2.x+nx,p2.y+ny);
+      planCtx.lineTo(p2.x-nx,p2.y-ny); planCtx.lineTo(p1.x-nx,p1.y-ny);
+      planCtx.closePath();
+      planCtx.fillStyle   = tc.fill + alpha + ')';
+      planCtx.strokeStyle = tc.stroke;
+      planCtx.lineWidth   = isHov ? 2 : 1;
+      planCtx.fill(); planCtx.stroke();
+      if (st==='Partial') drawHatch(planCtx, p1, p2, ww, tc.stroke);
+      drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov);
+      drawCenterMark(planCtx, cp, tc.stroke);
+
+    } else if (el.type === 'Column') {
+      if (c.x==null||c.y==null) continue;
+      const cp  = wToC(c.x, c.y);
+      const sw  = Math.max(6, (el.lRaw||0.4) * planScale * (el.unit==='m'?1:el.unit==='cm'?0.01:0.001));
+      const sh  = Math.max(6, (el.wRaw||0.4) * planScale * (el.unit==='m'?1:el.unit==='cm'?0.01:0.001));
+      planCtx.fillStyle   = tc.fill + alpha + ')';
+      planCtx.strokeStyle = tc.stroke;
+      planCtx.lineWidth   = isHov ? 2.5 : 1.5;
+      planCtx.fillRect  (cp.x-sw/2, cp.y-sh/2, sw, sh);
+      planCtx.strokeRect(cp.x-sw/2, cp.y-sh/2, sw, sh);
+      // Cross lines
+      planCtx.strokeStyle = tc.stroke; planCtx.lineWidth = 0.8; planCtx.globalAlpha = 0.4;
+      planCtx.beginPath(); planCtx.moveTo(cp.x-sw/2,cp.y-sh/2); planCtx.lineTo(cp.x+sw/2,cp.y+sh/2); planCtx.stroke();
+      planCtx.beginPath(); planCtx.moveTo(cp.x+sw/2,cp.y-sh/2); planCtx.lineTo(cp.x-sw/2,cp.y+sh/2); planCtx.stroke();
+      planCtx.globalAlpha = 1;
+      if (st==='Partial') drawBoxHatch(planCtx, cp.x-sw/2, cp.y-sh/2, sw, sh, tc.stroke);
+      drawLabel(planCtx, el.mark, cp.x, cp.y+sh/2+10, tc.stroke, isHov);
+      drawCenterMark(planCtx, cp, tc.stroke);
+
+    } else if (el.type === 'Footing') {
+      if (c.x==null||c.y==null) continue;
+      const cp  = wToC(c.x, c.y);
+      const fw  = Math.max(8, (el.lRaw||1.5) * planScale * (el.unit==='m'?1:el.unit==='cm'?0.01:0.001));
+      const fh2 = Math.max(8, (el.wRaw||1.5) * planScale * (el.unit==='m'?1:el.unit==='cm'?0.01:0.001));
+      planCtx.fillStyle   = tc.fill + alpha + ')';
+      planCtx.strokeStyle = tc.stroke;
+      planCtx.lineWidth   = isHov ? 2 : 1;
+      planCtx.setLineDash([4,3]);
+      planCtx.fillRect  (cp.x-fw/2, cp.y-fh2/2, fw, fh2);
+      planCtx.strokeRect(cp.x-fw/2, cp.y-fh2/2, fw, fh2);
+      planCtx.setLineDash([]);
+      if (st==='Partial') drawBoxHatch(planCtx, cp.x-fw/2, cp.y-fh2/2, fw, fh2, tc.stroke);
+      drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov);
+      drawCenterMark(planCtx, cp, tc.stroke);
+
+    } else {
+      // Slab / Other — circle
+      if (c.x==null||c.y==null) continue;
+      const cp  = wToC(c.x, c.y);
+      const r   = Math.max(8, Math.min(40, Math.sqrt((el.lRaw||1)*(el.wRaw||1)) * planScale * (el.unit==='m'?1:el.unit==='cm'?0.01:0.001) * 0.3));
+      planCtx.beginPath(); planCtx.arc(cp.x, cp.y, r, 0, Math.PI*2);
+      planCtx.fillStyle   = tc.fill + alpha + ')';
+      planCtx.strokeStyle = tc.stroke;
+      planCtx.lineWidth   = isHov ? 2 : 1;
+      planCtx.fill(); planCtx.stroke();
+      drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov);
+      drawCenterMark(planCtx, cp, tc.stroke);
+    }
+  }
+
+  // Scale bar
+  drawScaleBar(planCtx, W, H, planScale, gridM);
+};
+
+function drawLabel(ctx, text, x, y, color, bold) {
+  ctx.font      = (bold ? 'bold ' : '') + '10px Rajdhani';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor  = '#0d0f14'; ctx.shadowBlur = 3;
+  ctx.fillText(text, x, y);
+  ctx.shadowBlur = 0;
+}
+
+function drawEndPoint(ctx, p, color) {
+  ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+  ctx.fillStyle = color; ctx.fill();
+}
+
+function drawCenterMark(ctx, p, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.globalAlpha = 0.5;
+  ctx.beginPath(); ctx.moveTo(p.x-5,p.y); ctx.lineTo(p.x+5,p.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(p.x,p.y-5); ctx.lineTo(p.x,p.y+5); ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+function drawHatch(ctx, p1, p2, width, color) {
+  ctx.save();
+  const angle = Math.atan2(p2.y-p1.y, p2.x-p1.x);
+  const cx = (p1.x+p2.x)/2, cy = (p1.y+p2.y)/2;
+  ctx.translate(cx, cy); ctx.rotate(angle);
+  const len = Math.hypot(p2.x-p1.x, p2.y-p1.y);
+  ctx.strokeStyle = color; ctx.lineWidth = 0.5; ctx.globalAlpha = 0.3;
+  for (let x = -len/2; x < len/2; x += 8) {
+    ctx.beginPath(); ctx.moveTo(x,-width/2); ctx.lineTo(x+8,width/2); ctx.stroke();
+  }
+  ctx.restore(); ctx.globalAlpha = 1;
+}
+
+function drawBoxHatch(ctx, x, y, w, h, color) {
+  ctx.save();
+  ctx.strokeStyle = color; ctx.lineWidth = 0.5; ctx.globalAlpha = 0.25;
+  ctx.beginPath();
+  for (let d = -Math.max(w,h); d < Math.max(w,h); d += 8) {
+    ctx.moveTo(x+Math.max(0,d), y); ctx.lineTo(x, y+Math.max(0,-d+h));
+    ctx.moveTo(x+Math.min(w,d+h), y); ctx.lineTo(x+w, y+Math.max(0,d));
+  }
+  ctx.stroke(); ctx.restore(); ctx.globalAlpha = 1;
+}
+
+function drawScaleBar(ctx, W, H, scale, gridM) {
+  const barM  = gridM;
+  const barPx = barM * scale;
+  const x = 20, y = H - 30, h2 = 6;
+  ctx.fillStyle   = 'rgba(0,194,255,.7)';
+  ctx.strokeStyle = 'rgba(0,194,255,.8)';
+  ctx.lineWidth   = 1;
+  ctx.fillRect(x, y, barPx, h2);
+  ctx.strokeRect(x, y, barPx, h2);
+  ctx.font      = '9px Share Tech Mono';
+  ctx.fillStyle = 'rgba(0,194,255,.9)';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(`${barM}m`, x + barPx + 4, y + h2);
+}
+
+// ── PLAN: LOAD REPORT ─────────────────────────────────────────
+window.loadPlanReport = async function() {
+  planReportId = document.getElementById('plan-report-sel').value;
+  const coordCard = document.getElementById('plan-coord-card');
+  const visCard   = document.getElementById('plan-vis-card');
+  document.getElementById('plan-empty-msg').style.display = 'flex';
+
+  if (!planReportId) {
+    coordCard.style.display = 'none'; visCard.style.display = 'none';
+    planElements = []; planCoords = {}; planStatus = {};
+    redrawPlan(); return;
+  }
+  const report = savedData.find(d => d.id === planReportId);
+  if (!report) return;
+
+  planElements = report.entries || [];
+  planCoords   = {};
+  planStatus   = {};
+
+  // Init visibility
+  VALID_TYPES.forEach(t => { if (!(t in planVisible)) planVisible[t] = true; });
+
+  // Load saved coords
+  try {
+    const snap = await getDocs(query(collection(db,'elementCoords'), where('reportId','==',planReportId)));
+    snap.docs.forEach(d => {
+      const data = d.data();
+      planCoords[data.elementIdx] = data.coords;
+      planDocId = d.id;
+    });
+  } catch(e) { console.error('loadCoords error:', e); }
+
+  // Load current statuses
+  try {
+    const snap = await getDocs(query(collection(db,'elementStatus'), where('reportId','==',planReportId)));
+    snap.docs.forEach(d => { planStatus[d.data().elementIdx] = d.data().status; });
+  } catch(e) {}
+
+  renderPlanCoordForm();
+  renderPlanVisToggles();
+  coordCard.style.display = 'block';
+  visCard.style.display   = 'block';
+  resizePlanCanvas();
+
+  const hasAny = Object.keys(planCoords).length > 0;
+  document.getElementById('plan-empty-msg').style.display = hasAny ? 'none' : 'flex';
+};
+
+// ── PLAN: COORD FORM ─────────────────────────────────────────
+function renderPlanCoordForm() {
+  const wrap = document.getElementById('plan-coord-list');
+  if (!planElements.length) { wrap.innerHTML = '<div class="empty-list">No elements in this report.</div>'; return; }
+
+  wrap.innerHTML = planElements.map((e, i) => {
+    const m  = TYPE_META[e.type] || TYPE_META.Other;
+    const tc = TYPE_COLORS[e.type] || TYPE_COLORS.Other;
+    const c  = planCoords[i] || {};
+
+    let inputs = '';
+    if (e.type === 'Beam') {
+      inputs = `<div class="coord-inputs two-point">
+        <div class="coord-fi"><label>X1 (m)</label><input type="number" step="any" placeholder="0" value="${c.x1??''}" oninput="updateCoord(${i},'x1',this.value)"/></div>
+        <div class="coord-fi"><label>Y1 (m)</label><input type="number" step="any" placeholder="0" value="${c.y1??''}" oninput="updateCoord(${i},'y1',this.value)"/></div>
+        <div class="coord-fi"><label>X2 (m)</label><input type="number" step="any" placeholder="0" value="${c.x2??''}" oninput="updateCoord(${i},'x2',this.value)"/></div>
+        <div class="coord-fi"><label>Y2 (m)</label><input type="number" step="any" placeholder="0" value="${c.y2??''}" oninput="updateCoord(${i},'y2',this.value)"/></div>
+      </div>`;
+    } else if (e.type === 'Wall') {
+      inputs = `<div class="coord-inputs wall-point">
+        <div class="coord-fi"><label>X (m)</label><input type="number" step="any" placeholder="0" value="${c.x??''}" oninput="updateCoord(${i},'x',this.value)"/></div>
+        <div class="coord-fi"><label>Y (m)</label><input type="number" step="any" placeholder="0" value="${c.y??''}" oninput="updateCoord(${i},'y',this.value)"/></div>
+        <div class="coord-fi"><label>Angle (°)</label><input type="number" step="any" placeholder="0" value="${c.angle??''}" oninput="updateCoord(${i},'angle',this.value)"/></div>
+      </div>`;
+    } else {
+      inputs = `<div class="coord-inputs one-point">
+        <div class="coord-fi"><label>X (m)</label><input type="number" step="any" placeholder="0" value="${c.x??''}" oninput="updateCoord(${i},'x',this.value)"/></div>
+        <div class="coord-fi"><label>Y (m)</label><input type="number" step="any" placeholder="0" value="${c.y??''}" oninput="updateCoord(${i},'y',this.value)"/></div>
+      </div>`;
+    }
+
+    return `<div class="coord-row">
+      <div class="coord-row-header">
+        <span class="type-dot" style="background:${tc.hex};width:8px;height:8px;border-radius:50%;flex-shrink:0;"></span>
+        <span class="coord-type-label" style="color:${tc.hex};">${e.type}</span>
+        <span class="coord-mark">${e.mark}</span>
+      </div>
+      ${inputs}
+    </div>`;
+  }).join('');
+}
+
+window.updateCoord = function(idx, key, val) {
+  if (!planCoords[idx]) planCoords[idx] = {};
+  planCoords[idx][key] = val === '' ? null : parseFloat(val);
+  const hasAny = Object.values(planCoords).some(c =>
+    c && Object.values(c).some(v => v !== null && v !== undefined));
+  document.getElementById('plan-empty-msg').style.display = hasAny ? 'none' : 'flex';
+  redrawPlan();
+};
+
+window.saveCoords = async function() {
+  if (!planReportId) { toast('Select a report first.', true); return; }
+  const payload = {
+    reportId: planReportId,
+    coords:   planCoords,
+    savedAt:  new Date().toISOString(),
+    savedBy:  currentUName,
+  };
+  try {
+    const docRef = doc(db, 'elementCoords', planReportId);
+    await setDoc(docRef, payload);
+    toast('Coordinates saved!');
+  } catch(e) { toast('Error saving coords: ' + e.message, true); }
+};
+
+// ── PLAN: VISIBILITY TOGGLES ──────────────────────────────────
+function renderPlanVisToggles() {
+  const types = [...new Set(planElements.map(e => e.type))];
+  const wrap  = document.getElementById('plan-vis-toggles');
+  wrap.innerHTML = types.map(t => {
+    const tc = TYPE_COLORS[t] || TYPE_COLORS.Other;
+    const on = planVisible[t] !== false;
+    return `<div class="vis-toggle-row">
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <span class="vis-dot" style="background:${tc.hex};"></span>
+        <span>${t}</span>
+      </div>
+      <label class="toggle-switch" style="width:36px;height:20px;">
+        <input type="checkbox" ${on?'checked':''} onchange="togglePlanVis('${t}',this.checked)"/>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+
+  // Legend on canvas
+  document.getElementById('plan-legend').innerHTML = types.map(t => {
+    const tc = TYPE_COLORS[t] || TYPE_COLORS.Other;
+    return `<div style="display:flex;align-items:center;gap:5px;font-family:var(--fm);font-size:.7rem;color:var(--muted);">
+      <span style="width:12px;height:12px;border-radius:2px;background:${tc.fill}0.5);border:1px solid ${tc.stroke};flex-shrink:0;"></span>
+      ${t}
+    </div>`;
+  }).join('');
+}
+
+window.togglePlanVis = function(type, on) {
+  planVisible[type] = on; redrawPlan();
+};
+
+window.resetPlanView = function() {
+  planOffsetX = 40; planOffsetY = 40;
+  planScale   = 60;
+  redrawPlan();
+};
+
+// ── PLAN: POPULATE REPORT SELECT ─────────────────────────────
+function renderPlanReportSel() {
+  const sel = document.getElementById('plan-report-sel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select a saved report —</option>' +
+    savedData.map(d =>
+      `<option value="${d.id}" ${d.id===cur?'selected':''}>${d.project||d.date||d.id} (${d.elementCount||0} elements)</option>`
+    ).join('');
+}
 </script>
 </body>
 </html>
