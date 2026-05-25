@@ -1979,14 +1979,17 @@ window.loadPlanReport = async function() {
   // Init visibility
   VALID_TYPES.forEach(t => { if (!(t in planVisible)) planVisible[t] = true; });
 
-  // Load saved coords
+  // Load saved coords — single doc keyed by reportId
   try {
-    const snap = await getDocs(query(collection(db,'elementCoords'), where('reportId','==',planReportId)));
-    snap.docs.forEach(d => {
-      const data = d.data();
-      planCoords[data.elementIdx] = data.coords;
-      planDocId = d.id;
-    });
+    const coordDoc = await getDoc(doc(db, 'elementCoords', planReportId));
+    if (coordDoc.exists()) {
+      const data = coordDoc.data();
+      // coords is { "0": {...}, "1": {...}, ... }
+      const stored = data.coords || {};
+      Object.entries(stored).forEach(([idx, c]) => {
+        planCoords[parseInt(idx)] = c;
+      });
+    }
   } catch(e) { console.error('loadCoords error:', e); }
 
   // Load current statuses
@@ -2058,15 +2061,19 @@ window.updateCoord = function(idx, key, val) {
 
 window.saveCoords = async function() {
   if (!planReportId) { toast('Select a report first.', true); return; }
+  // Firestore map keys must be strings
+  const coordsToSave = {};
+  Object.entries(planCoords).forEach(([idx, c]) => {
+    coordsToSave[String(idx)] = c;
+  });
   const payload = {
     reportId: planReportId,
-    coords:   planCoords,
+    coords:   coordsToSave,
     savedAt:  new Date().toISOString(),
     savedBy:  currentUName,
   };
   try {
-    const docRef = doc(db, 'elementCoords', planReportId);
-    await setDoc(docRef, payload);
+    await setDoc(doc(db, 'elementCoords', planReportId), payload);
     toast('Coordinates saved!');
   } catch(e) { toast('Error saving coords: ' + e.message, true); }
 };
