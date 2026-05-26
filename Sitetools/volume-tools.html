@@ -292,6 +292,29 @@
   .toggle-switch input:checked+.toggle-slider{background:rgba(0,194,255,.15);border-color:var(--accent);}
   .toggle-switch input:checked+.toggle-slider::before{transform:translateX(20px);background:var(--accent);}
 
+  /* SLAB SHAPE DRAWER */
+  .slab-drawer{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+    padding:1rem;margin-bottom:.75rem;}
+  .slab-drawer-title{font-family:var(--fm);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;
+    color:var(--muted);margin-bottom:.75rem;}
+  .slab-arrow-pad{display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px);gap:3px;margin-bottom:.75rem;}
+  .slab-arr-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+    color:var(--muted);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;
+    justify-content:center;transition:all .2s;}
+  .slab-arr-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+  .slab-arr-btn.active{background:var(--accent3);border-color:var(--accent3);color:#000;}
+  .slab-arr-blank{background:transparent;border:none;}
+  .slab-seg-list{display:flex;flex-direction:column;gap:.3rem;max-height:150px;overflow-y:auto;margin-bottom:.75rem;}
+  .slab-seg-item{display:flex;align-items:center;gap:.5rem;background:var(--surface);border:1px solid var(--border);
+    border-radius:4px;padding:5px 10px;font-family:var(--fm);font-size:.75rem;}
+  .slab-seg-dir{font-size:1rem;}
+  .slab-seg-len{color:var(--accent3);flex:1;}
+  .slab-seg-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;transition:color .2s;}
+  .slab-seg-del:hover{color:var(--danger);}
+  .slab-canvas-wrap{background:var(--bg);border:1px solid var(--border);border-radius:4px;
+    display:flex;align-items:center;justify-content:center;margin-bottom:.75rem;}
+  .slab-area-preview{font-family:var(--fm);font-size:.72rem;color:var(--accent3);margin-bottom:.5rem;}
+
   /* PLAN VIEW */
   .coord-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
     padding:.5rem .75rem;margin-bottom:.4rem;}
@@ -433,6 +456,59 @@
       </div>
 
       <div class="dim-hint" id="dim-hint">Volume = L × W × H (all values in meters → result in m³)</div>
+
+      <!-- SLAB SHAPE DRAWING OPTION -->
+      <div id="slab-shape-section" style="display:none;margin-top:.75rem;">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+          <label style="margin:0;font-family:var(--fm);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">Draw Irregular Shape</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="slab-shape-toggle" onchange="onSlabShapeToggle()"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="slab-shape-inputs" style="display:none;">
+          <div class="slab-drawer">
+            <div class="slab-drawer-title">Shape Segments (in meters)</div>
+            <div style="display:flex;gap:1rem;align-items:flex-start;margin-bottom:.75rem;">
+              <!-- Arrow pad -->
+              <div>
+                <div class="slab-arrow-pad">
+                  <div class="slab-arr-blank"></div>
+                  <button class="slab-arr-btn" id="slab-arr-N" onclick="slabSetDir('N')">↑</button>
+                  <div class="slab-arr-blank"></div>
+                  <button class="slab-arr-btn" id="slab-arr-W" onclick="slabSetDir('W')">←</button>
+                  <div class="slab-arr-blank" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);"></div>
+                  <button class="slab-arr-btn" id="slab-arr-E" onclick="slabSetDir('E')">→</button>
+                  <div class="slab-arr-blank"></div>
+                  <button class="slab-arr-btn" id="slab-arr-S" onclick="slabSetDir('S')">↓</button>
+                  <div class="slab-arr-blank"></div>
+                </div>
+              </div>
+              <!-- Length input + controls -->
+              <div style="flex:1;display:flex;flex-direction:column;gap:.5rem;">
+                <div class="fi">
+                  <label>Segment Length (m)</label>
+                  <input type="number" id="slab-seg-len" placeholder="0.00" min="0" step="any"/>
+                </div>
+                <div class="btn-row">
+                  <button class="bp bp-sm" onclick="slabAddSegment()">+ Add</button>
+                  <button class="bp bp-green bp-sm" onclick="slabClosePolygon()">⬡ Close</button>
+                  <button class="bp bp-danger bp-sm" onclick="slabClearShape()">✕ Clear</button>
+                </div>
+              </div>
+              <!-- Mini canvas -->
+              <div class="slab-canvas-wrap">
+                <canvas id="slab-canvas" width="160" height="160"></canvas>
+              </div>
+            </div>
+            <!-- Segment list -->
+            <div class="slab-seg-list" id="slab-seg-list">
+              <div style="font-family:var(--fm);font-size:.72rem;color:var(--muted);">No segments yet.</div>
+            </div>
+            <div class="slab-area-preview" id="slab-area-preview">Area: —</div>
+          </div>
+        </div>
+      </div>
       <div class="btn-row" style="margin-top:1rem;">
         <button class="bp" onclick="addEntry()">+ Add Element</button>
         <button class="bp bp-danger" onclick="clearAll()">✕ Clear All</button>
@@ -469,7 +545,9 @@
           <strong style="color:var(--text);">Beam with coordinates (length auto-computed):</strong><br/>
           <code>type</code> · <code>mark</code> · <code>x1</code> · <code>y1</code> · <code>x2</code> · <code>y2</code> · <code>width</code> · <code>height</code><br/>
           <span style="color:var(--muted);font-size:.7rem;">Coordinates always in meters. Length = √((x2-x1)²+(y2-y1)²)</span><br/><br/>
-          <strong style="color:var(--text);">Non-beam with coordinates (Column, Footing, Slab, Wall, Other):</strong><br/>
+          <strong style="color:var(--text);">Irregular slab with drawn shape:</strong><br/>
+          <code>type</code> · <code>mark</code> · <code>segments</code> · <code>height</code> · <code>unit</code><br/>
+          <span style="color:var(--muted);font-size:.7rem;">Segments encoded as <code>DIR:LENGTH</code> pairs separated by commas e.g. <code>N:3,E:6,S:3,W:6</code>. Directions: N S E W. Lengths always in meters.</span><br/><br/>
           <code>type</code> · <code>mark</code> · <code>x</code> · <code>y</code> · <code>length</code> · <code>width</code> · <code>height</code> · <code>unit</code><br/>
           <span style="color:var(--muted);font-size:.7rem;">x,y coordinates always in meters. Coordinates saved automatically to Plan View.</span><br/><br/>
           <strong style="color:var(--text);">Rules:</strong><br/>
@@ -1057,15 +1135,24 @@ window.setUnit = function(u) {
     `Volume = L × W × H (all values in ${u} → result converted to m³)`;
 };
 
-// ── BEAM COORD TOGGLE ────────────────────────────────────────
+// ── BEAM COORD TOGGLE & SLAB SHAPE ───────────────────────────
 window.onTypeChange = function() {
   const type = document.getElementById('f-type').value;
-  const beamSec = document.getElementById('beam-coord-section');
-  beamSec.style.display = type === 'Beam' ? 'block' : 'none';
+  document.getElementById('beam-coord-section').style.display  = type === 'Beam'  ? 'block' : 'none';
+  document.getElementById('slab-shape-section').style.display  = type === 'Slab'  ? 'block' : 'none';
   if (type !== 'Beam') {
     document.getElementById('beam-coord-toggle').checked = false;
     onBeamCoordToggle();
   }
+  if (type !== 'Slab') {
+    document.getElementById('slab-shape-toggle').checked = false;
+    onSlabShapeToggle();
+  }
+  // show/hide L and W fields for slab shape mode
+  const slabOn = type === 'Slab' && document.getElementById('slab-shape-toggle').checked;
+  document.getElementById('f-l-wrap').style.display = slabOn ? 'none' : '';
+  const fwEl = document.getElementById('f-w').closest('.fi');
+  if (fwEl) fwEl.style.display = slabOn ? 'none' : '';
 };
 
 window.onBeamCoordToggle = function() {
@@ -1099,13 +1186,40 @@ window.addEntry = function() {
   if (!canEdit()) { toast('No permission to add entries.', true); return; }
   const type = document.getElementById('f-type').value;
   const mark = document.getElementById('f-mark').value.trim();
-  const lRaw = parseFloat(document.getElementById('f-l').value);
-  const wRaw = parseFloat(document.getElementById('f-w').value);
   const hRaw = parseFloat(document.getElementById('f-h').value);
   if (!mark)             { toast('Enter a mark / label.', true); return; }
+  if (!hRaw || hRaw<=0) { toast('Enter a valid Height / Depth.', true); return; }
+
+  // Slab shape mode
+  const slabShapeOn = type === 'Slab' && document.getElementById('slab-shape-toggle').checked;
+  if (slabShapeOn) {
+    if (!slabIsClosed || slabAreaVal === null) { toast('Close and compute the slab polygon first.', true); return; }
+    const f   = UNIT_FACTORS['m']; // slab shape always in meters
+    const vol = slabAreaVal * hRaw * UNIT_FACTORS[inputUnit]; // height uses current unit
+    const centroid = slabGetCentroid();
+    entryCounter++;
+    entries.push({
+      id: entryCounter, type, mark,
+      lRaw: null, wRaw: null, hRaw, unit: inputUnit,
+      l: null, w: null, h: hRaw * UNIT_FACTORS[inputUnit], vol,
+      shapeMode: true,
+      slabSegments: [...slabSegments],
+      slabArea: slabAreaVal,
+      slabCentroid: centroid,
+      beamCoords: null, pointCoords: { x: centroid.x, y: centroid.y },
+    });
+    document.getElementById('f-mark').value = '';
+    document.getElementById('f-h').value    = '';
+    slabClearShape();
+    renderList();
+    toast(`Slab "${mark}" added — ${fmt(vol)} m³`);
+    return;
+  }
+
+  const lRaw = parseFloat(document.getElementById('f-l').value);
+  const wRaw = parseFloat(document.getElementById('f-w').value);
   if (!lRaw || lRaw<=0) { toast('Enter a valid Length.', true);  return; }
   if (!wRaw || wRaw<=0) { toast('Enter a valid Width.',  true);  return; }
-  if (!hRaw || hRaw<=0) { toast('Enter a valid Height.', true);  return; }
   const f   = UNIT_FACTORS[inputUnit];
   const vol = lRaw*f * wRaw*f * hRaw*f;
 
@@ -1123,7 +1237,8 @@ window.addEntry = function() {
 
   entryCounter++;
   entries.push({ id:entryCounter, type, mark, lRaw, wRaw, hRaw, unit:inputUnit,
-    l:lRaw*f, w:wRaw*f, h:hRaw*f, vol, beamCoords });
+    l:lRaw*f, w:wRaw*f, h:hRaw*f, vol, beamCoords,
+    pointCoords: null, shapeMode: false });
 
   document.getElementById('f-mark').value = '';
   document.getElementById('f-l').value    = '';
@@ -1164,10 +1279,16 @@ function renderList() {
         <span class="${m.col}" style="font-size:.75rem;letter-spacing:.5px;">${e.type}</span>
       </span>
       <span class="entry-mark">${e.mark}</span>
-      <span class="entry-dim">${e.lRaw} ${e.unit}</span>
-      <span class="entry-dim" style="color:var(--muted);">×</span>
-      <span class="entry-dim">${e.wRaw} ${e.unit}</span>
-      <span class="entry-dim">× ${e.hRaw} ${e.unit}</span>
+      ${e.shapeMode
+        ? `<span class="entry-dim" style="color:var(--accent3);">⬡ ${fmt(e.slabArea,4)} m²</span>
+           <span class="entry-dim" style="color:var(--muted);">×</span>
+           <span class="entry-dim">${e.hRaw} ${e.unit} H</span>
+           <span class="entry-dim"></span>`
+        : `<span class="entry-dim">${e.lRaw} ${e.unit}</span>
+           <span class="entry-dim" style="color:var(--muted);">×</span>
+           <span class="entry-dim">${e.wRaw} ${e.unit}</span>
+           <span class="entry-dim">× ${e.hRaw} ${e.unit}</span>`
+      }
       <span class="entry-vol">${fmt(e.vol)}</span>
       <span class="entry-unit">m³</span>
       ${canDel ? `<button class="entry-del" onclick="delEntry(${e.id})">✕</button>` : '<span></span>'}
@@ -1234,9 +1355,10 @@ function parseCSV(text) {
   // Detect mode
   const hasBeamCoords  = ['x1','y1','x2','y2'].every(k => header.includes(k));
   const hasPointCoords = ['x','y'].every(k => header.includes(k)) && !hasBeamCoords;
+  const hasSegments    = header.includes('segments');
   const hasStd         = ['length','unit'].every(k => header.includes(k));
 
-  if (!hasBeamCoords && !hasPointCoords && !hasStd) {
+  if (!hasBeamCoords && !hasPointCoords && !hasSegments && !hasStd) {
     showCSVFeedback('Missing required columns. See format guide above.', true);
     return;
   }
@@ -1254,7 +1376,34 @@ function parseCSV(text) {
     if (isNaN(wRaw)||wRaw<=0)          { errors.push(`Row ${i+1}: Invalid width`); continue; }
     if (isNaN(hRaw)||hRaw<=0)          { errors.push(`Row ${i+1}: Invalid height`); continue; }
 
-    let lRaw, unit, beamCoords = null, pointCoords = null;
+    let lRaw, unit, beamCoords = null, pointCoords = null, slabShape = null;
+
+    // Slab with segments
+    if (hasSegments && type === 'Slab') {
+      const segStr = cols[idxOf('segments')] || '';
+      unit = cols[idxOf('unit')] || 'm';
+      if (!UNIT_FACTORS[unit]) { errors.push(`Row ${i+1}: Invalid unit "${unit}"`); continue; }
+      const segs = segStr.split(',').map(s => {
+        const [dir, len] = s.trim().split(':');
+        return { dir: dir?.trim().toUpperCase(), len: parseFloat(len) };
+      }).filter(s => ['N','S','E','W'].includes(s.dir) && !isNaN(s.len) && s.len > 0);
+      if (!segs.length) { errors.push(`Row ${i+1}: Invalid segments "${segStr}"`); continue; }
+      const pts = slabGetPointsFromSegs(segs);
+      const area = slabShoelace(pts);
+      const centroid = slabCentroidFromPoints(pts);
+      const f = UNIT_FACTORS[unit];
+      lRaw = null; wRaw = null;
+      hRaw = parseFloat(cols[idxOf('height')]);
+      if (isNaN(hRaw)||hRaw<=0) { errors.push(`Row ${i+1}: Invalid height`); continue; }
+      const vol = area * hRaw * f;
+      parsed.push({ type, mark, lRaw:null, wRaw:null, hRaw, unit, vol,
+        beamCoords:null, pointCoords:{ x:centroid.x, y:centroid.y },
+        shapeMode:true, slabSegments:segs, slabArea:area, slabCentroid:centroid });
+      continue;
+    }
+
+    wRaw = parseFloat(cols[idxOf('width')]);
+    if (isNaN(wRaw)||wRaw<=0) { errors.push(`Row ${i+1}: Invalid width`); continue; }
 
     if (hasBeamCoords && type === 'Beam') {
       const x1 = parseFloat(cols[idxOf('x1')]);
@@ -1283,7 +1432,8 @@ function parseCSV(text) {
 
     const f   = UNIT_FACTORS[unit] || 1;
     const vol = lRaw*f * wRaw*f * hRaw*f;
-    parsed.push({ type, mark, lRaw, wRaw, hRaw, unit, vol, beamCoords, pointCoords });
+    parsed.push({ type, mark, lRaw, wRaw, hRaw, unit, vol, beamCoords, pointCoords,
+      shapeMode:false, slabSegments:null, slabArea:null, slabCentroid:null });
   }
 
   csvParsed = parsed;
@@ -1296,9 +1446,11 @@ function parseCSV(text) {
   document.getElementById('csv-preview-count').textContent = `Preview — ${parsed.length} elements`;
   const previewRows = parsed.slice(0,20).map(e => {
     const m = TYPE_META[e.type] || TYPE_META.Other;
-    const dimStr = e.beamCoords
-      ? `(${e.beamCoords.x1},${e.beamCoords.y1})→(${e.beamCoords.x2},${e.beamCoords.y2})`
-      : `${e.lRaw} × ${e.wRaw} × ${e.hRaw} ${e.unit}`;
+    const dimStr = e.shapeMode
+      ? `⬡ ${fmt(e.slabArea,4)} m² × ${e.hRaw} ${e.unit} H`
+      : e.beamCoords
+        ? `(${e.beamCoords.x1},${e.beamCoords.y1})→(${e.beamCoords.x2},${e.beamCoords.y2})`
+        : `${e.lRaw} × ${e.wRaw} × ${e.hRaw} ${e.unit}`;
     return `<div class="csv-preview-row">
       <span class="${m.col}">${e.type}</span>
       <span style="color:var(--text);">${e.mark}</span>
@@ -1324,9 +1476,16 @@ window.importCSV = function() {
     entryCounter++;
     entries.push({ id:entryCounter, type:e.type, mark:e.mark,
       lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit,
-      l:e.lRaw*f, w:e.wRaw*f, h:e.hRaw*f, vol:e.vol,
-      beamCoords: e.beamCoords || null,
-      pointCoords: e.pointCoords || null });
+      l: e.lRaw ? e.lRaw*f : null,
+      w: e.wRaw ? e.wRaw*f : null,
+      h: e.hRaw*f, vol:e.vol,
+      beamCoords:  e.beamCoords  || null,
+      pointCoords: e.pointCoords || null,
+      shapeMode:   e.shapeMode   || false,
+      slabSegments:e.slabSegments|| null,
+      slabArea:    e.slabArea    || null,
+      slabCentroid:e.slabCentroid|| null,
+    });
   }
   toast(`${csvParsed.length} elements imported from CSV.`);
   clearCSV(); renderList();
@@ -1354,8 +1513,12 @@ window.saveReport = async function() {
     entries: entries.map(e => ({
       type:e.type, mark:e.mark,
       lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit, vol:e.vol,
-      beamCoords: e.beamCoords || null,
-      pointCoords: e.pointCoords || null
+      beamCoords:  e.beamCoords  || null,
+      pointCoords: e.pointCoords || null,
+      shapeMode:   e.shapeMode   || false,
+      slabSegments:e.slabSegments|| null,
+      slabArea:    e.slabArea    || null,
+      slabCentroid:e.slabCentroid|| null,
     })),
     savedAt:   new Date().toISOString(),
     savedBy:   currentUName,
@@ -1451,8 +1614,13 @@ window.useReport = function(id) {
     return { id:++entryCounter, type:e.type, mark:e.mark,
       lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit,
       l:e.lRaw*f, w:e.wRaw*f, h:e.hRaw*f, vol:e.vol,
-      beamCoords: e.beamCoords || null,
-      pointCoords: e.pointCoords || null };
+      beamCoords:  e.beamCoords  || null,
+      pointCoords: e.pointCoords || null,
+      shapeMode:   e.shapeMode   || false,
+      slabSegments:e.slabSegments|| null,
+      slabArea:    e.slabArea    || null,
+      slabCentroid:e.slabCentroid|| null,
+    };
   });
   document.getElementById('f-date').value    = d.date || '';
   document.getElementById('f-project').value = d.project || '';
@@ -1985,8 +2153,12 @@ function hitTest(mx, my) {
       if (distToSegment(mx, my, p1.x, p1.y, p2.x, p2.y) < 8) return i;
     } else {
       if (c.x==null||c.y==null) continue;
-      const p = wToC(c.x, c.y);
-      if (Math.hypot(mx-p.x, my-p.y) < 12) return i;
+      if (el.shapeMode && el.slabSegments) {
+        if (ptInSlabPoly(el, c, mx, my)) return i;
+      } else {
+        const p = wToC(c.x, c.y);
+        if (Math.hypot(mx-p.x, my-p.y) < 12) return i;
+      }
     }
   }
   return null;
@@ -2130,17 +2302,21 @@ window.redrawPlan = function() {
       drawCenterMark(planCtx, cp, tc.stroke);
 
     } else {
-      // Slab / Other — circle
+      // Slab / Other — use polygon if shapeMode, else circle
       if (c.x==null||c.y==null) continue;
-      const cp  = wToC(c.x, c.y);
-      const r   = Math.max(8, Math.min(40, Math.sqrt((el.lRaw||1)*(el.wRaw||1)) * planScale * (el.unit==='m'?1:el.unit==='cm'?0.01:0.001) * 0.3));
-      planCtx.beginPath(); planCtx.arc(cp.x, cp.y, r, 0, Math.PI*2);
-      planCtx.fillStyle   = tc.fill + alpha + ')';
-      planCtx.strokeStyle = tc.stroke;
-      planCtx.lineWidth   = isHov ? 2 : 1;
-      planCtx.fill(); planCtx.stroke();
-      drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov, st==='Full');
-      drawCenterMark(planCtx, cp, tc.stroke);
+      const cp = wToC(c.x, c.y);
+      if (el.shapeMode && el.slabSegments) {
+        drawSlabPolygon(planCtx, el, c, tc, st, isHov);
+      } else {
+        const r = Math.max(8, Math.min(40, Math.sqrt((el.lRaw||1)*(el.wRaw||1)) * planScale * (el.unit==='m'?1:el.unit==='cm'?0.01:0.001) * 0.3));
+        planCtx.beginPath(); planCtx.arc(cp.x, cp.y, r, 0, Math.PI*2);
+        planCtx.fillStyle   = tc.fill + alpha + ')';
+        planCtx.strokeStyle = tc.stroke;
+        planCtx.lineWidth   = isHov ? 2 : 1;
+        planCtx.fill(); planCtx.stroke();
+        drawLabel(planCtx, el.mark, cp.x, cp.y, tc.stroke, isHov, st==='Full');
+        drawCenterMark(planCtx, cp, tc.stroke);
+      }
     }
   }
 
@@ -2385,6 +2561,9 @@ window.zoomExtents = function() {
     if (el.type === 'Beam') {
       if (c.x1!=null) { xs.push(c.x1); ys.push(c.y1); }
       if (c.x2!=null) { xs.push(c.x2); ys.push(c.y2); }
+    } else if (el.shapeMode && el.slabSegments && el.slabCentroid && c.x!=null) {
+      const origin = { x: c.x - el.slabCentroid.x, y: c.y - el.slabCentroid.y };
+      slabGetPointsFromSegs(el.slabSegments).forEach(p => { xs.push(origin.x+p.x); ys.push(origin.y+p.y); });
     } else {
       if (c.x!=null) { xs.push(c.x); ys.push(c.y); }
     }
@@ -2504,6 +2683,10 @@ window.saveEditReport = async function() {
       lRaw:e.lRaw, wRaw:e.wRaw, hRaw:e.hRaw, unit:e.unit, vol:e.vol,
       beamCoords:  e.beamCoords  || null,
       pointCoords: e.pointCoords || null,
+      shapeMode:   e.shapeMode   || false,
+      slabSegments:e.slabSegments|| null,
+      slabArea:    e.slabArea    || null,
+      slabCentroid:e.slabCentroid|| null,
     })),
     editedAt: new Date().toISOString(),
     editedBy: currentUName,
@@ -2534,6 +2717,199 @@ window.loadPlanView = async function() {
     });
   } catch(e) {}
 };
+
+// ── SLAB SHAPE DRAWER ─────────────────────────────────────────
+let slabSegments  = [];
+let slabIsClosed  = false;
+let slabAreaVal   = null;
+let slabCurrentDir= null;
+
+window.onSlabShapeToggle = function() {
+  const on = document.getElementById('slab-shape-toggle').checked;
+  document.getElementById('slab-shape-inputs').style.display = on ? 'block' : 'none';
+  const lWrap = document.getElementById('f-l-wrap');
+  const wEl   = document.getElementById('f-w')?.closest('.fi');
+  if (lWrap) lWrap.style.display = on ? 'none' : '';
+  if (wEl)   wEl.style.display   = on ? 'none' : '';
+  if (!on) slabClearShape();
+};
+
+window.slabSetDir = function(dir) {
+  slabCurrentDir = dir;
+  ['N','S','E','W'].forEach(d => {
+    const el = document.getElementById('slab-arr-' + d);
+    if (el) el.classList.toggle('active', d === dir);
+  });
+};
+
+window.slabAddSegment = function() {
+  if (!slabCurrentDir) { toast('Select a direction.', true); return; }
+  const len = parseFloat(document.getElementById('slab-seg-len').value);
+  if (!len || len <= 0) { toast('Enter a valid length.', true); return; }
+  if (slabIsClosed) { toast('Shape closed. Clear to start over.', true); return; }
+  slabSegments.push({ dir: slabCurrentDir, len });
+  document.getElementById('slab-seg-len').value = '';
+  slabRenderSegList(); slabDrawCanvas();
+};
+
+window.slabDelSegment = function(i) {
+  slabSegments.splice(i, 1);
+  slabIsClosed = false; slabAreaVal = null;
+  document.getElementById('slab-area-preview').textContent = 'Area: —';
+  slabRenderSegList(); slabDrawCanvas();
+};
+
+window.slabClosePolygon = function() {
+  if (slabSegments.length < 3) { toast('Need at least 3 segments.', true); return; }
+  slabIsClosed = true;
+  const pts = slabGetPoints();
+  slabAreaVal = slabShoelace(pts);
+  document.getElementById('slab-area-preview').textContent = `Area: ${fmt(slabAreaVal)} m²`;
+  slabDrawCanvas();
+  toast('Shape closed — area: ' + fmt(slabAreaVal) + ' m²');
+};
+
+window.slabClearShape = function() {
+  slabSegments = []; slabIsClosed = false; slabAreaVal = null; slabCurrentDir = null;
+  ['N','S','E','W'].forEach(d => {
+    const el = document.getElementById('slab-arr-' + d);
+    if (el) el.classList.remove('active');
+  });
+  const lenEl = document.getElementById('slab-seg-len');
+  if (lenEl) lenEl.value = '';
+  const prev = document.getElementById('slab-area-preview');
+  if (prev) prev.textContent = 'Area: —';
+  slabRenderSegList(); slabDrawCanvas();
+};
+
+function slabRenderSegList() {
+  const el = document.getElementById('slab-seg-list');
+  if (!el) return;
+  if (!slabSegments.length) {
+    el.innerHTML = '<div style="font-family:var(--fm);font-size:.72rem;color:var(--muted);">No segments yet.</div>';
+    return;
+  }
+  const arrows = { N:'↑', S:'↓', E:'→', W:'←' };
+  el.innerHTML = slabSegments.map((s, i) => `
+    <div class="slab-seg-item">
+      <span class="slab-seg-dir">${arrows[s.dir]}</span>
+      <span class="slab-seg-len">${s.len} m</span>
+      <button class="slab-seg-del" onclick="slabDelSegment(${i})">✕</button>
+    </div>`).join('');
+}
+
+function slabGetPoints() {
+  return slabGetPointsFromSegs(slabSegments);
+}
+
+function slabGetPointsFromSegs(segs) {
+  let x = 0, y = 0;
+  const pts = [{ x, y }];
+  const dirMap = { N:{dx:0,dy:1}, S:{dx:0,dy:-1}, E:{dx:1,dy:0}, W:{dx:-1,dy:0} };
+  for (const s of segs) {
+    const d = dirMap[s.dir];
+    x += d.dx * s.len; y += d.dy * s.len;
+    pts.push({ x, y });
+  }
+  return pts;
+}
+
+function slabShoelace(pts) {
+  let a = 0; const n = pts.length;
+  for (let i=0;i<n;i++) { const j=(i+1)%n; a += pts[i].x*pts[j].y - pts[j].x*pts[i].y; }
+  return Math.abs(a) / 2;
+}
+
+function slabGetCentroid() {
+  return slabCentroidFromPoints(slabGetPoints());
+}
+
+function slabCentroidFromPoints(pts) {
+  let cx = 0, cy = 0;
+  pts.forEach(p => { cx += p.x; cy += p.y; });
+  return { x: cx/pts.length, y: cy/pts.length };
+}
+
+function slabDrawCanvas() {
+  const canvas = document.getElementById('slab-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  if (!slabSegments.length) return;
+  const pts = slabGetPoints();
+  const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+  const pad = 20;
+  const scale = Math.min((W-pad*2)/(maxX-minX||1), (H-pad*2)/(maxY-minY||1));
+  const toC = p => ({ x: pad+(p.x-minX)*scale, y: H-pad-(p.y-minY)*scale });
+  const cpts = pts.map(toC);
+  if (slabIsClosed) {
+    ctx.beginPath(); ctx.moveTo(cpts[0].x,cpts[0].y);
+    for (let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
+    ctx.closePath(); ctx.fillStyle='rgba(0,255,157,.1)'; ctx.fill();
+  }
+  ctx.strokeStyle='#00ff9d'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(cpts[0].x,cpts[0].y);
+  for (let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
+  if (slabIsClosed) ctx.closePath();
+  ctx.stroke();
+  if (!slabIsClosed && cpts.length > 1) {
+    ctx.setLineDash([4,4]); ctx.strokeStyle='rgba(0,255,157,.3)';
+    ctx.beginPath(); ctx.moveTo(cpts[cpts.length-1].x,cpts[cpts.length-1].y);
+    ctx.lineTo(cpts[0].x,cpts[0].y); ctx.stroke(); ctx.setLineDash([]);
+  }
+  cpts.forEach((p,i) => {
+    ctx.beginPath(); ctx.arc(p.x,p.y,i===0?4:2,0,Math.PI*2);
+    ctx.fillStyle=i===0?'#00ff9d':'rgba(0,255,157,.6)'; ctx.fill();
+  });
+}
+
+// ── PLAN: DRAW SLAB POLYGON ───────────────────────────────────
+function drawSlabPolygon(ctx, el, c, tc, st, isHov) {
+  if (!el.slabSegments || !el.slabCentroid) return;
+  const alpha  = st==='Full' ? 0.85 : st==='Partial' ? 0.5 : 0.22;
+  const origin = { x: c.x - el.slabCentroid.x, y: c.y - el.slabCentroid.y };
+  const rawPts = slabGetPointsFromSegs(el.slabSegments);
+  const cpts   = rawPts.map(p => wToC(origin.x + p.x, origin.y + p.y));
+  ctx.beginPath();
+  ctx.moveTo(cpts[0].x, cpts[0].y);
+  for (let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x, cpts[i].y);
+  ctx.closePath();
+  ctx.fillStyle   = tc.fill + alpha + ')';
+  ctx.strokeStyle = tc.stroke;
+  ctx.lineWidth   = isHov ? 2 : 1;
+  ctx.fill(); ctx.stroke();
+  if (st === 'Partial') {
+    ctx.save(); ctx.beginPath();
+    ctx.moveTo(cpts[0].x,cpts[0].y);
+    for (let i=1;i<cpts.length;i++) ctx.lineTo(cpts[i].x,cpts[i].y);
+    ctx.closePath(); ctx.clip();
+    const bb = { minX:Math.min(...cpts.map(p=>p.x)), maxX:Math.max(...cpts.map(p=>p.x)),
+                 minY:Math.min(...cpts.map(p=>p.y)), maxY:Math.max(...cpts.map(p=>p.y)) };
+    ctx.strokeStyle = tc.stroke; ctx.lineWidth = 0.5; ctx.globalAlpha = 0.25;
+    for (let d = bb.minX-(bb.maxY-bb.minY); d < bb.maxX+(bb.maxY-bb.minY); d += 8) {
+      ctx.beginPath(); ctx.moveTo(d,bb.minY); ctx.lineTo(d+(bb.maxY-bb.minY),bb.maxY); ctx.stroke();
+    }
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
+  const cp = wToC(c.x, c.y);
+  drawLabel(ctx, el.mark, cp.x, cp.y, tc.stroke, isHov, st==='Full');
+  drawCenterMark(ctx, cp, tc.stroke);
+}
+
+function ptInSlabPoly(el, c, mx, my) {
+  if (!el.slabSegments || !el.slabCentroid) return false;
+  const origin = { x: c.x - el.slabCentroid.x, y: c.y - el.slabCentroid.y };
+  const rawPts = slabGetPointsFromSegs(el.slabSegments);
+  const cpts   = rawPts.map(p => wToC(origin.x + p.x, origin.y + p.y));
+  let inside = false; const n = cpts.length;
+  for (let i=0,j=n-1;i<n;j=i++) {
+    const xi=cpts[i].x,yi=cpts[i].y,xj=cpts[j].x,yj=cpts[j].y;
+    if (((yi>my)!==(yj>my))&&(mx<(xj-xi)*(my-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
 
 function renderPlanReportSel() {
   const sel = document.getElementById('plan-report-sel');
