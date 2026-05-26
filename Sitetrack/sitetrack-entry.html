@@ -282,7 +282,7 @@
         <!-- Quantity (optional) -->
         <div class="fi">
           <label>Quantity</label>
-          <input type="text" id="f-quantity" placeholder='0 or e.g. 10+5=' inputmode="decimal"/>
+          <input type="text" id="f-quantity" placeholder='0 or e.g. 10+5=' inputmode="text"/>
         </div>
         <!-- Unit (optional) -->
         <div class="fi">
@@ -607,19 +607,39 @@ function showToast(msg, type='success') {
 function v(id) { return document.getElementById(id).value.trim(); }
 
 // ── QUANTITY EXPRESSION EVALUATOR ────────────────────────────
-document.getElementById('f-quantity').addEventListener('keyup', function(e) {
-  const raw = this.value;
-  if (!raw.endsWith('=')) return;
-  const expr = raw.slice(0, -1).trim();
-  if (!expr) return;
+function evalQty(expr) {
+  if (!expr) return null;
+  const clean = expr.replace(/=/g,'').trim();
+  if (!clean) return null;
   try {
-    // Only allow safe math characters
-    if (!/^[\d\s\+\-\*\/\.\(\)]+$/.test(expr)) return;
-    const result = Function('"use strict"; return (' + expr + ')')();
+    if (!/^[\d\s\+\-\*\/\.\(\)]+$/.test(clean)) return null;
+    const result = Function('"use strict"; return (' + clean + ')')();
     if (typeof result === 'number' && isFinite(result)) {
-      this.value = parseFloat(result.toFixed(6)).toString();
+      return parseFloat(result.toFixed(6));
     }
   } catch { /* leave as-is */ }
+  return null;
+}
+
+document.getElementById('f-quantity').addEventListener('keyup', function(e) {
+  if (e.key !== '=') return;
+  const result = evalQty(this.value);
+  if (result !== null) {
+    // Show computed value as a hint below the field
+    let hint = document.getElementById('qty-hint');
+    if (!hint) {
+      hint = document.createElement('div');
+      hint.id = 'qty-hint';
+      hint.style.cssText = 'font-family:var(--fm);font-size:.72rem;color:var(--accent3);margin-top:4px;letter-spacing:.5px;';
+      this.parentNode.appendChild(hint);
+    }
+    hint.textContent = '= ' + result;
+  }
+});
+
+document.getElementById('f-quantity').addEventListener('input', function() {
+  const hint = document.getElementById('qty-hint');
+  if (hint) hint.textContent = '';
 });
 
 // ── DESIGNATION ───────────────────────────────────────────────
@@ -852,7 +872,7 @@ function renderTable() {
       <td class="muted-td">${num}</td>
       <td>${e.date}</td><td>${e.name}</td><td>${e.designation}</td>
       <td>${e.activity}</td><td>${e.location}</td><td>${e.floorLevel}</td>
-      <td>${e.quantity||'—'}</td><td>${e.unit||'—'}</td>
+      <td style="font-family:var(--fm)">${(()=>{ const c=evalQty(e.quantity); return c!==null ? c : (e.quantity||'—'); })()}</td><td>${e.unit||'—'}</td>
       <td style="max-width:150px;word-break:break-word">${e.labor}</td>
       <td>${e.itemCredited||'—'}</td>
       <td>${statusHTML}</td>

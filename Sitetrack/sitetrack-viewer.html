@@ -291,7 +291,7 @@ window.renderTable = function() {
       <td>${d.activity||'—'}</td>
       <td>${d.location||'—'}</td>
       <td>${d.floorLevel||'—'}</td>
-      <td style="font-family:var(--fm)">${d.quantity||'—'}</td>
+      <td style="font-family:var(--fm)">${(()=>{ const c=evalQty(d.quantity); return c!==null?c:(d.quantity||'—'); })()}</td>
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent3)">${d.unit||'—'}</td>
       <td style="max-width:180px;word-break:break-word;font-size:.78rem">${d.labor||'—'}</td>
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent2)">${d.itemCredited||'—'}</td>
@@ -320,6 +320,17 @@ window.exportCSV = function() {
   a.click();
   toast('Exported!');
 };
+
+function evalQty(expr) {
+  if (!expr) return null;
+  const clean = expr.toString().replace(/=/g,'').trim();
+  if (!clean || !/^[\d\s\+\-\*\/\.\(\)]+$/.test(clean)) return null;
+  try {
+    const result = Function('"use strict"; return (' + clean + ')')();
+    if (typeof result === 'number' && isFinite(result)) return parseFloat(result.toFixed(6));
+  } catch { /* leave as-is */ }
+  return null;
+}
 
 function toast(msg,err=false){
   const t=document.getElementById('toast');
