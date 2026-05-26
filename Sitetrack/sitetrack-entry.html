@@ -282,7 +282,7 @@
         <!-- Quantity (optional) -->
         <div class="fi">
           <label>Quantity</label>
-          <input type="number" id="f-quantity" placeholder="0" min="0" step="any"/>
+          <input type="text" id="f-quantity" placeholder='0 or e.g. 10+5=' inputmode="decimal"/>
         </div>
         <!-- Unit (optional) -->
         <div class="fi">
@@ -605,6 +605,22 @@ function showToast(msg, type='success') {
 }
 
 function v(id) { return document.getElementById(id).value.trim(); }
+
+// ── QUANTITY EXPRESSION EVALUATOR ────────────────────────────
+document.getElementById('f-quantity').addEventListener('keyup', function(e) {
+  const raw = this.value;
+  if (!raw.endsWith('=')) return;
+  const expr = raw.slice(0, -1).trim();
+  if (!expr) return;
+  try {
+    // Only allow safe math characters
+    if (!/^[\d\s\+\-\*\/\.\(\)]+$/.test(expr)) return;
+    const result = Function('"use strict"; return (' + expr + ')')();
+    if (typeof result === 'number' && isFinite(result)) {
+      this.value = parseFloat(result.toFixed(6)).toString();
+    }
+  } catch { /* leave as-is */ }
+});
 
 // ── DESIGNATION ───────────────────────────────────────────────
 document.getElementById('desig-skilled').addEventListener('click', function() { setDesig(this); });
