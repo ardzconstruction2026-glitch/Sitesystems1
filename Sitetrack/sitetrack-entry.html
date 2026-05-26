@@ -1098,7 +1098,7 @@ document.getElementById('import-csv-input').addEventListener('change', function(
       if (!entry.date || !entry.name || !entry.activity) continue;
 
       // Skip duplicates
-      const sig = `${entry.date}|${entry.name}|${entry.activity}|${entry.location}|${entry.floorlevel}`;
+      const sig = `${entry.date}|${entry.name}|${entry.activity}|${entry.location}|${entry.floor level}`;
       if (existingSigs.has(sig)) continue;
 
       // Assign id, status, createdAt
