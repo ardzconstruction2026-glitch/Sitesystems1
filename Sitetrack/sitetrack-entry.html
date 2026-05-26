@@ -1085,8 +1085,8 @@ document.getElementById('import-csv-input').addEventListener('change', function(
     const rawHeaders = parseRow(lines[0]).map(h => h.toLowerCase().trim());
     const fieldKeys  = rawHeaders.map(h => headerMap[h] || null);
 
-    // Duplicate check by date+name+activity combo
-    const existingSigs = new Set(entries.map(x => `${x.date}|${x.name}|${x.activity}`));
+    // Duplicate check by date+name+activity+location+floorLevel combo
+    const existingSigs = new Set(entries.map(x => `${x.date}|${x.name}|${x.activity}|${x.location}|${x.floorLevel}`));
     let added = 0;
 
     for (let i = 1; i < lines.length; i++) {
@@ -1098,7 +1098,7 @@ document.getElementById('import-csv-input').addEventListener('change', function(
       if (!entry.date || !entry.name || !entry.activity) continue;
 
       // Skip duplicates
-      const sig = `${entry.date}|${entry.name}|${entry.activity}`;
+      const sig = `${entry.date}|${entry.name}|${entry.activity}|${entry.location}|${entry.floorLevel}`;
       if (existingSigs.has(sig)) continue;
 
       // Assign id, status, createdAt
