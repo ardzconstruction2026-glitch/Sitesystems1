@@ -330,7 +330,11 @@
           <button class="btn-sm btn-export-sm" onclick="exportJSON()">⬇ Export JSON</button>
           <button class="btn-sm btn-export-sm" onclick="document.getElementById('import-json-input').click()">📂 Import JSON</button>
           <input type="file" id="import-json-input" accept=".json" style="display:none"/>
+          <button class="btn-sm btn-export-sm" onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="btn-sm btn-export-sm" onclick="document.getElementById('import-csv-input').click()">📂 Import CSV</button>
+          <input type="file" id="import-csv-input" accept=".csv" style="display:none"/>
           <button class="btn-sm btn-clear" onclick="clearUploaded()">✕ Clear Uploaded</button>
+          <button class="btn-sm btn-clear" onclick="clearAll()">🗑 Clear All</button>
         </div>
       </div>
       <div class="tw">
@@ -909,6 +913,9 @@ document.getElementById('btn-del-confirm').addEventListener('click', () => {
   if (pendingDelId === '__uploaded__') {
     entries = entries.filter(e => e.status !== 'uploaded');
     showToast('Uploaded entries cleared.','info');
+  } else if (pendingDelId === '__all__') {
+    entries = [];
+    showToast('All entries cleared.','info');
   } else {
     entries = entries.filter(e => e.id !== pendingDelId);
     showToast('Entry deleted.','info');
@@ -928,6 +935,13 @@ window.clearUploaded = function() {
   if (!count) { showToast('No uploaded entries to clear.','info'); return; }
   pendingDelId = '__uploaded__';
   document.getElementById('del-msg').textContent = `This will remove ${count} uploaded entr${count===1?'y':'ies'} from local storage. This cannot be undone.`;
+  document.getElementById('del-overlay').classList.add('open');
+};
+
+window.clearAll = function() {
+  if (!entries.length) { showToast('No entries to clear.','info'); return; }
+  pendingDelId = '__all__';
+  document.getElementById('del-msg').textContent = `This will permanently remove all ${entries.length} entr${entries.length===1?'y':'ies'} from local storage. This cannot be undone.`;
   document.getElementById('del-overlay').classList.add('open');
 };
 
@@ -959,7 +973,6 @@ document.getElementById('import-json-input').addEventListener('change', function
     let added = 0;
     for (const item of parsed) {
       if (!item.id || existingIds.has(item.id)) continue;
-      // Ensure status is set
       if (!item.status) item.status = 'pending';
       entries.push(item);
       existingIds.add(item.id);
@@ -970,7 +983,103 @@ document.getElementById('import-json-input').addEventListener('change', function
     showToast(added > 0 ? `${added} entr${added===1?'y':'ies'} imported ✓` : 'No new entries found.', added > 0 ? 'success' : 'info');
   };
   reader.readAsText(file);
-  // Reset input so same file can be re-imported if needed
+  this.value = '';
+});
+
+// ── EXPORT CSV ────────────────────────────────────────────────
+window.exportCSV = function() {
+  if (!entries.length) { showToast('No entries to export.','error'); return; }
+  const fields  = ['date','name','designation','activity','location','floorLevel','quantity','unit','labor','itemCredited','status'];
+  const headers = ['Date','Name','Designation','Activity','Location','Floor Level','Quantity','Unit','Labor Assigned','Item Credited','Status'];
+  const rows    = entries.map(e => fields.map(f => (e[f]||'').toString().replace(/"/g,'""')));
+  const csv     = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob    = new Blob([csv], {type:'text/csv'});
+  const a       = document.createElement('a');
+  a.href        = URL.createObjectURL(blob);
+  a.download    = `sitetrack-offline-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('CSV exported ✓');
+};
+
+// ── IMPORT CSV ────────────────────────────────────────────────
+document.getElementById('import-csv-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result.trim();
+    if (!text) { showToast('CSV file is empty.','error'); return; }
+
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) { showToast('CSV has no data rows.','error'); return; }
+
+    // Parse a single CSV row respecting quoted fields
+    function parseRow(line) {
+      const result = []; let cur = '', inQuote = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuote && line[i+1] === '"') { cur += '"'; i++; }
+          else inQuote = !inQuote;
+        } else if (ch === ',' && !inQuote) { result.push(cur); cur = ''; }
+        else { cur += ch; }
+      }
+      result.push(cur);
+      return result;
+    }
+
+    // Map header labels to field keys
+    const headerMap = {
+      'date':           'date',
+      'name':           'name',
+      'designation':    'designation',
+      'activity':       'activity',
+      'location':       'location',
+      'floor level':    'floorLevel',
+      'floorlevel':     'floorLevel',
+      'quantity':       'quantity',
+      'unit':           'unit',
+      'labor assigned': 'labor',
+      'labor':          'labor',
+      'item credited':  'itemCredited',
+      'itemcredited':   'itemCredited',
+      'status':         'status',
+    };
+
+    const rawHeaders = parseRow(lines[0]).map(h => h.toLowerCase().trim());
+    const fieldKeys  = rawHeaders.map(h => headerMap[h] || null);
+
+    // Duplicate check by date+name+activity combo
+    const existingSigs = new Set(entries.map(x => `${x.date}|${x.name}|${x.activity}`));
+    let added = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols  = parseRow(lines[i]);
+      const entry = {};
+      fieldKeys.forEach((key, idx) => { if (key) entry[key] = (cols[idx] || '').trim(); });
+
+      // Skip rows missing core fields
+      if (!entry.date || !entry.name || !entry.activity) continue;
+
+      // Skip duplicates
+      const sig = `${entry.date}|${entry.name}|${entry.activity}`;
+      if (existingSigs.has(sig)) continue;
+
+      // Assign id, status, createdAt
+      entry.id        = Date.now().toString() + Math.random().toString(36).slice(2) + i;
+      entry.status    = 'pending';
+      entry.createdAt = new Date().toISOString();
+
+      entries.push(entry);
+      existingSigs.add(sig);
+      added++;
+    }
+
+    saveEntries();
+    renderTable();
+    showToast(added > 0 ? `${added} entr${added===1?'y':'ies'} imported ✓` : 'No new entries found.', added > 0 ? 'success' : 'info');
+  };
+  reader.readAsText(file);
   this.value = '';
 });
 
