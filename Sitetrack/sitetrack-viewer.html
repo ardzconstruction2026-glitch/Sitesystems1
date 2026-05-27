@@ -156,6 +156,7 @@
             <th onclick="sort(1)">Date</th>
             <th onclick="sort(2)">Name</th>
             <th onclick="sort(3)">Designation</th>
+            <th>Worker Status</th>
             <th onclick="sort(4)">Activity</th>
             <th onclick="sort(5)">Location</th>
             <th onclick="sort(6)">Floor</th>
@@ -185,8 +186,9 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-let allData = [];
-let sortState = { col: 1, asc: false };
+let allData    = [];
+let workersMap = {}; // name -> workerStatus
+let sortState  = { col: 1, asc: false };
 
 onAuthStateChanged(auth, async user => {
   if (user) {
@@ -228,8 +230,16 @@ window.refreshAll = async function() {
   const btn=document.getElementById('rbtn'), ov=document.getElementById('overlay');
   btn.classList.add('loading'); ov.classList.add('show');
   try {
-    const snap = await getDocs(collection(db,'siteActivities'));
-    allData = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const [actSnap, wSnap] = await Promise.all([
+      getDocs(collection(db,'siteActivities')),
+      getDocs(collection(db,'workers')),
+    ]);
+    allData = actSnap.docs.map(d=>({id:d.id,...d.data()}));
+    workersMap = {};
+    wSnap.docs.forEach(d => {
+      const w = d.data();
+      workersMap[w.name] = w.workerStatus || 'Active';
+    });
     populateFilters();
     updateStats();
     renderTable();
@@ -281,13 +291,19 @@ window.renderTable = function() {
 
   document.getElementById('rcount').textContent = data.length+' records';
   const tb = document.getElementById('main-tbody');
-  if (!data.length) { tb.innerHTML='<tr><td colspan="11"><div class="empty">NO RECORDS FOUND</div></td></tr>'; return; }
-  tb.innerHTML = data.map((d,i) => `
+  if (!data.length) { tb.innerHTML='<tr><td colspan="12"><div class="empty">NO RECORDS FOUND</div></td></tr>'; return; }
+  tb.innerHTML = data.map((d,i) => {
+    const wStatus  = workersMap[d.name] || 'Active';
+    const wsBadge  = wStatus === 'Active'
+      ? '<span style="font-family:var(--fm);font-size:.65rem;padding:2px 7px;border-radius:3px;background:rgba(0,255,157,.1);color:var(--accent3);border:1px solid rgba(0,255,157,.3)">Active</span>'
+      : '<span style="font-family:var(--fm);font-size:.65rem;padding:2px 7px;border-radius:3px;background:rgba(255,59,92,.1);color:var(--danger);border:1px solid rgba(255,59,92,.3)">Resigned</span>';
+    return `
     <tr>
       <td style="font-family:var(--fm);color:var(--muted);font-size:.75rem">${i+1}</td>
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${d.date||'—'}</td>
       <td>${d.name||'—'}</td>
       <td><span class="desig-badge ${d.designation==='Skilled'?'desig-s':'desig-l'}">${d.designation||'—'}</span></td>
+      <td>${wsBadge}</td>
       <td>${d.activity||'—'}</td>
       <td>${d.location||'—'}</td>
       <td>${d.floorLevel||'—'}</td>
@@ -295,7 +311,8 @@ window.renderTable = function() {
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent3)">${d.unit||'—'}</td>
       <td style="max-width:180px;word-break:break-word;font-size:.78rem">${d.labor||'—'}</td>
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent2)">${d.itemCredited||'—'}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 };
 
 window.sort = function(col) {

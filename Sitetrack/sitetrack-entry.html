@@ -154,6 +154,13 @@
   .desig-badge{font-family:var(--fm);font-size:.68rem;padding:3px 8px;border-radius:4px;letter-spacing:1px;}
   .desig-skilled{background:rgba(74,158,255,.12);color:var(--accent2);border:1px solid rgba(74,158,255,.3);}
   .desig-labor{background:rgba(240,192,64,.1);color:var(--accent);border:1px solid rgba(240,192,64,.3);}
+  .ws-active{background:rgba(0,255,157,.1);color:var(--accent3);border:1px solid rgba(0,255,157,.3);font-family:var(--fm);font-size:.68rem;padding:3px 9px;border-radius:3px;letter-spacing:.5px;}
+  .ws-resigned{background:rgba(255,59,92,.1);color:var(--danger);border:1px solid rgba(255,59,92,.3);font-family:var(--fm);font-size:.68rem;padding:3px 9px;border-radius:3px;letter-spacing:.5px;}
+  .btn-toggle-status{font-family:var(--fm);font-size:.68rem;padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.5px;}
+  .btn-to-resigned{background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);color:var(--danger);}
+  .btn-to-resigned:hover{background:rgba(255,59,92,.2);}
+  .btn-to-active{background:rgba(0,255,157,.08);border:1px solid rgba(0,255,157,.3);color:var(--accent3);}
+  .btn-to-active:hover{background:rgba(0,255,157,.2);}
 
   /* PICKER MODAL */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;}
@@ -226,6 +233,7 @@
     <button class="tb active" onclick="switchTab('t1',this)">New Entry</button>
     <button class="tb" onclick="switchTab('t2',this)">Saved Entries</button>
     <button class="tb" onclick="switchTab('t3',this)">Manage Lists</button>
+    <button class="tb" onclick="switchTab('t4',this)">Worker Status</button>
   </nav>
 
   <!-- TAB 1: NEW ENTRY -->
@@ -439,6 +447,33 @@
       </div>
     </div>
   </div>
+
+  <!-- TAB 4: WORKER STATUS -->
+  <div id="t4" class="tc">
+    <div class="card">
+      <div class="ctitle">Worker Status</div>
+      <div style="display:flex;gap:.75rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center;">
+        <select id="ws-filter" onchange="renderWorkerStatus()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--fb);font-size:.85rem;outline:none;cursor:pointer;">
+          <option value="">All Workers</option>
+          <option value="Active">Active</option>
+          <option value="Resigned">Resigned</option>
+        </select>
+        <span id="ws-count" style="font-family:var(--fm);font-size:.72rem;color:var(--muted);margin-left:auto;"></span>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Designation</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr></thead>
+          <tbody id="ws-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- PICKER MODAL -->
@@ -472,7 +507,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, addDoc, getDoc, getDocs, deleteDoc, setDoc }
+import { getFirestore, collection, doc, addDoc, getDoc, getDocs, deleteDoc, setDoc, updateDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { firebaseConfig } from '../references/firebase-config.js';
 
@@ -589,6 +624,7 @@ window.switchTab = function(id, btn) {
   document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
+  if (id === 't4') renderWorkerStatus();
 };
 
 function setToday() {
@@ -1245,6 +1281,45 @@ async function removeListItem(field, idx) {
     showToast('Removed.','info');
   } catch(e){ showToast('Error removing.','error'); }
 }
+
+// ── WORKER STATUS ─────────────────────────────────────────────
+window.renderWorkerStatus = function() {
+  const filter = document.getElementById('ws-filter').value;
+  const list   = workers.filter(w => !filter || (w.workerStatus||'Active') === filter);
+  const tbody  = document.getElementById('ws-tbody');
+  document.getElementById('ws-count').textContent = list.length + ' worker' + (list.length===1?'':'s');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem">NO WORKERS FOUND</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map((w, i) => {
+    const status  = w.workerStatus || 'Active';
+    const isActive = status === 'Active';
+    return `<tr>
+      <td style="font-family:var(--fm);color:var(--muted);font-size:.75rem">${i+1}</td>
+      <td>${w.name}</td>
+      <td><span class="desig-badge ${w.designation==='Skilled'?'desig-skilled':'desig-labor'}">${w.designation}</span></td>
+      <td><span class="${isActive?'ws-active':'ws-resigned'}">${status}</span></td>
+      <td><button class="btn-toggle-status ${isActive?'btn-to-resigned':'btn-to-active'}"
+        onclick="toggleWorkerStatus('${w.id}')">
+        ${isActive ? 'Mark Resigned' : 'Mark Active'}
+      </button></td>
+    </tr>`;
+  }).join('');
+};
+
+window.toggleWorkerStatus = async function(id) {
+  const worker = workers.find(w => w.id === id);
+  if (!worker) return;
+  const newStatus = (worker.workerStatus || 'Active') === 'Active' ? 'Resigned' : 'Active';
+  try {
+    await updateDoc(doc(db, 'workers', id), { workerStatus: newStatus });
+    worker.workerStatus = newStatus;
+    renderWorkerStatus();
+    renderWorkerList();
+    showToast(`${worker.name} marked as ${newStatus}.`);
+  } catch(e) { showToast('Error updating status.','error'); }
+};
 </script>
 </body>
 </html>
