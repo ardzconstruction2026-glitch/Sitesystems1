@@ -250,8 +250,8 @@ function updateStats() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('s-total').textContent   = allData.length;
   document.getElementById('s-today').textContent   = allData.filter(d=>d.date===today).length;
-  document.getElementById('s-skilled').textContent = allData.filter(d=>d.designation==='Skilled').length;
-  document.getElementById('s-labor').textContent   = allData.filter(d=>d.designation==='Labor').length;
+  document.getElementById('s-skilled').textContent = new Set(allData.filter(d=>d.designation==='Skilled').map(d=>d.name)).size;
+  document.getElementById('s-labor').textContent   = new Set(allData.filter(d=>d.designation==='Labor').map(d=>d.name)).size;
 }
 
 window.renderTable = function() {
