@@ -733,7 +733,7 @@ function closePicker() {
 
 function getPickerItems(field, search) {
   if (field === 'name') {
-    return workers.map(w=>w.name).filter(n=>n.toLowerCase().includes(search));
+    return workers.filter(w=>(w.workerStatus||'Active')==='Active').map(w=>w.name).filter(n=>n.toLowerCase().includes(search));
   } else if (field === 'activity') {
     return activities.map(a=>a.name).filter(n=>n.toLowerCase().includes(search));
   } else if (field === 'location') {
@@ -745,7 +745,7 @@ function getPickerItems(field, search) {
   } else if (field === 'itemCredited') {
     return itemsCredited.map(i=>i.name).filter(n=>n.toLowerCase().includes(search));
   } else if (field === 'labor') {
-    const laborWorkers = workers.filter(w=>w.designation==='Labor').map(w=>w.name);
+    const laborWorkers = workers.filter(w=>w.designation==='Labor'&&(w.workerStatus||'Active')==='Active').map(w=>w.name);
     const extras = ['Not Applicable','None'];
     return [...extras, ...laborWorkers].filter(n=>n.toLowerCase().includes(search));
   }
