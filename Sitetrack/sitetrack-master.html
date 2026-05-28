@@ -195,7 +195,7 @@
       <div class="tw">
         <table>
           <thead><tr>
-            <th>Date</th><th>Name</th><th>Designation</th><th>Activity</th>
+            <th>Date</th><th>Name</th><th>Designation</th><th>Worker Status</th><th>Activity</th>
             <th>Location</th><th>Floor</th><th>Qty</th><th>Unit</th><th>Labor</th>
             <th>Item Credited</th><th>Actions</th>
           </tr></thead>
@@ -220,7 +220,8 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-let allData = [];
+let allData    = [];
+let workersMap = {};
 let pendingDelId = null;
 
 onAuthStateChanged(auth, async user => {
@@ -274,8 +275,13 @@ async function loadAll() {
   const btn=document.getElementById('rbtn'), ov=document.getElementById('overlay');
   btn.classList.add('loading'); ov.classList.add('show');
   try {
-    const snap = await getDocs(collection(db,'siteActivities'));
-    allData = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const [actSnap, wSnap] = await Promise.all([
+      getDocs(collection(db,'siteActivities')),
+      getDocs(collection(db,'workers')),
+    ]);
+    allData = actSnap.docs.map(d=>({id:d.id,...d.data()}));
+    workersMap = {};
+    wSnap.docs.forEach(d => { const w=d.data(); workersMap[w.name]=w.workerStatus||'Active'; });
     populateDateFilter();
     renderTable();
   } catch(e) { toast('Failed to load.',true); }
@@ -300,12 +306,18 @@ window.renderTable = function() {
   });
   document.getElementById('rcount').textContent = data.length+' records';
   const tb = document.getElementById('main-tbody');
-  if (!data.length) { tb.innerHTML='<tr><td colspan="11"><div class="empty">NO RECORDS FOUND</div></td></tr>'; return; }
-  tb.innerHTML = data.map((d,i) => `
+  if (!data.length) { tb.innerHTML='<tr><td colspan="12"><div class="empty">NO RECORDS FOUND</div></td></tr>'; return; }
+  tb.innerHTML = data.map((d,i) => {
+    const wStatus = workersMap[d.name] || 'Active';
+    const wsBadge = wStatus === 'Active'
+      ? '<span style="font-family:var(--fm);font-size:.65rem;padding:2px 7px;border-radius:3px;background:rgba(0,255,157,.1);color:var(--accent3);border:1px solid rgba(0,255,157,.3)">Active</span>'
+      : '<span style="font-family:var(--fm);font-size:.65rem;padding:2px 7px;border-radius:3px;background:rgba(255,59,92,.1);color:var(--danger);border:1px solid rgba(255,59,92,.3)">Resigned</span>';
+    return `
     <tr id="row-${i}">
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${d.date||'—'}</td>
       <td>${d.name||'—'}</td>
       <td><span class="desig-badge ${d.designation==='Skilled'?'desig-s':'desig-l'}">${d.designation||'—'}</span></td>
+      <td>${wsBadge}</td>
       <td>${d.activity||'—'}</td>
       <td>${d.location||'—'}</td>
       <td>${d.floorLevel||'—'}</td>
@@ -317,7 +329,8 @@ window.renderTable = function() {
         <button class="btn-edit" onclick="editRow(${i})">✏ Edit</button>
         <button class="btn-del"  onclick="deleteRow(${i})">✕ Delete</button>
       </div></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 };
 
 window.editRow = function(i) {
@@ -334,7 +347,7 @@ window.editRow = function(i) {
     <td><input class="iedit" id="ed-activity-${i}" value="${d.activity||''}"/></td>
     <td><input class="iedit" id="ed-location-${i}" value="${d.location||''}"/></td>
     <td><input class="iedit" id="ed-floor-${i}" value="${d.floorLevel||''}"/></td>
-    <td><input class="iedit" id="ed-qty-${i}" type="number" value="${d.quantity||''}" style="min-width:60px"/></td>
+    <td><input class="iedit" id="ed-qty-${i}" type="text" value="${d.quantity||''}" style="min-width:60px"/></td>
     <td><input class="iedit" id="ed-unit-${i}" value="${d.unit||''}" style="min-width:60px"/></td>
     <td><input class="iedit" id="ed-labor-${i}" value="${d.labor||''}"/></td>
     <td><input class="iedit" id="ed-item-${i}" value="${d.itemCredited||''}"/></td>

@@ -69,7 +69,7 @@
   .ctitle::before{content:'';width:3px;height:16px;background:var(--accent3);border-radius:2px;}
   .rcount{margin-left:auto;font-family:var(--fm);font-size:.72rem;color:var(--muted);}
   .tw{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1100px;}
+  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1300px;}
   thead tr{background:var(--surface2);}
   th{font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 14px;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;}
   th:hover{color:var(--text);}
@@ -327,8 +327,13 @@ window.sort = function(col) {
 
 window.exportCSV = function() {
   if (!allData.length) { toast('No data to export.',true); return; }
-  const headers = ['Date','Name','Designation','Activity','Location','Floor Level','Quantity','Unit','Labor Assigned','Item Credited'];
-  const rows = allData.map(d=>[d.date,d.name,d.designation,d.activity,d.location,d.floorLevel,d.quantity||'',d.unit||'',d.labor,d.itemCredited||'']);
+  const headers = ['Date','Name','Designation','Worker Status','Activity','Location','Floor Level','Quantity','Unit','Labor Assigned','Item Credited'];
+  const rows = allData.map(d=>[
+    d.date, d.name, d.designation,
+    workersMap[d.name]||'Active',
+    d.activity, d.location, d.floorLevel,
+    d.quantity||'', d.unit||'', d.labor, d.itemCredited||''
+  ]);
   const csv  = [headers,...rows].map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob = new Blob([csv],{type:'text/csv'});
   const a = document.createElement('a');
