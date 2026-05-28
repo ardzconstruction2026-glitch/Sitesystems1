@@ -156,11 +156,17 @@
   .desig-labor{background:rgba(240,192,64,.1);color:var(--accent);border:1px solid rgba(240,192,64,.3);}
   .ws-active{background:rgba(0,255,157,.1);color:var(--accent3);border:1px solid rgba(0,255,157,.3);font-family:var(--fm);font-size:.68rem;padding:3px 9px;border-radius:3px;letter-spacing:.5px;}
   .ws-resigned{background:rgba(255,59,92,.1);color:var(--danger);border:1px solid rgba(255,59,92,.3);font-family:var(--fm);font-size:.68rem;padding:3px 9px;border-radius:3px;letter-spacing:.5px;}
+  .as-ongoing{background:rgba(74,158,255,.1);color:var(--accent2);border:1px solid rgba(74,158,255,.3);font-family:var(--fm);font-size:.68rem;padding:3px 9px;border-radius:3px;letter-spacing:.5px;}
+  .as-completed{background:rgba(90,97,128,.15);color:var(--muted);border:1px solid rgba(90,97,128,.3);font-family:var(--fm);font-size:.68rem;padding:3px 9px;border-radius:3px;letter-spacing:.5px;}
   .btn-toggle-status{font-family:var(--fm);font-size:.68rem;padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.5px;}
   .btn-to-resigned{background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);color:var(--danger);}
   .btn-to-resigned:hover{background:rgba(255,59,92,.2);}
   .btn-to-active{background:rgba(0,255,157,.08);border:1px solid rgba(0,255,157,.3);color:var(--accent3);}
   .btn-to-active:hover{background:rgba(0,255,157,.2);}
+  .btn-to-completed{background:rgba(90,97,128,.12);border:1px solid rgba(90,97,128,.3);color:var(--muted);}
+  .btn-to-completed:hover{background:rgba(90,97,128,.25);}
+  .btn-to-ongoing{background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.3);color:var(--accent2);}
+  .btn-to-ongoing:hover{background:rgba(74,158,255,.2);}
 
   /* PICKER MODAL */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;}
@@ -234,6 +240,7 @@
     <button class="tb" onclick="switchTab('t2',this)">Saved Entries</button>
     <button class="tb" onclick="switchTab('t3',this)">Manage Lists</button>
     <button class="tb" onclick="switchTab('t4',this)">Worker Status</button>
+    <button class="tb" onclick="switchTab('t5',this)">Activity Status</button>
   </nav>
 
   <!-- TAB 1: NEW ENTRY -->
@@ -474,6 +481,32 @@
       </div>
     </div>
   </div>
+
+  <!-- TAB 5: ACTIVITY STATUS -->
+  <div id="t5" class="tc">
+    <div class="card">
+      <div class="ctitle">Activity Status</div>
+      <div style="display:flex;gap:.75rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center;">
+        <select id="as-filter" onchange="renderActivityStatus()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--fb);font-size:.85rem;outline:none;cursor:pointer;">
+          <option value="">All Activities</option>
+          <option value="Ongoing">Ongoing</option>
+          <option value="Completed">Completed</option>
+        </select>
+        <span id="as-count" style="font-family:var(--fm);font-size:.72rem;color:var(--muted);margin-left:auto;"></span>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th>#</th>
+            <th>Activity</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr></thead>
+          <tbody id="as-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- PICKER MODAL -->
@@ -625,6 +658,7 @@ window.switchTab = function(id, btn) {
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
   if (id === 't4') renderWorkerStatus();
+  if (id === 't5') renderActivityStatus();
 };
 
 function setToday() {
@@ -735,7 +769,7 @@ function getPickerItems(field, search) {
   if (field === 'name') {
     return workers.filter(w=>(w.workerStatus||'Active')==='Active').map(w=>w.name).filter(n=>n.toLowerCase().includes(search));
   } else if (field === 'activity') {
-    return activities.map(a=>a.name).filter(n=>n.toLowerCase().includes(search));
+    return activities.filter(a => (a.activityStatus||'Ongoing') !== 'Completed').map(a=>a.name).filter(n=>n.toLowerCase().includes(search));
   } else if (field === 'location') {
     return locations.map(l=>l.name).filter(n=>n.toLowerCase().includes(search));
   } else if (field === 'floorLevel') {
@@ -1319,6 +1353,44 @@ window.toggleWorkerStatus = async function(id) {
     renderWorkerList();
     showToast(`${worker.name} marked as ${newStatus}.`);
   } catch(e) { showToast('Error updating status.','error'); }
+};
+
+// ── ACTIVITY STATUS ───────────────────────────────────────────
+window.renderActivityStatus = function() {
+  const filter = document.getElementById('as-filter').value;
+  const list   = activities.filter(a => !filter || (a.activityStatus||'Ongoing') === filter);
+  const tbody  = document.getElementById('as-tbody');
+  document.getElementById('as-count').textContent = list.length + ' activit' + (list.length===1?'y':'ies');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.82rem">NO ACTIVITIES FOUND</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map((a, i) => {
+    const status    = a.activityStatus || 'Ongoing';
+    const isOngoing = status === 'Ongoing';
+    return `<tr>
+      <td style="font-family:var(--fm);color:var(--muted);font-size:.75rem">${i+1}</td>
+      <td>${a.name}</td>
+      <td><span class="${isOngoing?'as-ongoing':'as-completed'}">${status}</span></td>
+      <td><button class="btn-toggle-status ${isOngoing?'btn-to-completed':'btn-to-ongoing'}"
+        onclick="toggleActivityStatus('${a.id}')">
+        ${isOngoing ? 'Mark Completed' : 'Mark Ongoing'}
+      </button></td>
+    </tr>`;
+  }).join('');
+};
+
+window.toggleActivityStatus = async function(id) {
+  const activity = activities.find(a => a.id === id);
+  if (!activity) return;
+  const newStatus = (activity.activityStatus || 'Ongoing') === 'Ongoing' ? 'Completed' : 'Ongoing';
+  try {
+    await updateDoc(doc(db, 'activities', id), { activityStatus: newStatus });
+    activity.activityStatus = newStatus;
+    renderActivityStatus();
+    renderAllMgrLists();
+    showToast(`"${activity.name}" marked as ${newStatus}.`);
+  } catch(e) { showToast('Error updating activity status.','error'); }
 };
 </script>
 </body>
