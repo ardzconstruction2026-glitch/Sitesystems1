@@ -69,7 +69,7 @@
   .ctitle::before{content:'';width:3px;height:16px;background:var(--accent3);border-radius:2px;}
   .rcount{margin-left:auto;font-family:var(--fm);font-size:.72rem;color:var(--muted);}
   .tw{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1100px;}
+  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1300px;}
   thead tr{background:var(--surface2);}
   th{font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 14px;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;}
   th:hover{color:var(--text);}
@@ -156,6 +156,7 @@
             <th onclick="sort(1)">Date</th>
             <th onclick="sort(2)">Name</th>
             <th onclick="sort(3)">Designation</th>
+            <th>Worker Status</th>
             <th onclick="sort(4)">Activity</th>
             <th onclick="sort(5)">Location</th>
             <th onclick="sort(6)">Floor</th>
@@ -185,8 +186,9 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-let allData = [];
-let sortState = { col: 1, asc: false };
+let allData    = [];
+let workersMap = {}; // name -> workerStatus
+let sortState  = { col: 1, asc: false };
 
 onAuthStateChanged(auth, async user => {
   if (user) {
@@ -228,8 +230,16 @@ window.refreshAll = async function() {
   const btn=document.getElementById('rbtn'), ov=document.getElementById('overlay');
   btn.classList.add('loading'); ov.classList.add('show');
   try {
-    const snap = await getDocs(collection(db,'siteActivities'));
-    allData = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const [actSnap, wSnap] = await Promise.all([
+      getDocs(collection(db,'siteActivities')),
+      getDocs(collection(db,'workers')),
+    ]);
+    allData = actSnap.docs.map(d=>({id:d.id,...d.data()}));
+    workersMap = {};
+    wSnap.docs.forEach(d => {
+      const w = d.data();
+      workersMap[w.name] = w.workerStatus || 'Active';
+    });
     populateFilters();
     updateStats();
     renderTable();
@@ -238,18 +248,43 @@ window.refreshAll = async function() {
 };
 
 function populateFilters() {
-  const dates  = [...new Set(allData.map(d=>d.date).filter(Boolean))].sort().reverse();
+  const dates  = [...new Set(allData.map(d=>normalizeDate(d.date)).filter(Boolean))].sort().reverse();
   const locs   = [...new Set(allData.map(d=>d.location).filter(Boolean))].sort();
   const items  = [...new Set(allData.map(d=>d.itemCredited).filter(Boolean))].sort();
-  document.getElementById('f-date-filter').innerHTML  = '<option value="">All Dates</option>'          + dates.map(d=>`<option>${d}</option>`).join('');
-  document.getElementById('f-location').innerHTML     = '<option value="">All Locations</option>'       + locs.map(l=>`<option>${l}</option>`).join('');
-  document.getElementById('f-item-credited').innerHTML= '<option value="">All Items Credited</option>'  + items.map(i=>`<option>${i}</option>`).join('');
+  document.getElementById('f-date-filter').innerHTML  = '<option value="">All Dates</option>'         + dates.map(d=>`<option value="${d}">${formatDate(d)}</option>`).join('');
+  document.getElementById('f-location').innerHTML     = '<option value="">All Locations</option>'      + locs.map(l=>`<option>${l}</option>`).join('');
+  document.getElementById('f-item-credited').innerHTML= '<option value="">All Items Credited</option>' + items.map(i=>`<option>${i}</option>`).join('');
+}
+
+function normalizeDate(d) {
+  if (!d) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+  try {
+    const dt = new Date(d);
+    if (!isNaN(dt)) return dt.toISOString().split('T')[0];
+  } catch {}
+  return d;
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const norm = normalizeDate(d);
+  try {
+    const dt = new Date(norm + 'T00:00:00');
+    if (!isNaN(dt)) {
+      const mm = String(dt.getMonth()+1).padStart(2,'0');
+      const dd = String(dt.getDate()).padStart(2,'0');
+      const yyyy = dt.getFullYear();
+      return `${mm}-${dd}-${yyyy}`;
+    }
+  } catch {}
+  return d;
 }
 
 function updateStats() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('s-total').textContent   = allData.length;
-  document.getElementById('s-today').textContent   = allData.filter(d=>d.date===today).length;
+  document.getElementById('s-today').textContent   = allData.filter(d=>normalizeDate(d.date)===today).length;
   document.getElementById('s-skilled').textContent = new Set(allData.filter(d=>d.designation==='Skilled').map(d=>d.name)).size;
   document.getElementById('s-labor').textContent   = new Set(allData.filter(d=>d.designation==='Labor').map(d=>d.name)).size;
 }
@@ -263,7 +298,7 @@ window.renderTable = function() {
 
   let data = allData.filter(d => {
     const matchQ = [d.name,d.activity,d.location,d.floorLevel,d.labor,d.itemCredited].join(' ').toLowerCase().includes(q);
-    const matchD  = !date  || d.date===date;
+    const matchD  = !date  || normalizeDate(d.date)===date;
     const matchDg = !desig || d.designation===desig;
     const matchL  = !loc   || d.location===loc;
     const matchI  = !item  || d.itemCredited===item;
@@ -281,13 +316,19 @@ window.renderTable = function() {
 
   document.getElementById('rcount').textContent = data.length+' records';
   const tb = document.getElementById('main-tbody');
-  if (!data.length) { tb.innerHTML='<tr><td colspan="11"><div class="empty">NO RECORDS FOUND</div></td></tr>'; return; }
-  tb.innerHTML = data.map((d,i) => `
+  if (!data.length) { tb.innerHTML='<tr><td colspan="12"><div class="empty">NO RECORDS FOUND</div></td></tr>'; return; }
+  tb.innerHTML = data.map((d,i) => {
+    const wStatus  = workersMap[d.name] || 'Active';
+    const wsBadge  = wStatus === 'Active'
+      ? '<span style="font-family:var(--fm);font-size:.65rem;padding:2px 7px;border-radius:3px;background:rgba(0,255,157,.1);color:var(--accent3);border:1px solid rgba(0,255,157,.3)">Active</span>'
+      : '<span style="font-family:var(--fm);font-size:.65rem;padding:2px 7px;border-radius:3px;background:rgba(255,59,92,.1);color:var(--danger);border:1px solid rgba(255,59,92,.3)">Resigned</span>';
+    return `
     <tr>
       <td style="font-family:var(--fm);color:var(--muted);font-size:.75rem">${i+1}</td>
-      <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${d.date||'—'}</td>
+      <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent)">${formatDate(d.date)}</td>
       <td>${d.name||'—'}</td>
       <td><span class="desig-badge ${d.designation==='Skilled'?'desig-s':'desig-l'}">${d.designation||'—'}</span></td>
+      <td>${wsBadge}</td>
       <td>${d.activity||'—'}</td>
       <td>${d.location||'—'}</td>
       <td>${d.floorLevel||'—'}</td>
@@ -295,7 +336,8 @@ window.renderTable = function() {
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent3)">${d.unit||'—'}</td>
       <td style="max-width:180px;word-break:break-word;font-size:.78rem">${d.labor||'—'}</td>
       <td style="font-family:var(--fm);font-size:.78rem;color:var(--accent2)">${d.itemCredited||'—'}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 };
 
 window.sort = function(col) {
@@ -310,8 +352,13 @@ window.sort = function(col) {
 
 window.exportCSV = function() {
   if (!allData.length) { toast('No data to export.',true); return; }
-  const headers = ['Date','Name','Designation','Activity','Location','Floor Level','Quantity','Unit','Labor Assigned','Item Credited'];
-  const rows = allData.map(d=>[d.date,d.name,d.designation,d.activity,d.location,d.floorLevel,d.quantity||'',d.unit||'',d.labor,d.itemCredited||'']);
+  const headers = ['Date','Name','Designation','Worker Status','Activity','Location','Floor Level','Quantity','Unit','Labor Assigned','Item Credited'];
+  const rows = allData.map(d=>[
+    d.date, d.name, d.designation,
+    workersMap[d.name]||'Active',
+    d.activity, d.location, d.floorLevel,
+    d.quantity||'', d.unit||'', d.labor, d.itemCredited||''
+  ]);
   const csv  = [headers,...rows].map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob = new Blob([csv],{type:'text/csv'});
   const a = document.createElement('a');
